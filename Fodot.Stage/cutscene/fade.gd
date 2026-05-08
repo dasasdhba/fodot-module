@@ -29,6 +29,6 @@ func fade_in():
 func fade_out():
 	modulate.a = 1.0
 	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, fade_out_time)
 	tween.tween_interval(fade_out_wait)
+	tween.tween_property(self, "modulate:a", 0.0, fade_out_time)
 	tween.tween_callback(fade_out_finished.emit)

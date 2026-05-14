@@ -2,7 +2,7 @@ namespace Fodot.Stage
 
 open Fodot.Async
 open Fodot.Common
-open Fodot.Core
+open Fodot.Module
 open Godot
 
 [<FScript("cutscene_provider")>]
@@ -16,7 +16,7 @@ type CutsceneProvider(node : Node) =
     let outPool = bind.OutScene |> Option.map poolMapper
     
     let nodeMapper (p :AsyncScene<Node>) =
-        p.Get() |> FScript.get<ICutscene>
+        p.Get() |> GodotObject.getInterface<ICutscene>
 
     member this.CreateConfig () : CutsceneConfig =
         let inNode = inPool |> Option.map nodeMapper

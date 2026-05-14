@@ -1,14 +1,18 @@
-@tool
-extends ColorFill
+extends Node2D
 
 @export_category("Fade")
+@export var color = Color(0, 0, 0)
 @export var fade_in_time = 0.4
 @export var fade_in_wait = 0.1
 @export var fade_out_time = 0.4
 @export var fade_out_wait = 0.1
+@export var size = Vector2(800, 600)
 
 signal fade_in_finished
 signal fade_out_finished
+
+func _draw():
+	draw_rect(Rect2(Vector2(0, 0), size), color)
 
 func _get_fscripts():
 	return [ "cutscene" ]

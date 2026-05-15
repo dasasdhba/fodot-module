@@ -130,6 +130,8 @@ module Stage =
           stage.CurrentScene <- Some scene
           stage.Viewport |> Node.addChild scene
           do! wait
+          
+          Engine.treeUpdateCache ()
           stage.Status <- Ready
           Logger.push $"Stage {stage.Root.GetPath()} is now at {stage.CurrentScenePath}"
      }

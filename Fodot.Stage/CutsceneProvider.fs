@@ -10,7 +10,7 @@ type CutsceneProvider(node : Node) =
     let bind = Bind.CutsceneProvider node
     
     let poolMapper s =
-        node |> AsyncScene.fromNode s 1 0
+        node |> AsyncScene.create s 1 0
     
     let inPool = bind.InScene |> Option.map poolMapper
     let outPool = bind.OutScene |> Option.map poolMapper

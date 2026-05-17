@@ -251,18 +251,6 @@ public static class MoonExtensions
         }
     }
 
-    public static void SetShaderParam(this CanvasItem item, string param, Variant value)
-    {
-        if (item.Material is not ShaderMaterial shader) return;
-        shader.SetShaderParameter(param, value);
-    }
-
-    public static T GetShaderParam<[MustBeVariant] T>(this CanvasItem item, string param)
-    {
-        if (item.Material is not ShaderMaterial shader) return default;
-        return shader.GetShaderParameter(param) is T t ? t : default;
-    }
-
     public static Texture2D TryGetTexture(this CanvasItem item)
     {
         if (item is Sprite2D spr) return spr.Texture;

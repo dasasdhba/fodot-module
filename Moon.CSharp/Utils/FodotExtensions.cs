@@ -5,10 +5,14 @@ namespace Moon.Utils;
 
 public static class FodotExtensions
 {
+    // packed scene
+
     public static T InstantiateSafely<T>(this PackedScene scene) where T : Node
     {
         return Fodot.Core.PackedScene.instantiateTo<T>(scene);
     }
+    
+    // node
 
     public static void AddChildSafely(this Node node, Node child, Node.InternalMode internalMode = Node.InternalMode.Disabled)
     {
@@ -50,5 +54,22 @@ public static class FodotExtensions
     {
         if (filter == null) return Fodot.Module.Node.findParent<T>(node).Value;
         return Fodot.Module.Node.findParentWith(filter.AsFSharpFunc(), node).Value;
+    }
+    
+    // canvas item
+    
+    public static bool HasShaderParam(this CanvasItem item, string param)
+    {
+        return Fodot.Module.CanvasItem.hasShaderParam(param, item);
+    }
+    
+    public static void SetShaderParam(this CanvasItem item, string param, Variant value)
+    {
+        Fodot.Module.CanvasItem.setShaderParam(param, value, item);
+    }
+
+    public static T GetShaderParam<[MustBeVariant] T>(this CanvasItem item, string param)
+    {
+        return Fodot.Module.CanvasItem.getShaderParamAs<T>(param, item);
     }
 }

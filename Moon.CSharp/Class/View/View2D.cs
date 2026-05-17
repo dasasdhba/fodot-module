@@ -174,7 +174,8 @@ public partial class View2D : Node2D
     {
         if (IsInstanceValid(FollowNode))
         {
-            GlobalPosition = (Vector2)FollowNode.Get(Node2D.PropertyName.GlobalPosition) + FollowOffset;
+            var pos = Fodot.Module.CanvasItem.getGlobalPosition(FollowNode);
+            GlobalPosition = pos + FollowOffset;
         }
 
         CurrentZoom = GetLimitZoom(Zoom);
@@ -324,6 +325,17 @@ public partial class View2D : Node2D
     {
         var view = GetViewport();
         var size = GetViewportRect().Size;
+        
+        // we use shader for zoom (if exists)
+        
+        var container = view.GetParentOrNull<CanvasItem>();
+        var hasShader = IsInstanceValid(container) && container.HasShaderParam("zoom");
+        if (hasShader)
+        {
+            container.SetShaderParam("zoom", Mathf.Max(1f, zoom));
+            zoom = 1f;
+        }
+        
         var transform = new Transform2D(rotation, zoom * Vector2.One, 0f, TransformOffset);
         var pos = transform * position;
         var origin = -pos + size / 2f;

@@ -38,7 +38,7 @@ public partial class MotionRecorder2D : Node
                     return;
                 }
                 
-                var pos = (Vector2)Target.Get(Node2D.PropertyName.GlobalPosition);
+                var pos =  Fodot.Module.CanvasItem.getGlobalPosition(Target);
 
                 if (!FirstRecorded)
                 {

@@ -333,7 +333,7 @@ public partial class View2D : Node2D
         if (hasShader)
         {
             container.SetShaderParam("zoom", Mathf.Max(1f, zoom));
-            zoom = 1f;
+            if (zoom > 1f) zoom = 1f;
         }
         
         var transform = new Transform2D(rotation, zoom * Vector2.One, 0f, TransformOffset);

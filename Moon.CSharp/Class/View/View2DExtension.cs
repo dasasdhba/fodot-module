@@ -16,22 +16,21 @@ public static class View2DExtension
 
     public static View2D GetView2D(this Node node)
     {
-        if (node.HasMeta("ViewportView2D"))
-            return node.GetMeta("ViewportView2D").As<View2D>();
         var v = node.GetViewport();
-        return v.HasMeta("ViewportView2D") ? 
-            v.GetMeta("ViewportView2D").As<View2D>() : null;
+        return v.HasMeta(View2D.ViewMeta) ? 
+            v.GetMeta(View2D.ViewMeta).As<View2D>() : null;
     }
 
     /// <summary>
     /// Return the current view rect.
     /// </summary>
-    public static Rect2 GetViewRect(this Node node, bool forceUpdate = false)
+    public static Rect2 GetViewRect(this Node node)
     {
-        if (!forceUpdate)
+        var view = node.GetView2D();
+    
+        if (view is not null)
         {
-            var view = node.GetView2D();
-            if (view is not null) return view.GetCurrentViewRect();
+            return view.GetCurrentViewRect();
         }
 
         if (node is CanvasItem item)
@@ -51,11 +50,10 @@ public static class View2DExtension
     /// </summary>
     /// <param name="item">The CanvasItem to query.</param>
     /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
-    /// <param name="forceUpdate">Whether to use buffered view if available.</param>
-    public static bool IsInView(this CanvasItem item, float eps = 0f, bool forceUpdate = false)
+    public static bool IsInView(this CanvasItem item, float eps = 0f)
     {
-        var pos = (Vector2)item.Get(Node2D.PropertyName.GlobalPosition);
-        return GetViewRect(item, forceUpdate).Grow(eps).HasPoint(pos);
+        var pos = Fodot.Module.CanvasItem.getGlobalPosition(item);
+        return item.GetViewRect().Grow(eps).HasPoint(pos);
     }
 
     /// <summary>
@@ -63,11 +61,10 @@ public static class View2DExtension
     /// </summary>
     /// <param name="item">The CanvasItem to query.</param>
     /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
-    /// <param name="forceUpdate">Whether to use buffered view if available.</param>
-    public static bool IsInViewLeft(this CanvasItem item, float eps = 0f, bool forceUpdate = false)
+    public static bool IsInViewLeft(this CanvasItem item, float eps = 0f)
     {
-        var pos = (Vector2)item.Get(Node2D.PropertyName.GlobalPosition);
-        return GetViewRect(item, forceUpdate).Position.X - eps <= pos.X;
+        var pos = Fodot.Module.CanvasItem.getGlobalPosition(item);
+        return item.GetViewRect().Position.X - eps <= pos.X;
     }
 
     /// <summary>
@@ -75,11 +72,10 @@ public static class View2DExtension
     /// </summary>
     /// <param name="item">The CanvasItem to query.</param>
     /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
-    /// <param name="forceUpdate">Whether to use buffered view if available.</param>
-    public static bool IsInViewRight(this CanvasItem item, float eps = 0f, bool forceUpdate = false)
+    public static bool IsInViewRight(this CanvasItem item, float eps = 0f)
     {
-        var pos = (Vector2)item.Get(Node2D.PropertyName.GlobalPosition);
-        return GetViewRect(item, forceUpdate).End.X + eps >= pos.X;
+        var pos = Fodot.Module.CanvasItem.getGlobalPosition(item);
+        return item.GetViewRect().End.X + eps >= pos.X;
     }
 
     /// <summary>
@@ -87,11 +83,10 @@ public static class View2DExtension
     /// </summary>
     /// <param name="item">The CanvasItem to query.</param>
     /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
-    /// <param name="forceUpdate">Whether to use buffered view if available.</param>
-    public static bool IsInViewTop(this CanvasItem item, float eps = 0f, bool forceUpdate = false)
+    public static bool IsInViewTop(this CanvasItem item, float eps = 0f)
     {
-        var pos = (Vector2)item.Get(Node2D.PropertyName.GlobalPosition);
-        return GetViewRect(item, forceUpdate).Position.Y - eps <= pos.Y;
+        var pos = Fodot.Module.CanvasItem.getGlobalPosition(item);
+        return item.GetViewRect().Position.Y - eps <= pos.Y;
     }
 
     /// <summary>
@@ -99,11 +94,10 @@ public static class View2DExtension
     /// </summary>
     /// <param name="item">The CanvasItem to query.</param>
     /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
-    /// <param name="forceUpdate">Whether to use buffered view if available.</param>
-    public static bool IsInViewBottom(this CanvasItem item, float eps = 0f, bool forceUpdate = false)
+    public static bool IsInViewBottom(this CanvasItem item, float eps = 0f)
     {
-        var pos = (Vector2)item.Get(Node2D.PropertyName.GlobalPosition);
-        return GetViewRect(item, forceUpdate).End.Y + eps >= pos.Y;
+        var pos = Fodot.Module.CanvasItem.getGlobalPosition(item);
+        return item.GetViewRect().End.Y + eps >= pos.Y;
     }
 
     /// <summary>
@@ -112,15 +106,14 @@ public static class View2DExtension
     /// <param name="item">The CanvasItem to query.</param>
     /// <param name="dir">The direction to query.</param>
     /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
-    /// <param name="forceUpdate">Whether to use buffered view if available.</param>
-    public static bool IsInViewDir(this CanvasItem item, Vector2 dir, float eps = 0f, bool forceUpdate = false)
+    public static bool IsInViewDir(this CanvasItem item, Vector2 dir, float eps = 0f)
     {
         if (Math.Abs(dir.Y) >= Math.Abs(dir.X))
         {
-            return dir.Y >= 0 ? IsInViewBottom(item, eps, forceUpdate) : IsInViewTop(item, eps, forceUpdate);
+            return dir.Y >= 0 ? item.IsInViewBottom(eps) : item.IsInViewTop(eps);
         }
 
-        return dir.X >= 0 ? IsInViewRight(item, eps, forceUpdate) : IsInViewLeft(item, eps, forceUpdate);
+        return dir.X >= 0 ? item.IsInViewRight(eps) : item.IsInViewLeft(eps);
     }
     
     /// <summary>
@@ -129,9 +122,7 @@ public static class View2DExtension
     public static Rect2 GetViewRegion(this Node node)
     {
         var view = node.GetView2D();
-        if (view is not null) return view.GetRegion();
-
-        return default;
+        return view?.GetRegion() ?? default;
     }
 
     /// <summary>
@@ -141,8 +132,8 @@ public static class View2DExtension
     /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
     public static bool IsInViewRegion(this CanvasItem item, float eps = 0f)
     {
-        var pos = (Vector2)item.Get(Node2D.PropertyName.GlobalPosition);
-        return GetViewRegion(item).Grow(eps).HasPoint(pos);
+        var pos = Fodot.Module.CanvasItem.getGlobalPosition(item);
+        return item.GetViewRegion().Grow(eps).HasPoint(pos);
     }
 
     /// <summary>
@@ -152,8 +143,8 @@ public static class View2DExtension
     /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
     public static bool IsInViewRegionLeft(this CanvasItem item, float eps = 0f)
     {
-        var pos = (Vector2)item.Get(Node2D.PropertyName.GlobalPosition);
-        return GetViewRegion(item).Position.X - eps <= pos.X;
+        var pos = Fodot.Module.CanvasItem.getGlobalPosition(item);
+        return item.GetViewRegion().Position.X - eps <= pos.X;
     }
 
     /// <summary>
@@ -163,8 +154,8 @@ public static class View2DExtension
     /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
     public static bool IsInViewRegionRight(this CanvasItem item, float eps = 0f)
     {
-        var pos = (Vector2)item.Get(Node2D.PropertyName.GlobalPosition);
-        return GetViewRegion(item).End.X + eps >= pos.X;
+        var pos = Fodot.Module.CanvasItem.getGlobalPosition(item);
+        return item.GetViewRegion().End.X + eps >= pos.X;
     }
 
     /// <summary>
@@ -174,8 +165,8 @@ public static class View2DExtension
     /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
     public static bool IsInViewRegionTop(this CanvasItem item, float eps = 0f)
     {
-        var pos = (Vector2)item.Get(Node2D.PropertyName.GlobalPosition);
-        return GetViewRegion(item).Position.Y - eps <= pos.Y;
+        var pos = Fodot.Module.CanvasItem.getGlobalPosition(item);
+        return item.GetViewRegion().Position.Y - eps <= pos.Y;
     }
 
     /// <summary>
@@ -185,8 +176,8 @@ public static class View2DExtension
     /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
     public static bool IsInViewRegionBottom(this CanvasItem item, float eps = 0f)
     {
-        var pos = (Vector2)item.Get(Node2D.PropertyName.GlobalPosition);
-        return GetViewRegion(item).End.Y + eps >= pos.Y;
+        var pos = Fodot.Module.CanvasItem.getGlobalPosition(item);
+        return item.GetViewRegion().End.Y + eps >= pos.Y;
     }
 
     /// <summary>
@@ -199,9 +190,9 @@ public static class View2DExtension
     {
         if (Math.Abs(dir.Y) >= Math.Abs(dir.X))
         {
-            return dir.Y >= 0 ? IsInViewRegionBottom(item, eps) : IsInViewRegionTop(item, eps);
+            return dir.Y >= 0 ? item.IsInViewRegionBottom(eps) : item.IsInViewRegionTop(eps);
         }
 
-        return dir.X >= 0 ? IsInViewRegionRight(item, eps) : IsInViewRegionLeft(item, eps);
+        return dir.X >= 0 ? item.IsInViewRegionRight(eps) : item.IsInViewRegionLeft(eps);
     }
 }

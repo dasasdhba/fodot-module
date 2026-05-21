@@ -14,6 +14,9 @@ public partial class View2D : Node2D
 
     [ExportCategory("View2D")]
     [Export]
+    public bool AutoCurrent { get; set; } = true;
+    
+    [Export]
     public View2DProcessCallbackMode ProcessCallbackMode { get ;set; } = View2DProcessCallbackMode.Physics;
     
     [Export]
@@ -159,8 +162,12 @@ public partial class View2D : Node2D
     {
         TreeEntered += () =>
         {
-            var viewport = GetViewport();
-            viewport.SetMeta("ViewportView2D", this);
+            if (AutoCurrent) MakeCurrent();
+        };
+        
+        TreeExited += () =>
+        {
+            if (IsCurrent()) GetViewport().RemoveMeta(ViewMeta);
         };
 
         Ready += () =>
@@ -168,6 +175,20 @@ public partial class View2D : Node2D
             ForceUpdate();
             this.AddProcess(ViewProcess, ProcessCallbackMode == View2DProcessCallbackMode.Physics);
         };
+    }
+    
+    public const string ViewMeta = "_moon_viewport_view2d";
+
+    public void MakeCurrent()
+    {
+        var viewport = GetViewport();
+        viewport.SetMeta(ViewMeta, this);
+    }
+
+    public bool IsCurrent()
+    {
+        var v = GetViewport();
+        return v.HasMeta(ViewMeta) && v.GetMeta(ViewMeta).As<View2D>() == this;
     }
 
     public void ForceUpdate()
@@ -218,7 +239,7 @@ public partial class View2D : Node2D
         ChangingInterp = interp;
     }
 
-    protected virtual void ViewProcess(double delta)
+    private void ViewProcess(double delta)
     {
         // follow
 
@@ -323,20 +344,22 @@ public partial class View2D : Node2D
 
     public void SetView(Vector2 position, float zoom, float rotation)
     {
+        var current = IsCurrent();
         var view = GetViewport();
         var size = GetViewportRect().Size;
         
         // we use shader for zoom (if exists)
         
         var container = view.GetParentOrNull<CanvasItem>();
+        var tZoom = zoom;
         var hasShader = IsInstanceValid(container) && container.HasShaderParam("zoom");
         if (hasShader)
         {
-            container.SetShaderParam("zoom", Mathf.Max(1f, zoom));
-            if (zoom > 1f) zoom = 1f;
+            if (current) container.SetShaderParam("zoom", Mathf.Max(1f, zoom));
+            if (tZoom > 1f) tZoom = 1f;
         }
         
-        var transform = new Transform2D(rotation, zoom * Vector2.One, 0f, TransformOffset);
+        var transform = new Transform2D(rotation, tZoom * Vector2.One, 0f, TransformOffset);
         var pos = transform * position;
         var origin = -pos + size / 2f;
         
@@ -347,17 +370,21 @@ public partial class View2D : Node2D
             origin = (origin + 0.5f * Vector2.One).Floor();*/
         
         transform = transform with { Origin = origin };
-        view.CanvasTransform = transform;
+
+        if (current)
+        {
+            view.CanvasTransform = transform;
         
-        // update parallax objects
+            // update parallax objects
         
-        GetTree().CallGroup("__cameras_" + view.GetViewportRid().Id,
-             "_camera_moved", transform, size / 2f, -origin);
+            GetTree().CallGroup("__cameras_" + view.GetViewportRid().Id,
+                "_camera_moved", transform, size / 2f, -origin);
+        }
              
         // update view rect
         
-        var topLeft = -transform.Origin / transform.Scale;
-        var viewSize = size / transform.Scale;
+        var topLeft = -transform.Origin / zoom;
+        var viewSize = size / zoom;
         CurrentViewRect = new(topLeft, viewSize);
     }
     

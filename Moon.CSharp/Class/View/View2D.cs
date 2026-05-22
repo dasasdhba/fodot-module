@@ -167,7 +167,7 @@ public partial class View2D : Node2D
         
         TreeExited += () =>
         {
-            if (IsCurrent()) GetViewport().RemoveMeta(ViewMeta);
+            if (IsCurrent()) GetViewport().RemoveData(ViewMeta);
         };
 
         Ready += () =>
@@ -177,18 +177,18 @@ public partial class View2D : Node2D
         };
     }
     
-    public const string ViewMeta = "_moon_viewport_view2d";
+    public static readonly StringName ViewMeta = "_moon_viewport_view2d";
 
     public void MakeCurrent()
     {
         var viewport = GetViewport();
-        viewport.SetMeta(ViewMeta, this);
+        viewport.SetData(ViewMeta, this);
     }
 
     public bool IsCurrent()
     {
         var v = GetViewport();
-        return v.HasMeta(ViewMeta) && v.GetMeta(ViewMeta).As<View2D>() == this;
+        return v.HasData(ViewMeta) && v.GetData<View2D>(ViewMeta) == this;
     }
 
     public void ForceUpdate()

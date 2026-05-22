@@ -1,5 +1,6 @@
 ﻿using System;
 using Godot;
+using Moon.Utils;
 
 namespace Moon.Class;
 
@@ -17,8 +18,8 @@ public static class View2DExtension
     public static View2D GetView2D(this Node node)
     {
         var v = node.GetViewport();
-        return v.HasMeta(View2D.ViewMeta) ? 
-            v.GetMeta(View2D.ViewMeta).As<View2D>() : null;
+        return v.HasData(View2D.ViewMeta) ? 
+            v.GetData<View2D>(View2D.ViewMeta) : null;
     }
 
     /// <summary>

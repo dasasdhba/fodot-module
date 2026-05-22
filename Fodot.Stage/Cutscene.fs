@@ -32,6 +32,11 @@ type CutsceneConfig =
 
 [<FScript("cutscene")>]
 type Cutscene(node : Node2D) =
+    static let fadeInInit = new StringName "fade_in_init"
+    static let fadeOutInit = new StringName "fade_out_init"
+    static let fadeIn = new StringName "fade_in"
+    static let fadeOut = new StringName "fade_out"
+    
     let size = node |> GDProp<Vector2>.From "size"
     let fadeInFinished = node |> GDSignal<unit>.From "fade_in_finished"
     let fadeOutFinished = node |> GDSignal<unit>.From "fade_out_finished"
@@ -47,19 +52,19 @@ type Cutscene(node : Node2D) =
             this.Size <- value
             
         member this.FadeInInit () =
-            node |> GodotObject.tryInvoke "fade_in_init" |> ignore
+            node |> GodotObject.tryInvoke fadeInInit |> ignore
             
         member this.FadeOutInit () =
-            node |> GodotObject.tryInvoke "fade_out_init" |> ignore
+            node |> GodotObject.tryInvoke fadeOutInit |> ignore
             
         member this.FadeIn () = task {
-            node |> GodotObject.invoke "fade_in" |> ignore
+            node |> GodotObject.invoke fadeIn |> ignore
             let! _ = fadeInFinished.AsTask()
             return ()
         }
         
         member this.FadeOut () = task {
-            node |> GodotObject.invoke "fade_out" |> ignore
+            node |> GodotObject.invoke fadeOut |> ignore
             let! _ = fadeOutFinished.AsTask()
             return ()
         }

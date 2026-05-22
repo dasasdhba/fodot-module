@@ -42,11 +42,11 @@ public partial class Rotator : Node
 
     private void RotateProcess(double delta)
     {
-        if (RotateNode == null || Disabled) return;
+        if (!IsInstanceValid(RotateNode) || Disabled) return;
         
-        var rotation = (float)RotateNode.Get(Node2D.PropertyName.Rotation);
+        var rotation = Fodot.Module.CanvasItem.getRotation(RotateNode);
         rotation += (float)Mathf.DegToRad(Speed * delta) * (Flip ? -1 : 1);
         rotation = Mathf.Wrap(rotation, -float.Pi, float.Pi);
-        RotateNode.Set(Node2D.PropertyName.Rotation, rotation);
+        Fodot.Module.CanvasItem.setRotation(rotation, RotateNode);
     }
 }

@@ -11,13 +11,15 @@ type NodePool (scene : PackedScene) =
     
     let pool = ConcurrentQueue<Node>()
     let mutable disposed = false
-        
+    
+    static member PoolMeta = new StringName "_moon_node_pool"
+    
     member val Disposed = disposed with get
         
     member this.Store count =
         for i in 0 .. count - 1 do
             let node = scene |> PackedScene.instantiate
-            node |> GodotObject.setMeta "_moon_node_pool" this
+            node |> GodotObject.setMeta NodePool.PoolMeta this
             node.add_TreeExited (fun _ ->
                 if not disposed then
                     this.Return node
@@ -64,7 +66,7 @@ module NodePool =
     let returnPool (node : Node) =
         let canReturn =
             node
-            |> GodotObject.tryGetMetaAs<NodePool> "_moon_node_pool"
+            |> GodotObject.tryGetMetaAs<NodePool> NodePool.PoolMeta
             |> Option.map (fun p -> p.Disposed |> not)
             |> Option.defaultValue false
             

@@ -26,9 +26,9 @@ public static class FlipExtensions
         TryInitFlip(node);
         node.SetChildrenRecursively(TryInitFlip);
         
-        void TryInitFlip(Node node)
+        void TryInitFlip(Node n)
         {
-            if (node is IFlipHInit flip) flip.FlipHInit();
+            if (n is IFlipHInit flip) flip.FlipHInit();
         }
     }
     
@@ -37,9 +37,9 @@ public static class FlipExtensions
         TryInitFlip(node);
         node.SetChildrenRecursively(TryInitFlip);
         
-        void TryInitFlip(Node node)
+        void TryInitFlip(Node n)
         {
-            if (node is IFlipVInit flip) flip.FlipVInit();
+            if (n is IFlipVInit flip) flip.FlipVInit();
         }
     }
 

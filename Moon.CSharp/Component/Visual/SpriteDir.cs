@@ -1,4 +1,5 @@
 using Godot;
+using Moon.Library;
 using Moon.Utils;
 
 namespace Moon.Component;
@@ -28,11 +29,11 @@ public partial class SpriteDir : Node, IFlipHInit
     [Export]
     public bool Disabled { get ;set; }
 
-    private MotionRecorder2D Recorder;
+    private Recorder2D Recorder;
     public override void _EnterTree()
     {
         if (Sprite == null && GetParent() is CanvasItem parent) Sprite = parent;
-        if (Root != null) Recorder = Root.GetRecorder();
+        if (IsInstanceValid(Root)) Recorder = Recorder2DModule.get(Root);
     }
 
     public override void _Ready()
@@ -51,9 +52,9 @@ public partial class SpriteDir : Node, IFlipHInit
     
     private void Process()
     {
-        if (Root != null)
+        if (IsInstanceValid(Root))
         {
-            var s = Recorder.GetLastMotion().X;
+            var s = Recorder.LastMotion.X;
             if (s != 0f) SetSpriteFlip(s < 0f);
         }
     }

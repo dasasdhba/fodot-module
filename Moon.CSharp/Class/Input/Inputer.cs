@@ -38,12 +38,7 @@ public abstract partial class Inputer : Node
     private System.Collections.Generic.Dictionary<string, bool> BufferMaps { get ;set; } = new();
 
     public bool IsKeyPressed(string key, bool buffered = true)
-    {
-        if (!buffered || !BufferMaps.TryGetValue(key, out bool value) || !value)
-            return GetKey(key).Pressed;
-
-        return false;
-    }
+        => !(buffered && BufferMaps.TryGetValue(key, out bool value) && value) && GetKey(key).Pressed;
     
     /// <summary>
     /// This will make IsKeyPressed (with buffered = true) always return false, until the key was released before.

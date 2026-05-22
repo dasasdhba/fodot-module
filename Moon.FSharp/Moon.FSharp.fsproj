@@ -10,6 +10,7 @@
         <Compile Include="Module\Action.fs" />
         <Compile Include="Module\Node.fs" />
         <Compile Include="Library\NodePool.fs" />
+        <Compile Include="Library\Recorder2D.fs" />
     </ItemGroup>
 
     <ItemGroup>

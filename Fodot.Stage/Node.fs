@@ -7,9 +7,11 @@ open Fodot.Module.Node
 
 // access
 
+let private stageMeta = new StringName "_fs_parent_stage"
+
 let tryGetStage (node : Node) =
     node
-    |> findParentCachedWith (fun p -> p |> FScript.contains<Stage> ) "_fs_parent_stage"
+    |> findParentCachedWith (fun p -> p |> FScript.contains<Stage> ) stageMeta
     |> Option.bind (fun p -> p |> FScript.tryGet<Stage> )
       
 let getStage (node : Node) =

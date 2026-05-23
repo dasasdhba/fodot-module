@@ -14,16 +14,10 @@ public class PhysicsQuery3D
     public virtual uint CollisionMask { get ;set; }
     
     public bool GetCollisionMaskValue(int layer)
-        => ((CollisionMask >> (layer - 1)) & 1) == 1;
+        => Fodot.Module.BitFlag.getValue(layer, CollisionMask);
 
     public void SetCollisionMaskValue(int layer, bool value)
-    {
-        int n = layer - 1;
-        int mask = (int)CollisionMask;
-        if (value) mask |= 1 << n;
-        else mask &= ~(1 << n);
-        CollisionMask = (uint)mask;
-    }
+        => Fodot.Module.BitFlag.setValue(layer, value, CollisionMask);
     
     // exceptions
     

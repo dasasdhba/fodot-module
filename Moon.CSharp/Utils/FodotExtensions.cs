@@ -53,14 +53,14 @@ public static class FodotExtensions
         return Fodot.Module.Node.findParentWith(filter.AsFSharpFunc(), node).Value;
     }
     
-    public static IEnumerable<T> GetChildren<T>(this Node node) where T : Node
+    public static IEnumerable<T> GetChildren<T>(this Node node, bool includeInternal = false) where T : Node
     {
-        return Fodot.Core.Node.getChildren<T>(node);
+        return Fodot.Core.Node.getChildrenInternalOrNot<T>(includeInternal, node);
     }
     
-    public static IEnumerable<T> GetChildrenRec<T>(this Node node) where T : Node
+    public static IEnumerable<T> GetChildrenRec<T>(this Node node, bool includeInternal = false) where T : Node
     {
-        return Fodot.Core.Node.getChildrenRec<T>(node);
+        return Fodot.Core.Node.getChildrenRecInternalOrNot<T>(includeInternal, node);
     }
     
     public static NodePath GetUniquePath(this Node node)

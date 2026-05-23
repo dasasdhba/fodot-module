@@ -23,7 +23,7 @@ type GlobalStage (node : Control) =
     do if Singleton.attach node &instance then
         Logger.push "GlobalStage loaded."
     
-    let entryCutscene = "%EntryCutscene"
+    static let entryCutscene = new NodePath "%EntryCutscene"
         
     do node.add_Ready (fun _ ->
         let first =

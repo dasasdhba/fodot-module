@@ -2,32 +2,28 @@ module Fodot.Stage.Node
 
 open Fodot.Core.Engine
 open Godot
-open Fodot.Core
-open Fodot.Module.Node
+open Fodot.Module
 
 // access
 
 let private stageMeta = new StringName "_fs_parent_stage"
 
 let tryGetStage (node : Node) =
-    node
-    |> findParentCachedWith (fun p -> p |> FScript.contains<Stage> ) stageMeta
-    |> Option.bind (fun p -> p |> FScript.tryGet<Stage> )
-      
+    node |> Node.findParentFScriptCached<Stage> stageMeta
+
 let getStage (node : Node) =
     node
     |> tryGetStage
     |> Option.defaultWith (fun () -> failwith $"{node} does not have a parent stage.")
-  
+
 let getCurrentScene (node : Node) =
     node
     |> tryGetStage
     |> Option.bind (fun s -> s.CurrentScene)
     |> Option.defaultWith (fun _ -> getTree().CurrentScene)
-  
+
 let getCutsceneConfig path (node : Node) =
     node
-    |> Node.tryGetNode path
-    |> Option.bind (fun n -> n |> FScript.tryGet<CutsceneProvider>)
+    |> Node.tryGetNodeFScript<CutsceneProvider> path
     |> Option.map (fun c -> c.CreateConfig ())
     |> Option.defaultValue CutsceneConfig.None

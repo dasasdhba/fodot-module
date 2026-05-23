@@ -13,20 +13,19 @@ type StageStatus =
 
 [<FScript("stage")>]
 type Stage(node : Control) =
-     let viewport : Node option = node |> Node.tryGetNode "%Viewport"
-     let cutscene : Node option = node |> Node.tryGetNode "%Cutscene"
+     static let viewportPath = new NodePath "%Viewport"
+     static let cutscenePath = new NodePath "%Cutscene"
      
-     member val Root = node with get
-     member this.Viewport
-          with get () =
-               match viewport with
-               | Some v -> v
-               | None -> node
-     member this.CutsceneRoot
-          with get () =
-               match cutscene with
-               | Some c -> c
-               | None -> node
+     member this.Root = node
+     member this.Viewport : Node =
+          node
+          |> Node.tryGetNode viewportPath
+          |> Option.defaultValue node
+     member this.CutsceneRoot : Node =
+          node
+          |> Node.tryGetNode cutscenePath
+          |> Option.defaultValue node
+     
      member val Status = Pending with get, set
      member val CurrentScene : Node option = None with get, set
      member this.CurrentScenePath

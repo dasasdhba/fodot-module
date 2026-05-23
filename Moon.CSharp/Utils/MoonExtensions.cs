@@ -51,6 +51,8 @@ public static class MoonExtensions
     public static Dictionary<string, Variant> GetSection(this ConfigFile config, string section)
     {
         var result = new Dictionary<string, Variant>();
+        if (!config.HasSection(section)) return result;
+        
         foreach (var key in config.GetSectionKeys(section))
         {
             result[key] = config.GetValue(section, key);

@@ -1,18 +1,21 @@
 using System;
+using System.Collections.Generic;
 using Godot;
 
 namespace Moon.Utils;
 
 public static class FodotExtensions
 {
-    // packed scene
+    #region packed scene
 
     public static T InstantiateSafely<T>(this PackedScene scene) where T : Node
     {
         return Fodot.Core.PackedScene.instantiateTo<T>(scene);
     }
     
-    // node
+    #endregion
+    
+    #region node
 
     public static void AddChildSafely(this Node node, Node child, Node.InternalMode internalMode = Node.InternalMode.Disabled)
     {
@@ -44,19 +47,34 @@ public static class FodotExtensions
         Fodot.Core.Node.bindChild(child, node);
     }
     
-    public static NodePath GetUniquePath(this Node node)
-        => Module.Node.getUniquePath(node);
-        
-    public static Node GetCurrentScene(this Node node)
-        => Fodot.Stage.Node.getCurrentScene(node);
-
     public static T FindParent<T>(this Node node, Func<T, bool> filter = null) where T : Node
     {
         if (filter == null) return Fodot.Module.Node.findParent<T>(node).Value;
         return Fodot.Module.Node.findParentWith(filter.AsFSharpFunc(), node).Value;
     }
     
-    // canvas item
+    public static IEnumerable<T> GetChildren<T>(this Node node) where T : Node
+    {
+        return Fodot.Core.Node.getChildren<T>(node);
+    }
+    
+    public static IEnumerable<T> GetChildrenRec<T>(this Node node) where T : Node
+    {
+        return Fodot.Core.Node.getChildrenRec<T>(node);
+    }
+    
+    public static NodePath GetUniquePath(this Node node)
+        => Module.Node.getUniquePath(node);
+        
+    public static Node GetCurrentScene(this Node node)
+        => Fodot.Stage.Node.getCurrentScene(node);
+    
+    public static Tween CreatePhysicsTween(this Node node)
+        => Fodot.Module.Tween.createPhysicsWith(node);
+    
+    #endregion
+    
+    #region canvas item
     
     public static bool HasShaderParam(this CanvasItem item, string param)
     {
@@ -72,4 +90,6 @@ public static class FodotExtensions
     {
         return Fodot.Module.CanvasItem.getShaderParamAs<T>(param, item);
     }
+    
+    #endregion
 }

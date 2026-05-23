@@ -24,7 +24,7 @@ public static class FlipExtensions
     public static void InitFlipH(this Node node)
     {
         TryInitFlip(node);
-        node.SetChildrenRecursively(TryInitFlip);
+        foreach (var n in node.GetChildrenRec<Node>()) TryInitFlip(n);
         
         void TryInitFlip(Node n)
         {
@@ -35,7 +35,7 @@ public static class FlipExtensions
     public static void InitFlipV(this Node node)
     {
         TryInitFlip(node);
-        node.SetChildrenRecursively(TryInitFlip);
+        foreach (var n in node.GetChildrenRec<Node>()) TryInitFlip(n);
         
         void TryInitFlip(Node n)
         {

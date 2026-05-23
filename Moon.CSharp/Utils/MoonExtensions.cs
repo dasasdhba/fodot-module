@@ -1,7 +1,6 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using Godot.Collections;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 
@@ -49,9 +48,9 @@ public static class MoonExtensions
 
     #region ConfigFile
 
-    public static System.Collections.Generic.Dictionary<string, Variant> GetSection(this ConfigFile config, string section)
+    public static Dictionary<string, Variant> GetSection(this ConfigFile config, string section)
     {
-        var result = new System.Collections.Generic.Dictionary<string, Variant>();
+        var result = new Dictionary<string, Variant>();
         foreach (var key in config.GetSectionKeys(section))
         {
             result[key] = config.GetValue(section, key);
@@ -59,7 +58,7 @@ public static class MoonExtensions
         return result;
     }
 
-    public static void SetSection(this ConfigFile config, string section, System.Collections.Generic.Dictionary<string, Variant> values)
+    public static void SetSection(this ConfigFile config, string section, Dictionary<string, Variant> values)
     {
         foreach (var key in values.Keys)
         {
@@ -67,137 +66,6 @@ public static class MoonExtensions
         }
     }
 
-    #endregion
-
-    #region Node
-
-    public static Tween CreatePhysicsTween(this Node node)
-    {
-        var tween = node.CreateTween();
-        tween.SetProcessMode(Tween.TweenProcessMode.Physics);
-        return tween;
-    }
-    
-    public static IEnumerable<T> GetChildren<T>(this Node node, 
-        bool includeInternal = false) where T : Node
-    {
-        foreach (var child in node.GetChildren(includeInternal))
-        {
-            if (child is T t) yield return t;
-        }
-    }
-
-    public static IEnumerable<Node> GetChildrenRecursively(this Node node, bool includeInternal = false)
-    {
-        foreach (var child in node.GetChildren(includeInternal))
-        {
-            yield return child;
-            foreach (var c in child.GetChildrenRecursively(includeInternal))
-            {
-                yield return c;
-            }
-        }
-    }
-    
-    public static IEnumerable<T> GetChildrenRecursively<T>(this Node node, 
-        bool includeInternal = false) where T : Node
-    {
-        foreach (var child in node.GetChildrenRecursively(includeInternal))
-        {
-            if (child is T t) yield return t;
-        }
-    }
-
-    public static void SetChildrenRecursively(this Node node, Action<Node> action, bool includeInternal = false)
-    {
-        foreach (var child in node.GetChildren(includeInternal))
-        {
-            action?.Invoke(child);
-            SetChildrenRecursively(child, action, includeInternal);
-        }
-    }
-    
-    private const string ChildrenCacheTag = "_MCCache";
-    private const string ChildrenRecursivelyCacheTag = "_MCRCache";
-    private static void ClearChildrenCache(this GodotObject node, string tag)
-    {
-        foreach (string meta in node.GetMetaList())
-        {
-            if (meta.StartsWith(tag))
-            {
-                node.RemoveMeta(meta);
-            }
-        }
-    }
-
-    private static void SetChildrenCacheMonitor(this Node node, Node target, string tag)
-    {
-        var signalTag = $"{tag}_MSignal";
-        if (target.HasData(signalTag))
-        {
-            var arr = target.GetData<Array<Node>>(signalTag);
-            if (arr.Contains(node)) return;
-            arr.Add(node);
-        }
-        else
-        {
-            target.SetData(signalTag, 
-            new Array<Node> { node });
-        }
-        
-        target.ChildEnteredTree += c => ClearChildrenCache(node, tag);
-        target.ChildExitingTree += c => ClearChildrenCache(node, tag);
-    }
-
-    public static IEnumerable<T> GetChildrenCached<[MustBeVariant] T>(this Node node, 
-        string tag = "Default", bool includeInternal = false) where T : Node
-    {
-    #if TOOLS
-        if (Engine.IsEditorHint())
-        {
-            FD.PushWarning($"{node} namely {node.GetPathTo(node.GetTree().GetEditedSceneRoot())} is trying to call GetChildrenCached in editor, which is not expected.");
-            return null;
-        }
-    #endif
-    
-        if (node.HasData($"{ChildrenCacheTag}{tag}"))
-        {
-            return node.GetData<Array<T>>($"{ChildrenCacheTag}{tag}");
-        }
-        
-        Array<T> result = new(node.GetChildren<T>(includeInternal));
-        node.SetData($"{ChildrenCacheTag}{tag}", result);
-        node.SetChildrenCacheMonitor(node, ChildrenCacheTag);
-        return result;
-    }
-
-    public static IEnumerable<T> GetChildrenRecursivelyCached<[MustBeVariant] T>(this Node node,
-        string tag = "Default", bool includeInternal = false) where T : Node
-    {
-    #if TOOLS
-        if (Engine.IsEditorHint())
-        {
-            FD.PushWarning($"{node} namely {node.GetPathTo(node.GetTree().GetEditedSceneRoot())} is trying to call GetChildrenRecursivelyCached in editor, which is not expected.");
-            return null;
-        }
-    #endif
-    
-        if (node.HasData($"{ChildrenRecursivelyCacheTag}{tag}"))
-        {
-            return node.GetData<Array<T>>($"{ChildrenRecursivelyCacheTag}{tag}");
-        }
-        
-        Array<T> result = [];
-        foreach (var child in node.GetChildrenRecursively(includeInternal))
-        {
-            if (child is T t) result.Add(t);
-            node.SetChildrenCacheMonitor(child, ChildrenRecursivelyCacheTag);
-        }
-        node.SetData($"{ChildrenRecursivelyCacheTag}{tag}", result);
-        node.SetChildrenCacheMonitor(node, ChildrenRecursivelyCacheTag);
-        return result;
-    }
-    
     #endregion
     
     #region CanvasItem
@@ -251,19 +119,18 @@ public static class MoonExtensions
         }
     }
 
-    public static Texture2D TryGetTexture(this CanvasItem item)
-    {
-        if (item is Sprite2D spr) return spr.Texture;
-        if (item is AnimatedSprite2D anim) return anim.SpriteFrames.GetFrameTexture(
-            anim.Animation, anim.Frame);
-        return null;
-    }
-
     public static Tween FadeIn(this CanvasItem item, double time)
     {
         item.Modulate = item.Modulate with { A = 0f };
         var t = item.CreatePhysicsTween();
         t.TweenProperty(item, "modulate:a", 1f, time);
+        return t;
+    }
+    
+    public static Tween FadeOut(this CanvasItem item, double time)
+    {
+        var t = item.CreatePhysicsTween();
+        t.TweenProperty(item, "modulate:a", 0f, time);
         return t;
     }
     

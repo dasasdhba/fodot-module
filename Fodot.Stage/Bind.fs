@@ -12,6 +12,6 @@ type CutsceneProvider(obj : Node) =
     let _back_prop_reuse_in_if_out_is_null = GDProp<bool>.From("reuse_in_if_out_is_null") obj
     let _back_prop_value_reuse_in_if_out_is_null = _back_prop_reuse_in_if_out_is_null.Get()
 
-    member val InScene = _back_prop_value_in_scene with get
-    member val OutScene = _back_prop_value_out_scene with get
-    member val ReuseInIfOutIsNull = _back_prop_value_reuse_in_if_out_is_null with get
+    member this.InScene = _back_prop_value_in_scene
+    member this.OutScene = _back_prop_value_out_scene
+    member this.ReuseInIfOutIsNull = _back_prop_value_reuse_in_if_out_is_null

@@ -2,19 +2,18 @@ namespace Moon.Library
 
 open System
 open Fodot.Core
-open Fodot.Module
 open Godot
 open Moon.Module
 
-type Recorder2D(node : Node, target : CanvasItem) =
+type Recorder3D(node : Node, target : Node3D) =
     inherit RefCounted()
     
-    let mutable velocity = Vector2.Zero
-    let mutable motion = Vector2.Zero
-    let mutable lastPosition = Vector2.Zero
+    let mutable velocity = Vector3.Zero
+    let mutable motion = Vector3.Zero
+    let mutable lastPosition = Vector3.Zero
     let mutable firstRecorded = false
     
-    new (node : CanvasItem) = new Recorder2D(node, node)
+    new (node : Node3D) = new Recorder3D(node, node)
     
     member val Disabled = false with get, set
     member val LastVelocity = velocity with get
@@ -26,13 +25,13 @@ type Recorder2D(node : Node, target : CanvasItem) =
             (this :> IDisposable).Dispose()
         
         elif this.Disabled then
-            velocity <- Vector2.Zero
-            motion <- Vector2.Zero
+            velocity <- Vector3.Zero
+            motion <- Vector3.Zero
             firstRecorded <- false
             
         else
             
-            let pos = target |> CanvasItem.getGlobalPosition
+            let pos = target.GlobalPosition
             
             if firstRecorded |> not then
                 lastPosition <- pos
@@ -47,9 +46,9 @@ type Recorder2D(node : Node, target : CanvasItem) =
         member this.Dispose() =
             node |> Engine.removePhysicsProcess this.Process |> ignore
             
-module Recorder2D =
+module Recorder3D =
     
-    let private meta = new StringName "_moon_recorder2d"
+    let private meta = new StringName "_moon_recorder3d"
     
-    let get (item: CanvasItem)=
-        item |> Node.getSubBinding meta (fun n -> new Recorder2D(n, item))
+    let get (n3d : Node3D)=
+        n3d |> Node.getSubBinding meta (fun n -> new Recorder3D(n, n3d))

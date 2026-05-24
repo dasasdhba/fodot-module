@@ -13,10 +13,10 @@ public partial class AnimGroup2D : Node2D
     [ExportCategory("AnimGroup2D")]
     [ExportGroup("Animation")]
     [Export]
-    public string CurrentSprite { get ;set; }
+    public StringName CurrentSprite { get ;set; } = "";
     
     [Export]
-    public string Autoplay { get ;set; }
+    public StringName Autoplay { get ;set; } = "";
     
     [Export]
     public float SpeedScale { get ;set; } = 1f;

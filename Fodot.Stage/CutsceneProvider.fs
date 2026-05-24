@@ -7,7 +7,7 @@ open Godot
 
 [<FScript("cutscene_provider")>]
 type CutsceneProvider(node : Node) =
-    let bind = Bind.CutsceneProvider node
+    let bind = Bind.CutsceneProvider.From node
     
     let poolMapper s =
         node |> AsyncScene.create s 1 0

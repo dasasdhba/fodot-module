@@ -72,7 +72,7 @@ public static class Data
     {
         if (obj is TileMap tilemap) return tilemap.TileSet.HasCustomData(tag);
         if (obj is TileMapLayer tilelayer) return tilelayer.TileSet.HasCustomData(tag);
-        return Fodot.Core.GodotObject.hasMeta(tag, obj);
+        return obj.HasData(tag);
     }
     
     /// <summary>
@@ -93,8 +93,7 @@ public static class Data
             return;
         }
         
-        if (obj.HasData(tag))
-            obj.RemoveData(tag);
+        obj.RemoveData(tag);
     }
 
     public static T GetData<[MustBeVariant] T>(this GodotObject obj, StringName tag, T defaultValue = default)

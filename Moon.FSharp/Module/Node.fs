@@ -9,8 +9,17 @@ let getUniquePath (node : Node) =
     |> Node.tryGetStage
     |> Option.map _.Viewport.GetPathTo(node)
     |> Option.defaultWith (fun _ -> node.GetPath())
-    
-let getSubBinding meta (creator : Node -> 'a) (node : Node)=
+
+let getSubBinding (creator : Node -> 'a) (node : Node)=
+    node |> FScript.attachBy (lazy (
+        let sub = new Node()
+        let result = creator sub
+        node |> Node.bindChild sub
+        node |> Node.addChildInternalFront sub
+        result
+    ))
+
+let getSubMetaBinding meta (creator : Node -> 'a) (node : Node)=
     node |> GodotObject.getMetaWithDefaultAs<'a> meta (lazy (
         let sub = new Node()
         let result = creator sub

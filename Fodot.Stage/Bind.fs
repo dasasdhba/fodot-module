@@ -15,3 +15,5 @@ type CutsceneProvider(obj : Node) =
     member this.InScene = _back_prop_value_in_scene
     member this.OutScene = _back_prop_value_out_scene
     member this.ReuseInIfOutIsNull = _back_prop_value_reuse_in_if_out_is_null
+
+    static member From o = o |> FScript.attachBy (lazy CutsceneProvider o)

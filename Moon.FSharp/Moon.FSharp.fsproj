@@ -12,6 +12,8 @@
         <Compile Include="Module\CanvasItem.fs" />
         <Compile Include="Library\NodePool.fs" />
         <Compile Include="Library\Recorder2D.fs" />
+        <Compile Include="Library\Recorder3D.fs" />
+        <Compile Include="Library\Behavior.fs" />
     </ItemGroup>
 
     <ItemGroup>

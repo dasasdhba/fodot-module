@@ -73,6 +73,12 @@ public partial class SaveNode : Node
     {
         foreach (var (name, value) in dict)
         {
+            if (name is "SectionKey" or "Password") continue;
+            
+        #if TOOLS
+            if (name is "DebugTable") continue;
+        #endif    
+        
             Set(name, value);
         }
     }

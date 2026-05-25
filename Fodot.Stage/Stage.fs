@@ -91,6 +91,9 @@ module Stage =
           |> ignore
      }
      
+     let fadeInOut (cutscene : CutsceneConfig) (stage : Stage) =
+          stage |> fadeInOutWith (fun () -> task {}) cutscene
+     
      // load scene
      
      let asRelativePath (path : string) (current : string)=
@@ -117,47 +120,70 @@ module Stage =
                GD.loadAs<PackedScene> path |> PackedScene.instantiate
           )
      
-     let changeSceneTo (scene : Node) (stage : Stage) = task {
+     // change scene
+     
+     let clearScene (stage : Stage) = task {
           match stage.CurrentScene with
           | Some n ->
                n.QueueFree ()
                if n.IsInsideTree () then
                     do! n.ToSignalTreeExited ()
           | None -> ()
+     }
+     
+     let changeSceneWith (middleTask: unit -> Task<unit>) (scene : Node) (stage : Stage) = task {
+          do! stage |> clearScene
+          do! middleTask ()
           
-          let wait = scene.ToSignalReady ()
           stage.CurrentScene <- Some scene
           stage.Viewport |> Node.addChild scene
-          do! wait
+          if scene.IsNodeReady() |> not then
+               do! scene.ToSignalReady ()
           
           Engine.treeUpdateCache ()
           stage.Status <- Ready
           Logger.push $"Stage {stage.Root.GetPath()} is now at {stage.CurrentScenePath}"
      }
      
-     let changeSceneWith (scene : Node) (cutscene : CutsceneConfig) (stage : Stage) =
-          stage |> fadeInOutWith (fun _ -> stage |> changeSceneTo scene) cutscene
+     let changeScene (scene : Node) (stage : Stage) =
+          stage |> changeSceneWith (fun () -> task {}) scene
      
-     let changeSceneWithLoader (sceneLoader : Task<Node>) (cutscene : CutsceneConfig) (stage : Stage) =
-          let loading () = task {
-               let! scene = sceneLoader
-               do! stage |> changeSceneTo scene
-          }
-          stage |> fadeInOutWith loading cutscene
+     // queued change scene
      
-     let changeScene (path : string) (cutscene : CutsceneConfig) (stage : Stage) = 
+     let private fadeInOutAndChangeSceneWith (middleTask: unit -> Task<unit>) (path : string) (cutscene : CutsceneConfig) (stage : Stage) = 
           stage.Status <- Loading
-          stage |> changeSceneWithLoader (stage |> loadScene path) cutscene
+          let loading = stage |> loadScene path
+          let changing () = task {
+               let! scene = loading
+               do! stage |> changeSceneWith middleTask scene
+          }
+          stage |> fadeInOutWith changing cutscene
           
-     let queueChangeScene (path : string) (cutscene : CutsceneConfig) (stage : Stage) = task {
+     let queueChangeSceneWith (middleTask: unit -> Task<unit>) (path : string) (cutscene : CutsceneConfig) (stage : Stage) = task {
           if stage.Status = Loading then
-          #if TOOLS
                Logger.pushWarn $"Stage {stage.Root.GetPath()} has been queued for changing scene before, changing task to {path} will be cancelled."
-          #endif     
                ()
           else
-               do! stage |> changeScene path cutscene
+               do! stage |> fadeInOutAndChangeSceneWith middleTask path cutscene
      }
+     
+     let queueChangeScene (path : string) (cutscene : CutsceneConfig) (stage : Stage) =
+          stage |> queueChangeSceneWith (fun () -> task {}) path cutscene
+     
+     let queueReloadWith (middleTask: unit -> Task<unit>) (cutscene : CutsceneConfig) (stage : Stage) =
+          stage |> queueChangeSceneWith middleTask "" cutscene
      
      let queueReload cutscene stage =
           stage |> queueChangeScene "" cutscene
+
+     let queueExit (cutscene : CutsceneConfig) (stage : Stage) = task {
+          if stage.Status = Loading then
+               Logger.pushWarn $"Stage {stage.Root.GetPath()} has been queued for changing scene before, exiting task will be cancelled."
+               ()
+          else
+               let exit () = task {
+                    do! stage |> clearScene
+                    stage.Status <- Pending
+               }
+               do! stage |> fadeInOutWith exit cutscene
+     }

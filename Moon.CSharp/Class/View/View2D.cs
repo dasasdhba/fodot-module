@@ -19,6 +19,9 @@ public partial class View2D : Node2D
     [Export]
     public View2DProcessCallbackMode ProcessCallbackMode { get ;set; } = View2DProcessCallbackMode.Physics;
     
+    [Export(PropertyHint.NodePathValidTypes, "ViewRect2D")]
+    public NodePath DefaultRegion { get ;set; }
+    
     [Export]
     public Rect2 Region
     {
@@ -172,6 +175,11 @@ public partial class View2D : Node2D
 
         Ready += () =>
         {
+            var def = GetNodeOrNull<ViewRect2D>(DefaultRegion);
+            if (def != null)
+            {
+                Region = def.GetViewRect();
+            }
             ForceUpdate();
             this.AddProcess(ViewProcess, ProcessCallbackMode == View2DProcessCallbackMode.Physics);
         };

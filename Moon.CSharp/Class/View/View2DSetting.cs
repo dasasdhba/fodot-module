@@ -111,7 +111,7 @@ public partial class View2DSetting : Node
     
     public View2DSetting() : base()
     {
-    #if TOOLS
+    #if DEBUG
         if (Engine.IsEditorHint()) return;
     #endif    
     
@@ -124,7 +124,7 @@ public partial class View2DSetting : Node
         };
     }
 
-#if TOOLS
+#if DEBUG
     public override void _ValidateProperty(Dictionary property)
     {
         if (
@@ -146,7 +146,7 @@ public partial class View2DSetting : Node
 
     public void ApplySetting()
     {
-#if TOOLS
+#if DEBUG
         if (Engine.IsEditorHint()) return;
 #endif
     

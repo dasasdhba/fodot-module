@@ -44,7 +44,7 @@ public static class NodePoolExtensions
     /// </summary>
     public static bool TryQueueFree(this Node node)
     {
-#if TOOLS
+#if DEBUG
         if (Engine.IsEditorHint())
         {
             FD.PushWarning($"{node} namely {node.GetPathTo(node.GetTree().GetEditedSceneRoot())} is trying to call TryQueueFree in editor, which is not expected.");

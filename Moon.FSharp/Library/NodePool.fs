@@ -34,9 +34,7 @@ type NodePool (scene : PackedScene) =
         
         | true, node -> node
         | false, _ ->
-        #if TOOLS
             Logger.pushWarn $"NodePool with {scene.ResourcePath} is running out! Consider increasing the pool size."
-        #endif
             scene |> PackedScene.instantiate
         
     member this.GetAs<'a when 'a :> Node>() =

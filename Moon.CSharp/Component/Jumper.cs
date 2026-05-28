@@ -48,7 +48,7 @@ public partial class Jumper : Node
 
     public Jumper() : base()
     {
-    #if TOOLS
+    #if DEBUG
         if (Engine.IsEditorHint()) return;            
     #endif
         

@@ -11,7 +11,7 @@ namespace Moon.Class;
 // we have to draw separately
 
 [GlobalClass, Tool]
-#if TOOLS
+#if DEBUG
 public partial class FramesFill : NodeSize2D, ISerializationListener
 #else
 public partial class FramesFill : NodeSize2D
@@ -25,7 +25,7 @@ public partial class FramesFill : NodeSize2D
         set
         {
             _frames = value;
-        #if TOOLS
+        #if DEBUG
             NotifyPropertyListChanged();
         #endif
             Animation = _frames.GetAnimationNames()[0];
@@ -83,7 +83,7 @@ public partial class FramesFill : NodeSize2D
         TreeEntered += QueueRedraw;
         SignalSizeChanged += QueueRedraw;
         
-    #if TOOLS
+    #if DEBUG
         if (Engine.IsEditorHint()) return;
     #endif    
         
@@ -186,7 +186,7 @@ public partial class FramesFill : NodeSize2D
         this.DrawTextureRectTiled(texture, new(Vector2.Zero, size));
     }
 
-#if TOOLS
+#if DEBUG
     public override void _PhysicsProcess(double delta)
     {
         if (!Engine.IsEditorHint()) return;

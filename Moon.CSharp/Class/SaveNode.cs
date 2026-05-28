@@ -16,7 +16,7 @@ namespace Moon.Class;
 public partial class SaveNode : Node
 {
 
-#if TOOLS
+#if DEBUG
 
     [Export(PropertyHint.File, "*.cfg,*.ini")]
     public string DebugTable { get ;set; } = "";
@@ -37,7 +37,7 @@ public partial class SaveNode : Node
         {
             DefaultValues = ExportDictionary();
             
-        #if TOOLS
+        #if DEBUG
             var config = new ConfigFile();
             if (config.Load(DebugTable) == Error.Ok)
             {
@@ -60,7 +60,7 @@ public partial class SaveNode : Node
             var name = item["name"].AsString();
             if (name is "SectionKey" or "Password") continue;
             
-        #if TOOLS
+        #if DEBUG
             if (name is "DebugTable") continue;
         #endif
         
@@ -75,7 +75,7 @@ public partial class SaveNode : Node
         {
             if (name is "SectionKey" or "Password") continue;
             
-        #if TOOLS
+        #if DEBUG
             if (name is "DebugTable") continue;
         #endif    
         
@@ -90,7 +90,7 @@ public partial class SaveNode : Node
         config.SetSection(section, ExportDictionary());
         config.SaveEncryptedPass(file, Password);
         FD.Print($"{this.GetUniquePath()} saved at {file} ({section})");
-#if TOOLS
+#if DEBUG
         if (Password != "") config.Save(file + ".cfg");
 #endif    
     }

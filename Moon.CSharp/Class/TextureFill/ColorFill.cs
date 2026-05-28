@@ -3,7 +3,7 @@ using Godot;
 namespace Moon.Class;
 
 [GlobalClass, Tool]
-#if TOOLS
+#if DEBUG
 public partial class ColorFill : NodeSize2D, ISerializationListener
 #else
 public partial class ColorFill : NodeSize2D
@@ -34,7 +34,7 @@ public partial class ColorFill : NodeSize2D
         SignalSizeChanged += QueueRedraw;
     }
     
-#if TOOLS
+#if DEBUG
     
     public void OnBeforeSerialize()
     {

@@ -26,7 +26,7 @@ public partial class NodeSize2D : Node2D
     [Signal]
     public delegate void SizeChangedEventHandler();
 
-#if TOOLS    
+#if DEBUG    
     public override void _EditorGetState(Dictionary state)
         => state["size"] = Size;
 

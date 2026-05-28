@@ -196,7 +196,7 @@ public partial class View2D : Node2D
     public bool IsCurrent()
     {
         var v = GetViewport();
-        return v.HasData(ViewMeta) && v.GetData<View2D>(ViewMeta) == this;
+        return IsInstanceValid(v) && v.HasData(ViewMeta) && v.GetData<View2D>(ViewMeta) == this;
     }
 
     public void ForceUpdate()

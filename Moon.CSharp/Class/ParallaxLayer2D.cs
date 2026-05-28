@@ -14,7 +14,7 @@ public partial class ParallaxLayer2D : ParallaxLayer
 
     public ParallaxLayer2D() : base()
     {
-    #if TOOLS
+    #if DEBUG
         if (Engine.IsEditorHint()) return;
     #endif    
     
@@ -40,7 +40,7 @@ public partial class ParallaxLayer2D : ParallaxLayer
         MotionOffset = offset;
     }
 
-#if TOOLS
+#if DEBUG
     public override void _ValidateProperty(Dictionary property)
     {
         // disable transform

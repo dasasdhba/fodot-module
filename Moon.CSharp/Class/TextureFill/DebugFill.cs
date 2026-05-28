@@ -3,13 +3,13 @@ using Godot;
 namespace Moon.Class;
 
 [GlobalClass, Tool]
-#if TOOLS
+#if DEBUG
 public partial class DebugFill : NodeSize2D, ISerializationListener
 #else
 public partial class DebugFill : NodeSize2D
 #endif
 {
-#if TOOLS
+#if DEBUG
     [ExportCategory("DebugFill")]
     [Export]
     public Color DebugColor

@@ -3,7 +3,7 @@ using Godot;
 namespace Moon.Class;
 
 [GlobalClass, Tool]
-#if TOOLS
+#if DEBUG
 public partial class TextureFill : NodeSize2D, ISerializationListener
 #else
 public partial class TextureFill : NodeSize2D
@@ -63,7 +63,7 @@ public partial class TextureFill : NodeSize2D
         SignalSizeChanged += QueueRedraw;
     }
     
-#if TOOLS
+#if DEBUG
 
     public void OnBeforeSerialize()
     {

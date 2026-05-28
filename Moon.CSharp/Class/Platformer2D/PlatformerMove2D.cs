@@ -85,7 +85,7 @@ public partial class PlatformerMove2D : Node, IFlipHInit
     
     public PlatformerMove2D() : base()
     {
-#if TOOLS
+#if DEBUG
         if (Engine.IsEditorHint()) return;
 #endif
         
@@ -105,7 +105,7 @@ public partial class PlatformerMove2D : Node, IFlipHInit
     
     public void Turn(IPlatformer2D platformer)
     {
-#if TOOLS    
+#if DEBUG    
         if (Engine.IsEditorHint()) return;
 #endif
     
@@ -121,7 +121,7 @@ public partial class PlatformerMove2D : Node, IFlipHInit
 
     public void SetMoveSpeed(double delta)
     {
-#if TOOLS 
+#if DEBUG 
         if (Engine.IsEditorHint()) return;
 #endif
 

@@ -27,7 +27,7 @@ type GlobalStage (node : Control) =
         
     do node.add_Ready (fun _ ->
         let first =
-#if TOOLS
+#if DEBUG
             let file = FileAccess.Open(FodotEditor.DebugScenePath, FileAccess.ModeFlags.Read)
             using file _.GetLine()
 #else

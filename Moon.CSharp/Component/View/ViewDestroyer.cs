@@ -18,7 +18,7 @@ public partial class ViewDestroyer : ViewMonitor
 
     public override void _Ready()
     {
-#if TOOLS
+#if DEBUG
         if (Engine.IsEditorHint()) return;        
 #endif
 

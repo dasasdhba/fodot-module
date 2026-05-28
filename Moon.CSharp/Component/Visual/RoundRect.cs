@@ -6,7 +6,7 @@ using Moon.Class;
 namespace Moon.Component;
 
 [GlobalClass, Tool]
-#if TOOLS
+#if DEBUG
 public partial class RoundRect : NodeSize2D, ISerializationListener
 #else
 public partial class RoundRect : NodeSize2D
@@ -57,7 +57,7 @@ public partial class RoundRect : NodeSize2D
         SignalSizeChanged += QueueRedraw;
     }
     
-#if TOOLS
+#if DEBUG
     
     public void OnBeforeSerialize()
     {

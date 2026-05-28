@@ -89,7 +89,7 @@ public static class Mathe
                 iter++;
                 if (iter >= maxIter)
                 {
-                #if TOOLS
+                #if DEBUG
                     FD.PushWarning("Binary Search failed...");
                 #endif                
                     break;

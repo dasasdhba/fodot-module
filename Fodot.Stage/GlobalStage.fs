@@ -4,7 +4,7 @@ open Fodot.Stage.Stage
 open Godot
 open Fodot.Common
 open Fodot.Core
-open Godot.Common
+open Godot.Editor
 
 // this one works fine for single stage game
 // for multiple stage case, it's encouraged to write your own global stage

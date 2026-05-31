@@ -8,8 +8,8 @@ namespace Moon.Component;
 public partial class ViewMonitor : Node
 {
 	[ExportCategory("ViewMonitor")]
-	[Export]
-	public CanvasItem MonitorNode { get; set; }
+	[Export(PropertyHint.NodePathValidTypes, "CanvasItem")]
+	public NodePath MonitorNode { get; set; } = "..";
 	
 	public enum ViewArea { Current, All }
 	
@@ -67,6 +67,8 @@ public partial class ViewMonitor : Node
 	
 	[Signal]
 	public delegate void InvokeOutViewEventHandler();
+
+#if DEBUG
 	
 	public override void _ValidateProperty(Dictionary property)
 	{
@@ -86,28 +88,41 @@ public partial class ViewMonitor : Node
 		}
 	}
 	
+#endif
+
+	protected CanvasItem Monitor { get; private set; }
+
+	public ViewMonitor() : base()
+	{
+	#if DEBUG
+		if (Engine.IsEditorHint()) return;
+	#endif	
+	
+		Ready += () => Monitor = GetNode<CanvasItem>(MonitorNode);
+	}
+	
 	private bool IsInArea() => Area == ViewArea.Current ?
-		MonitorNode.IsInView(Range) : MonitorNode.IsInViewRegion(Range);
+		Monitor.IsInView(Range) : Monitor.IsInViewRegion(Range);
 	
 	private bool IsInAreaDir() => Area == ViewArea.Current ?
-		MonitorNode.IsInViewDir(Direction, Range) :
-		MonitorNode.IsInViewRegionDir(Direction, Range);
+		Monitor.IsInViewDir(Direction, Range) :
+		Monitor.IsInViewRegionDir(Direction, Range);
 		
 	private bool IsInAreaTop() => Area == ViewArea.Current ?
-		MonitorNode.IsInViewTop(UpRange) :
-		MonitorNode.IsInViewRegionTop(UpRange);
+		Monitor.IsInViewTop(UpRange) :
+		Monitor.IsInViewRegionTop(UpRange);
 		
 	private bool IsInAreaBottom() => Area == ViewArea.Current ?
-		MonitorNode.IsInViewBottom(DownRange) :
-		MonitorNode.IsInViewRegionBottom(DownRange);
+		Monitor.IsInViewBottom(DownRange) :
+		Monitor.IsInViewRegionBottom(DownRange);
 		
 	private bool IsInAreaLeft() => Area == ViewArea.Current ?
-		MonitorNode.IsInViewLeft(LeftRange) :
-		MonitorNode.IsInViewRegionLeft(LeftRange);
+		Monitor.IsInViewLeft(LeftRange) :
+		Monitor.IsInViewRegionLeft(LeftRange);
 	
 	private bool IsInAreaRight() => Area == ViewArea.Current ?
-		MonitorNode.IsInViewRight(RightRange) :
-		MonitorNode.IsInViewRegionRight(RightRange);
+		Monitor.IsInViewRight(RightRange) :
+		Monitor.IsInViewRegionRight(RightRange);
 
 	public bool IsInView()
 	{

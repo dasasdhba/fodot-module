@@ -16,20 +16,23 @@ public partial class ViewDestroyer : ViewMonitor
     [Export]
     public ViewDestroyerProcessCallback ProcessCallback { get; set; } = ViewDestroyerProcessCallback.Physics;
 
-    public override void _Ready()
+    public ViewDestroyer() : base()
     {
 #if DEBUG
         if (Engine.IsEditorHint()) return;        
 #endif
-
-        this.AddProcess(Process, ProcessCallback == ViewDestroyerProcessCallback.Physics);
+        
+        Ready += () =>
+        {
+            this.AddProcess(Process, ProcessCallback == ViewDestroyerProcessCallback.Physics);
+        };
     }
 
     public void Process()
     {
         if (Disabled) return;
 
-        if (!IsInView()) MonitorNode.TryQueueFree();
+        if (!IsInView()) Monitor.TryQueueFree();
     }
 
 }

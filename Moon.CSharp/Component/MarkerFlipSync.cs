@@ -1,6 +1,5 @@
 using Fodot.CSharp;
 using Godot;
-using Moon.Class;
 
 namespace Moon.Component;
 
@@ -8,8 +7,8 @@ namespace Moon.Component;
 public partial class MarkerFlipSync : Marker2D
 {
     [ExportCategory("MarkerFlipSync")]
-    [Export]
-    public Node2D AnimNode {  get; set; }
+    [Export(PropertyHint.NodePathValidTypes, "Sprite2D, AnimatedSprite2D")]
+    public NodePath AnimNode {  get; set; } = "..";
     
     public enum MarkerFlipSyncProcessCallback { Idle, Physics }
     
@@ -17,6 +16,7 @@ public partial class MarkerFlipSync : Marker2D
     public MarkerFlipSyncProcessCallback ProcessCallback { get; set; } 
         = MarkerFlipSyncProcessCallback.Physics;
     
+    private Node2D Anim;
     public bool FlipH { get; set; } = false;
     public bool FlipV { get; set; } = false;
     public Vector2 Origin { get; set; }
@@ -25,15 +25,7 @@ public partial class MarkerFlipSync : Marker2D
     {
         Origin = Position;
         
-        if (AnimNode != null) return;
-        var p = GetParent();
-        if (p is Sprite2D spr)
-            AnimNode = spr;
-        else if (p is AnimatedSprite2D anim)
-            AnimNode = anim;
-        else if (p is AnimGroup2D group)
-            AnimNode = group;
-        
+        Anim = GetNode<Node2D>(AnimNode);
         Update();
         
         this.AddProcess(Update, ProcessCallback == MarkerFlipSyncProcessCallback.Physics);
@@ -41,20 +33,15 @@ public partial class MarkerFlipSync : Marker2D
 
     public void Update()
     {
-        if (AnimNode is Sprite2D spr)
+        if (Anim is Sprite2D spr)
         {
             FlipH = spr.FlipH;
             FlipV = spr.FlipV;
         }
-        else if (AnimNode is AnimatedSprite2D anim)
+        else if (Anim is AnimatedSprite2D anim)
         {
             FlipH = anim.FlipH;
             FlipV = anim.FlipV;
-        }
-        else if (AnimNode is AnimGroup2D group)
-        {
-            FlipH = group.FlipH;
-            FlipV = group.FlipV;
         }
 
         var pos = Origin;

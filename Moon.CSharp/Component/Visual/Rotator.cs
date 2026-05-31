@@ -10,8 +10,8 @@ public partial class Rotator : Node
     /// Default value is parent.
     /// </summary>
     [ExportCategory("Rotator")]
-    [Export]
-    public CanvasItem RotateNode { get; set; }
+    [Export(PropertyHint.NodePathValidTypes, "CanvasItem")]
+    public NodePath RotateNode { get; set; } = "..";
     
     [Export]
     public float Speed { get; set; } = 500f;
@@ -26,27 +26,25 @@ public partial class Rotator : Node
     
     [Export]
     public RotatorProcessCallback ProcessCallback { get; set; } = RotatorProcessCallback.Physics;
-
+    
+    private CanvasItem Parent;
+    
     public Rotator() : base()
     {
-        TreeEntered += () =>
-        {
-            if (RotateNode == null && GetParent() is CanvasItem parent) RotateNode = parent;
-        };
-        
         Ready += () =>
         {
+            Parent = GetNodeOrNull<CanvasItem>(RotateNode);
             this.AddProcess(RotateProcess, ProcessCallback == RotatorProcessCallback.Physics);
         };
     }
 
     private void RotateProcess(double delta)
     {
-        if (!IsInstanceValid(RotateNode) || Disabled) return;
+        if (!IsInstanceValid(Parent) || Disabled) return;
         
-        var rotation = Fodot.Module.CanvasItem.getRotation(RotateNode);
+        var rotation = Fodot.Module.CanvasItem.getRotation(Parent);
         rotation += (float)Mathf.DegToRad(Speed * delta) * (Flip ? -1 : 1);
         rotation = Mathf.Wrap(rotation, -float.Pi, float.Pi);
-        Fodot.Module.CanvasItem.setRotation(rotation, RotateNode);
+        Fodot.Module.CanvasItem.setRotation(rotation, Parent);
     }
 }

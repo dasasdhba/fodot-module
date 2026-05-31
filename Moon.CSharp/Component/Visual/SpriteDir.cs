@@ -1,6 +1,9 @@
 using Fodot.CSharp;
 using Godot;
+using Moon.CSharp;
+using Moon.Interface;
 using Moon.Library;
+using Moon.Utils;
 
 namespace Moon.Component;
 
@@ -11,43 +14,42 @@ public partial class SpriteDir : Node, IFlipHInit
     /// The monitored moving node.
     /// </summary>
     [ExportCategory("SpriteDir")]
-    [Export]
-    public CanvasItem Root { get ;set; }
+    [Export(PropertyHint.NodePathValidTypes, "CanvasItem")]
+    public NodePath TrackingNode { get ;set; }
     
     /// <summary>
     /// Default value is parent.
     /// </summary>
-    [Export]
-    public CanvasItem Sprite { get ;set; }
+    [Export(PropertyHint.NodePathValidTypes, "CanvasItem")]
+    public NodePath SpriteNode { get ;set; } = "..";
     
-    [Export]
-    public Rotator Rotator { get ;set; }
+    [Export(PropertyHint.NodePathValidTypes, "Rotator")]
+    public NodePath RotatorNode { get ;set; }
     
     [Export]
     public bool Flip { get ;set; }
     
     [Export]
     public bool Disabled { get ;set; }
-
+    
+    private CanvasItem Root;
+    private CanvasItem Sprite;
+    private Rotator Rotator;
+    
     private Recorder2D Recorder;
-    public override void _EnterTree()
-    {
-        if (Sprite == null && GetParent() is CanvasItem parent) Sprite = parent;
-        if (IsInstanceValid(Root)) Recorder = Recorder2DModule.get(Root);
-    }
-
     public override void _Ready()
     {
+        Root = GetNodeOrNull<CanvasItem>(TrackingNode);
+        Sprite = GetNode<CanvasItem>(SpriteNode);
+        Rotator = GetNodeOrNull<Rotator>(RotatorNode);
+        
+        if (IsInstanceValid(Root)) Recorder = Recorder2DModule.get(Root);
         this.AddPhysicsProcess(Process);
     }
 
-    public void FlipHInit()
+    public void InitFlipH()
     {
-        Connect(
-            Node.SignalName.TreeEntered,
-            Callable.From(() => SetSpriteFlip(true)),
-            (uint)ConnectFlags.OneShot
-        );
+        this.WhenReady(() => SetSpriteFlip(true));
     }
     
     private void Process()

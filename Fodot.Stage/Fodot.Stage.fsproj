@@ -18,7 +18,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\library\Fodot.Async\Fodot.Async.fsproj" />
-        <ProjectReference Include="..\..\library\Godot.Common\Godot.Common.csproj" />
+        <ProjectReference Include="..\..\library\Godot.Editor\Godot.Editor.csproj" />
         <ProjectReference Include="..\..\library\Fodot.Extend\Fodot.Extend.fsproj" />
     </ItemGroup>
 

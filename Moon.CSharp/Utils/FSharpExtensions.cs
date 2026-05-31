@@ -9,6 +9,11 @@ namespace Moon.Utils;
 
 public static class FSharpExtensions
 {
+    public static void WhenReady(this Node node, Action action)
+    {
+        Module.Node.whenReady(action.AsFSharpFunc(), node);
+    }
+
     // action
 
     public static Guid ActionRepeat(this Node node, double interval, Action action, bool physics = false)

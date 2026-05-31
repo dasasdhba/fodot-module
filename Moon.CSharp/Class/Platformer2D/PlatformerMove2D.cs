@@ -1,7 +1,7 @@
 using Fodot.CSharp;
 using Godot;
 using Godot.Collections;
-using Moon.Component;
+using Moon.Interface;
 
 namespace Moon.Class;
 
@@ -58,7 +58,7 @@ public partial class PlatformerMove2D : Node, IFlipHInit
     [Export]
     public bool IgnorePhysics { get; set; } = true;
 
-    public void FlipHInit()
+    public void InitFlipH()
     {
         Speed *= -1f;
         if (MoveMode == PlatformerMove2DMoveMode.Accelerate)

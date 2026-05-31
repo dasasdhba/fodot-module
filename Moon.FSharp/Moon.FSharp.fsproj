@@ -16,6 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\library\Fodot.Module\Fodot.Module.fsproj" />
       <ProjectReference Include="..\..\module\Fodot.Stage\Fodot.Stage.fsproj" />
     </ItemGroup>
 

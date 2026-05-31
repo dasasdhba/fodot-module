@@ -4,7 +4,7 @@ using Godot;
 
 namespace Moon.Class;
 
-public partial class Draw2D : Node2D
+public partial class Draw2D
 {
     // drawing API used in DrawProcess call.
 

@@ -2,7 +2,7 @@ module Fodot.Stage.Node
 
 open Fodot.Core.Engine
 open Godot
-open Fodot.Module
+open Fodot.Extend
 
 // access
 
@@ -15,6 +15,12 @@ let getStage (node : Node) =
     node
     |> tryGetStage
     |> Option.defaultWith (fun () -> failwith $"{node} does not have a parent stage.")
+
+let getUniquePath (node : Node) =
+    node
+    |> tryGetStage
+    |> Option.map _.Viewport.GetPathTo(node)
+    |> Option.defaultWith (fun _ -> node.GetPath())
 
 let getCurrentScene (node : Node) =
     node

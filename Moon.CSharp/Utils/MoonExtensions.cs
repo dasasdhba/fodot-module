@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using Fodot.CSharp;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 
@@ -136,30 +137,6 @@ public static class MoonExtensions
         return t;
     }
     
-    #endregion
-    
-    #region TileMap
-
-    public static bool HasLayer(this TileMap tilemap, string layer)
-    {
-        for (int i = 0; i < tilemap.GetLayersCount(); i++)
-        {
-            if (tilemap.GetLayerName(i) == layer) return true;
-        }
-        
-        return false;
-    }
-    
-    public static int GetLayerIndex(this TileMap tilemap, string layer)
-    {
-        for (int i = 0; i < tilemap.GetLayersCount(); i++)
-        {
-            if (tilemap.GetLayerName(i) == layer) return i;
-        }
-        
-        return -1;
-    }
-
     #endregion
     
     #region PhysicsBody

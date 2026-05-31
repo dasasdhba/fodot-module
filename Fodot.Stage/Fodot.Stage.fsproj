@@ -13,12 +13,13 @@
         <Compile Include="Stage.fs" />
         <Compile Include="Node.fs" />
         <Compile Include="GlobalStage.fs" />
+        <Compile Include="CSharp.fs" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\library\Fodot.Async\Fodot.Async.fsproj" />
         <ProjectReference Include="..\..\library\Godot.Common\Godot.Common.csproj" />
-        <ProjectReference Include="..\..\library\Fodot.Module\Fodot.Module.fsproj" />
+        <ProjectReference Include="..\..\library\Fodot.Extend\Fodot.Extend.fsproj" />
     </ItemGroup>
 
 </Project>

@@ -2,7 +2,7 @@ namespace Fodot.Stage
 
 open Fodot.Async
 open Fodot.Common
-open Fodot.Module
+open Fodot.Extend
 open Godot
 
 [<FScript("cutscene_provider")>]

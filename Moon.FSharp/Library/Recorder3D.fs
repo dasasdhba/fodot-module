@@ -2,6 +2,7 @@ namespace Moon.Library
 
 open Fodot.Common
 open Fodot.Core
+open Fodot.Stage
 open Godot
 open Moon.Module
 

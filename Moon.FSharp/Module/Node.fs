@@ -2,13 +2,6 @@ module Moon.Module.Node
 
 open Godot
 open Fodot.Core
-open Fodot.Stage
-
-let getUniquePath (node : Node) =
-    node
-    |> Node.tryGetStage
-    |> Option.map _.Viewport.GetPathTo(node)
-    |> Option.defaultWith (fun _ -> node.GetPath())
 
 let getSubBinding (creator : Node -> 'a) (node : Node)=
     node |> FScript.attachBy (lazy (

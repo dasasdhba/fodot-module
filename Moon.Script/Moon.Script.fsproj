@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+        <GenerateDocumentationFile>$(DocumentationFileFlag)</GenerateDocumentationFile>
+        <RootNamespace>Moon.Script</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Bind.fs" />
+        <Compile Include="ResourceProvider.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Moon.CSharp\Moon.CSharp.csproj" />
+    </ItemGroup>
+
+</Project>

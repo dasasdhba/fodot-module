@@ -1,0 +1,17 @@
+# Note: you should put this node in the end of the tree
+# so that other fscript can use it in init
+# otherwise you can only use it after tree_entered or ready
+
+extends: Node
+class_name: ResourceProvider
+fscript: [ "resource_provider" ]
+
+property:
+  readonly:
+    type: bool
+    value: true
+
+  lib:
+    type: Dictionary[String, Resource]
+    hint: PROPERTY_HINT_DICTIONARY_TYPE
+    hint_string: "String;Resource"

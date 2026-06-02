@@ -103,7 +103,7 @@ module Stage =
                let body = s[1..]
                
                let dir = current.GetBaseDir ()
-               let name = current.GetBaseName ()
+               let name = current.GetFile().GetBaseName ()
                let ext = current.GetExtension ()
                
                let idx = name.LastIndexOf '_'

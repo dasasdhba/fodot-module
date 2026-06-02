@@ -15,4 +15,8 @@
       <ProjectReference Include="..\Moon.CSharp\Moon.CSharp.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="FSharpPlus" Version="1.9.1" />
+    </ItemGroup>
+
 </Project>

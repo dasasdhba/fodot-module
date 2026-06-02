@@ -1,22 +1,26 @@
 module Moon.Script.ResourceProvider
 
+open FSharpPlus
 open Fodot.Common
 open Fodot.Core
 open Fodot.Extend
 open Godot
+open Godot.Collections
 
-let private meta = "_moon_res_provider_"
+let private resMap = WeakMap<Dictionary<string, Resource>>()
 
 let getAll<'a when 'a :> Resource> (node : Node) =
-    node
-    |> Node.getOwnerOrSelf
-    |> GodotObject.getMetaList
-    |> Seq.choose (fun m ->
-        if (string m).StartsWith meta then
-            node |> GodotObject.tryGetMetaAs<'a> m
-        else
-            None
+    resMap
+    |> WeakMap.tryGet (node |> Node.getOwnerOrSelf)
+    |> Option.map (fun dict ->
+        dict.Values
+        |> Seq.choose (fun r ->
+            match r with
+            | :? 'a as r -> Some r
+            | _ -> None
+        )
     )
+    |> Option.defaultValue Seq.empty
 
 let tryGet<'a when 'a :> Resource> (node : Node) =
     node |> getAll<'a> |> Seq.tryHead
@@ -24,20 +28,26 @@ let tryGet<'a when 'a :> Resource> (node : Node) =
 let get<'a when 'a :> Resource> (node : Node) =
     node |> getAll<'a> |> Seq.head
 
+let tryFind<'a when 'a :> Resource> (key : string) (node : Node) =
+    resMap
+    |> WeakMap.tryGet (node |> Node.getOwnerOrSelf)
+    |> Option.bind (fun d -> d |> Dict.tryGetValue key)
+
+let find<'a when 'a :> Resource> (key : string) (node : Node) =
+    node
+    |> tryFind<'a> key
+    |> Option.defaultWith (fun _ -> failwith $"Resource key {key} not found")
+
 [<FScript("resource_provider")>]
 type ResourceProviderScript(node : Node) =
     let bind = Bind.ResourceProvider.From node
     
     // inject all resource to owner
     let owner = node |> Node.getOwnerOrSelf
-    do for k in bind.Lib.Keys do
-        let res =
-            if bind.Readonly then
-                bind.Lib[k]
-            else
-                let dup = bind.Lib[k].Duplicate true
-                bind.Lib[k] <- dup
-                dup
+    
+    do if bind.Readonly |> not then
+        for k in bind.Lib.Keys do
+            let dup = bind.Lib[k].Duplicate true
+            bind.Lib[k] <- dup
         
-        let meta = new StringName $"{meta}{k}"
-        owner |> GodotObject.setMeta meta res
+    do resMap |> WeakMap.addOrUpdate owner bind.Lib

@@ -1,15 +1,15 @@
 module Fodot.Stage.Node
 
-open Fodot.Core.Engine
+open Fodot.Core
 open Godot
 open Fodot.Extend
 
 // access
 
-let private stageMeta = new StringName "_fs_parent_stage"
+let private stageMap = Node.ParentCache<Stage>()
 
 let tryGetStage (node : Node) =
-    node |> Node.findParentFScriptCached<Stage> stageMeta
+    node |> Node.findParentFScriptCached stageMap
 
 let getStage (node : Node) =
     node
@@ -25,8 +25,8 @@ let getUniquePath (node : Node) =
 let getCurrentScene (node : Node) =
     node
     |> tryGetStage
-    |> Option.bind (fun s -> s.CurrentScene)
-    |> Option.defaultWith (fun _ -> getTree().CurrentScene)
+    |> Option.bind _.CurrentScene
+    |> Option.defaultWith (fun _ -> Engine.getTree().CurrentScene)
 
 let getCutsceneConfig path (node : Node) =
     node

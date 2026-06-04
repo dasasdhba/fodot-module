@@ -16,12 +16,12 @@ type Stage(node : Control) =
      static let viewportPath = new NodePath "%Viewport"
      static let cutscenePath = new NodePath "%Cutscene"
      
-     member this.Root = node
-     member this.Viewport : Node =
+     member val Root = node
+     member val Viewport : Node =
           node
           |> Node.tryGetNode viewportPath
           |> Option.defaultValue node
-     member this.CutsceneRoot : Node =
+     member val CutsceneRoot : Node =
           node
           |> Node.tryGetNode cutscenePath
           |> Option.defaultValue node

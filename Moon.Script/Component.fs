@@ -1,5 +1,6 @@
 module Moon.Script.Component
 
+open System
 open System.Collections.Generic
 open Fodot.Common
 open Fodot.Core
@@ -13,47 +14,88 @@ let private predictor<'a when 'a :> Node> (node: Node) =
     match node with
     | :? 'a as a -> Some a
     | _ -> None
-    
-let getAll<'a when 'a :> Node> node =
-    map |> OwnerDict.getAll node predictor<'a>
 
-let tryGet<'a when 'a :> Node> node =
-    map |> OwnerDict.tryGet node predictor<'a>
+let findAll<'a when 'a :> Node> node =
+    map |> OwnerDict.findAll node predictor<'a>
 
-let get<'a when 'a :> Node> node =
-    map |> OwnerDict.get node predictor<'a>
+let tryFind<'a when 'a :> Node> node =
+    node |> findAll<'a> |> Seq.tryHead
 
-let tryFind<'a when 'a :> Node> key node =
-    map |> OwnerDict.tryFind node key predictor<'a>
+let find<'a when 'a :> Node> node =
+    node |> findAll<'a> |> Seq.head
 
-let find<'a when 'a :> Node> key node =
-    map |> OwnerDict.find node key predictor<'a>
+let findOrAdd<'a when 'a :> Node> (value : Lazy<'a>)  (node : Node)=
+    map
+    |> OwnerDict.findOrAdd node predictor<'a> (lazy (
+        value.Value :> Node, value.Value
+    ))
+
+let tryGet<'a when 'a :> Node> path node =
+    map
+    |> OwnerDict.tryGet node path
+    |> Option.bind predictor<'a>
+
+let get<'a when 'a :> Node> path node =
+    node
+    |> tryGet<'a> path
+    |> Option.defaultWith (fun _ -> failwith $"Component: Node {path} not found")
+
+let getOrAdd<'a when 'a :> Node> key (value : Lazy<'a>)  (node : Node) =
+    map
+    |> OwnerDict.getOrAdd node key predictor<'a> (lazy (
+        value.Value :> Node, value.Value
+    ))
 
 let private predictorFs<'a> (node: Node) =
     node |> FScript.tryGet<'a>
 
-let getAllFs<'a> node =
-    map |> OwnerDict.getAll node predictorFs<'a>
+let findAllFs<'a> node =
+    map |> OwnerDict.findAll node predictorFs<'a>
 
-let tryGetFs<'a> node =
-    map |> OwnerDict.tryGet node predictorFs<'a>
+let tryFindFs<'a> node =
+    node |> findAllFs<'a> |> Seq.tryHead
 
-let getFs<'a> node =
-    map |> OwnerDict.get node predictorFs<'a>
+let findFs<'a> node =
+    node |> findAllFs<'a> |> Seq.head
 
-let tryFindFs<'a> key node =
-    map |> OwnerDict.tryFind node key predictorFs<'a>
+let findOrAddFs<'a> (value : Lazy<Node>) (node : Node)=
+    map
+    |> OwnerDict.findOrAdd node predictorFs<'a> (lazy (
+        value.Value, value.Value |> FScript.attach<'a>
+    ))
 
-let findFs<'a> key node =
-    map |> OwnerDict.find node key predictorFs<'a>
+let tryGetFs<'a> path node =
+    map
+    |> OwnerDict.tryGet node path
+    |> Option.bind predictorFs<'a>
 
-[<FScript("compo")>]
+let getFs<'a> path node =
+    node
+    |> tryGetFs<'a> path
+    |> Option.defaultWith (fun _ -> failwith $"Component: FScript {path} not found")
+
+let getOrAddFs<'a> key (value : Lazy<Node>) (node : Node) =
+    map
+    |> OwnerDict.getOrAdd node key predictorFs<'a> (lazy (
+        value.Value, value.Value |> FScript.attach<'a>
+    ))
+
+[<FScript("component")>]
 type ComponentScript(node : Node) =
 
     // inject self into owner
-    let owner = node |> Node.getOwnerOrSelf
-    let dict = map |> WeakMeta.getOrAdd owner (lazy
-        Dictionary<string, Node>()
-    )
-    
-    do dict[node |> Node.getNameInOwner] <- node
+    let mutable injected = false
+    let inject() =
+        if injected || node.Owner = null then
+            ()
+        else
+            injected <- true
+            let dict = map |> WeakMeta.getOrAdd node.Owner (lazy
+                Dictionary<string, Node>()
+            )
+            
+            dict[node |> Node.getNameInOwner] <- node
+            
+    do
+        inject ()
+        node.add_Ready inject

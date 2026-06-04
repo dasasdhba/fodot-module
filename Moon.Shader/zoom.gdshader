@@ -1,3 +1,7 @@
+// fragment zoom
+// this can be used for camera scaling
+// (especially for pixel art games)
+
 shader_type canvas_item;
 
 uniform float zoom = 1.0; 

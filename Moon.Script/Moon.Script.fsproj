@@ -8,15 +8,12 @@
 
     <ItemGroup>
         <Compile Include="Bind.fs" />
-        <Compile Include="ResourceProvider.fs" />
+        <Compile Include="Resource.fs" />
+        <Compile Include="Component.fs" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Moon.CSharp\Moon.CSharp.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="FSharpPlus" Version="1.9.1" />
     </ItemGroup>
 
 </Project>

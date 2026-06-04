@@ -9,7 +9,7 @@ open Fodot.Extend
 let private stageMap = Node.ParentCache<Stage>()
 
 let tryGetStage (node : Node) =
-    node |> Node.findParentFScriptCached stageMap
+    node |> Node.findParentFsCached stageMap
 
 let getStage (node : Node) =
     node
@@ -30,6 +30,6 @@ let getCurrentScene (node : Node) =
 
 let getCutsceneConfig path (node : Node) =
     node
-    |> Node.tryGetNodeFScript<CutsceneProvider> path
+    |> Node.tryGetNodeFs<CutsceneProvider> path
     |> Option.map (fun c -> c.CreateConfig ())
     |> Option.defaultValue CutsceneConfig.None

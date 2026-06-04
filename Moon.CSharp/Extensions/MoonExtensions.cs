@@ -2,9 +2,7 @@ using Godot;
 using System;
 using Fodot.CSharp;
 
-#pragma warning disable CS0618 // Type or member is obsolete
-
-namespace Moon.Utils;
+namespace Moon;
 
 // useful node extension functions
 

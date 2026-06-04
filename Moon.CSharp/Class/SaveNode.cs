@@ -89,7 +89,7 @@ public partial class SaveNode : Node
         config.LoadEncryptedPass(file, Password);
         config.SetSection(section, ExportDictionary());
         config.SaveEncryptedPass(file, Password);
-        FD.Print($"{this.GetUniquePath()} saved at {file} ({section})");
+        FD.Print($"{GetPath()} saved at {file} ({section})");
 #if DEBUG
         if (Password != "") config.Save(file + ".cfg");
 #endif    
@@ -103,12 +103,12 @@ public partial class SaveNode : Node
         var config = new ConfigFile();
         if (config.LoadEncryptedPass(file, Password) == Error.Ok)
         {
-            FD.Print($"{this.GetUniquePath()} loaded from {file} ({section})");
+            FD.Print($"{GetPath()} loaded from {file} ({section})");
             ImportDictionary(config.GetSection(section));
         }
         else
         {
-            FD.Print($"{this.GetUniquePath()} loading failed from {file} ({section}), values are all reset");
+            FD.Print($"{GetPath()} loading failed from {file} ({section}), values are all reset");
             ImportDictionary(DefaultValues);
         }
     }

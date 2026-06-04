@@ -7,11 +7,11 @@ open Fodot.Extend
 open Godot
 open Godot.Collections
 
-let private resMap = WeakMap<Dictionary<string, Resource>>()
+let private resMap = WeakMeta<Dictionary<string, Resource>>()
 
 let getAll<'a when 'a :> Resource> (node : Node) =
     resMap
-    |> WeakMap.tryGet (node |> Node.getOwnerOrSelf)
+    |> WeakMeta.tryGet (node |> Node.getOwnerOrSelf)
     |> Option.map (fun dict ->
         dict.Values
         |> Seq.choose (fun r ->
@@ -30,7 +30,7 @@ let get<'a when 'a :> Resource> (node : Node) =
 
 let tryFind<'a when 'a :> Resource> (key : string) (node : Node) =
     resMap
-    |> WeakMap.tryGet (node |> Node.getOwnerOrSelf)
+    |> WeakMeta.tryGet (node |> Node.getOwnerOrSelf)
     |> Option.bind (fun d -> d |> Dict.tryGetValue key)
 
 let find<'a when 'a :> Resource> (key : string) (node : Node) =
@@ -50,4 +50,4 @@ type ResourceProviderScript(node : Node) =
             let dup = bind.Lib[k].Duplicate true
             bind.Lib[k] <- dup
         
-    do resMap |> WeakMap.addOrUpdate owner bind.Lib
+    do resMap |> WeakMeta.addOrUpdate owner bind.Lib

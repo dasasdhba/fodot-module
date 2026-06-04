@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Fodot.CSharp;
 using Godot;
 using Godot.Collections;
-using Moon.Utils;
+using Moon.CSharp;
 
 namespace Moon.Component;
 

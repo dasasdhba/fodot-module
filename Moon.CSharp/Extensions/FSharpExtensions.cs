@@ -5,7 +5,7 @@ using Fodot.CSharp;
 using Godot;
 using Microsoft.FSharp.Core;
 
-namespace Moon.Utils;
+namespace Moon.CSharp;
 
 public static class FSharpExtensions
 {

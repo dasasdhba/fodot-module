@@ -13,5 +13,5 @@ type ResourceProvider(obj : Node) =
     member this.Readonly = _back_prop_value_readonly
     member this.Lib = _back_prop_value_lib
 
-    static member private _bind_map = WeakMap<ResourceProvider>()
-    static member From o = ResourceProvider._bind_map |> WeakMap.getOrAdd o (lazy ResourceProvider o)
+    static member private _bind_map = WeakMeta<ResourceProvider>()
+    static member From o = ResourceProvider._bind_map |> WeakMeta.getOrAdd o (lazy ResourceProvider o)

@@ -7,8 +7,9 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\library\Fodot.CSharp\Fodot.CSharp.csproj" />
-      <ProjectReference Include="..\..\library\Fodot.Math\Fodot.Math.fsproj" />
-      <ProjectReference Include="..\..\library\Godot.Common\Godot.Common.csproj" />
+      <ProjectReference Include="..\..\library\Moon.Utils\Moon.Utils.fsproj" />
+      <ProjectReference Include="..\..\library\Moon.Common\Moon.Common.csproj" />
       <ProjectReference Include="..\..\library\Moon\Moon.fsproj" />
+      <ProjectReference Include="..\Fodot.Stage\Fodot.Stage.fsproj" />
     </ItemGroup>
 </Project>

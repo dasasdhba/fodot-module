@@ -1,7 +1,7 @@
 module Moon.Script.Compo
 
 open System
-open System.Collections.Generic
+open System.Collections.Concurrent
 open Fodot.Common
 open Fodot.Core
 open Fodot.Extend
@@ -90,11 +90,11 @@ type ComponentScript(node : Node) =
         
         injected <- true
         let dict = map |> WeakMeta.getOrAdd node.Owner (lazy
-            Dictionary<string, Node>()
+            ConcurrentDictionary<string, Node>()
         )
         
         dict[node |> Node.getNameInOwner] <- node
-            
+        
     do
         inject ()
         node.add_Ready inject

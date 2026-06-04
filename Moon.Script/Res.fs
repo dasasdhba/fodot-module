@@ -1,7 +1,7 @@
 module Moon.Script.Res
 
 open System
-open System.Collections.Generic
+open System.Collections.Concurrent
 open Fodot.Common
 open Fodot.Core
 open Godot
@@ -50,7 +50,7 @@ type ResourceProvider(node : Node) =
     let bind = Bind.ResourceProvider.From node
     
     // inject all resources to owner
-    let add k (dict: Dictionary<string, Resource>) =
+    let add k (dict: ConcurrentDictionary<string, Resource>) =
         dict[k] <-
             if bind.Readonly |> not then
                 let dup = bind.Lib[k].Duplicate true
@@ -65,7 +65,7 @@ type ResourceProvider(node : Node) =
         
         injected <- true
         let dict = map |> WeakMeta.getOrAdd node.Owner (lazy
-            Dictionary<string, Resource>()
+            ConcurrentDictionary<string, Resource>()
         )
             
         for k in bind.Lib.Keys do

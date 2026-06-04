@@ -1,4 +1,4 @@
-module Moon.Script.Resource
+module Moon.Script.Res
 
 open System
 open System.Collections.Generic
@@ -58,22 +58,18 @@ type ResourceProvider(node : Node) =
                 dup
             else
                 bind.Lib[k]
-    
-    let injectTo owner =
-        let dict = map |> WeakMeta.getOrAdd owner (lazy
-                Dictionary<string, Resource>()
-            )
-            
-        for k in bind.Lib.Keys do
-            dict |> add k
 
     let mutable injected = false
     let inject() =
-        if injected || node.Owner = null then
-            ()
-        else
-            injected <- true
-            injectTo node.Owner
+        if injected || node.Owner = null then () else
+        
+        injected <- true
+        let dict = map |> WeakMeta.getOrAdd node.Owner (lazy
+            Dictionary<string, Resource>()
+        )
+            
+        for k in bind.Lib.Keys do
+            dict |> add k
     
     do
         inject ()

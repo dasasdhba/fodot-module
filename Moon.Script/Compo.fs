@@ -1,4 +1,4 @@
-module Moon.Script.Component
+module Moon.Script.Compo
 
 open System
 open System.Collections.Generic
@@ -86,15 +86,14 @@ type ComponentScript(node : Node) =
     // inject self into owner
     let mutable injected = false
     let inject() =
-        if injected || node.Owner = null then
-            ()
-        else
-            injected <- true
-            let dict = map |> WeakMeta.getOrAdd node.Owner (lazy
-                Dictionary<string, Node>()
-            )
-            
-            dict[node |> Node.getNameInOwner] <- node
+        if injected || node.Owner = null then () else
+        
+        injected <- true
+        let dict = map |> WeakMeta.getOrAdd node.Owner (lazy
+            Dictionary<string, Node>()
+        )
+        
+        dict[node |> Node.getNameInOwner] <- node
             
     do
         inject ()

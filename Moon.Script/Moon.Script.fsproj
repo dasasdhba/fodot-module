@@ -8,8 +8,9 @@
 
     <ItemGroup>
         <Compile Include="Bind.fs" />
-        <Compile Include="Resource.fs" />
-        <Compile Include="Component.fs" />
+        <Compile Include="Res.fs" />
+        <Compile Include="Compo.fs" />
+        <Compile Include="MarkerFlipSync.fs" />
     </ItemGroup>
 
     <ItemGroup>

@@ -30,6 +30,8 @@ type CutsceneConfig =
         Out = None
     }
 
+// glue for gdscript
+
 [<FScript("cutscene")>]
 type Cutscene(node : Node2D) =
     static let fadeInInit = new StringName "fade_in_init"
@@ -46,7 +48,7 @@ type Cutscene(node : Node2D) =
         and set value = size.Set value
 
     interface ICutscene with
-        member this.Root = node
+        member val Root = node
         
         member this.SetSize value =
             this.Size <- value

@@ -5,7 +5,7 @@ using Godot;
 namespace Moon.Component;
 
 [GlobalClass]
-public partial class Node2DCaster : Node
+public partial class Node2DCaster : Node2D
 {
 	[ExportCategory("Node2DCaster")]
 	[Export]
@@ -36,8 +36,9 @@ public partial class Node2DCaster : Node
 	public void Cast()
 	{
 		var node = Node2DLoader.Get();
-		node.Position = Root.Position + Offset;
-		EmitSignal(SignalName.Casted, node);
-		Root.AddSiblingSafely(node);
+		var root = IsInstanceValid(Root) ? Root : this;
+		node.Position = root.Position + Offset;
+		EmitSignalCasted(node);
+		root.AddSiblingSafely(node);
 	}
 }

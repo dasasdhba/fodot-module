@@ -23,7 +23,7 @@ type MarkerFlipSyncScript (marker : MarkerFlipSync) =
         )
     
     do
-        marker.add_Ready (fun () ->
+        marker |> Node.whenReady (fun () ->
             marker.Origin <- marker.Position
             update ()
         )

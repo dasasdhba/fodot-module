@@ -11,6 +11,7 @@
         <Compile Include="Res.fs" />
         <Compile Include="Compo.fs" />
         <Compile Include="MarkerFlipSync.fs" />
+        <Compile Include="TestScript.fs" />
     </ItemGroup>
 
     <ItemGroup>

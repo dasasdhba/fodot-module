@@ -1,13 +1,11 @@
 module Moon.Script.Res
 
 open System
-open System.Collections.Concurrent
 open Fodot.Common
-open Fodot.Core
 open Godot
 open Moon.Library
 
-let private map = OwnerDict<Resource> ()
+let private map = OwnerMeta<Resource> ()
 
 let private predictor<'a when 'a :> Resource> (res: Resource) =
     match res with
@@ -15,23 +13,23 @@ let private predictor<'a when 'a :> Resource> (res: Resource) =
     | _ -> None
 
 let findAll<'a when 'a :> Resource> node =
-    map |> OwnerDict.findAll node predictor<'a>
+    map |> OwnerMeta.findAll node predictor<'a>
 
 let tryFind<'a when 'a :> Resource> node =
-    node |> findAll<'a> |> Seq.tryHead
+    node |> findAll<'a> |> List.tryHead
 
 let find<'a when 'a :> Resource> node =
-    node |> findAll<'a> |> Seq.head
+    node |> findAll<'a> |> List.head
 
 let findOrAdd<'a when 'a :> Resource> (value : Lazy<'a>)  (node : Node)=
     map
-    |> OwnerDict.findOrAdd node predictor<'a> (lazy (
+    |> OwnerMeta.findOrAdd node predictor<'a> (lazy (
         value.Value :> Resource, value.Value
     ))
 
 let tryGet<'a when 'a :> Resource> key node =
     map
-    |> OwnerDict.tryGet node key
+    |> OwnerMeta.tryGet node key
     |> Option.bind predictor<'a>
 
 let get<'a when 'a :> Resource> key node =
@@ -41,7 +39,7 @@ let get<'a when 'a :> Resource> key node =
 
 let getOrAdd<'a when 'a :> Resource> key (value : Lazy<'a>)  (node : Node) =
     map
-    |> OwnerDict.getOrAdd node key predictor<'a> (lazy (
+    |> OwnerMeta.getOrAdd node key predictor<'a> (lazy (
         value.Value :> Resource, value.Value
     ))
 
@@ -50,26 +48,25 @@ type ResourceProvider(node : Node) =
     let bind = Bind.ResourceProvider.From node
     
     // inject all resources to owner
-    let add k (dict: ConcurrentDictionary<string, Resource>) =
-        dict[k] <-
-            if bind.Readonly |> not then
-                let dup = bind.Lib[k].Duplicate true
-                bind.Lib[k] <- dup
-                dup
-            else
-                bind.Lib[k]
+    let list =
+        bind.Lib |> Seq.fold (fun l d ->
+            let k, v = d.Key, d.Value
+            let next =
+                if bind.Readonly |> not then
+                    let dup = v.Duplicate true
+                    bind.Lib[k] <- dup
+                    dup
+                else
+                    v
+            (k, next) :: l
+        ) []
 
     let mutable injected = false
     let inject() =
         if injected || node.Owner = null then () else
         
         injected <- true
-        let dict = map |> WeakMeta.getOrAdd node.Owner (lazy
-            ConcurrentDictionary<string, Resource>()
-        )
-            
-        for k in bind.Lib.Keys do
-            dict |> add k
+        map |> OwnerMeta.updateDict node list
     
     do
         inject ()

@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Fodot.CSharp;
 using Godot;
-using GodotTask;
 
 namespace Moon.Class;
 
@@ -123,7 +122,7 @@ public partial class SaveNode : Node
     
     public async Task SaveAsync(string file, string section)
     {
-        await GDTask.RunOnThreadPool(() => Save(file, section));
+        await Task.Run(() => Save(file, section));
     }
     
     public Task SaveAsync(string file)
@@ -131,7 +130,7 @@ public partial class SaveNode : Node
     
     public async Task LoadAsync(string file, string section)
     {
-        await GDTask.RunOnThreadPool(() => Load(file, section));
+        await Task.Run(() => Load(file, section));
     }
     
     public Task LoadAsync(string file)

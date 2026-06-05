@@ -1,14 +1,13 @@
 module Moon.Script.Compo
 
 open System
-open System.Collections.Concurrent
 open Fodot.Common
 open Fodot.Core
 open Fodot.Extend
 open Godot
 open Moon.Library
 
-let private map = OwnerDict<Node> ()
+let private map = OwnerMeta<Node> ()
 
 let private predictor<'a when 'a :> Node> (node: Node) =
     match node with
@@ -16,23 +15,23 @@ let private predictor<'a when 'a :> Node> (node: Node) =
     | _ -> None
 
 let findAll<'a when 'a :> Node> node =
-    map |> OwnerDict.findAll node predictor<'a>
+    map |> OwnerMeta.findAll node predictor<'a>
 
 let tryFind<'a when 'a :> Node> node =
-    node |> findAll<'a> |> Seq.tryHead
+    node |> findAll<'a> |> List.tryHead
 
 let find<'a when 'a :> Node> node =
-    node |> findAll<'a> |> Seq.head
+    node |> findAll<'a> |> List.head
 
 let findOrAdd<'a when 'a :> Node> (value : Lazy<'a>)  (node : Node)=
     map
-    |> OwnerDict.findOrAdd node predictor<'a> (lazy (
+    |> OwnerMeta.findOrAdd node predictor<'a> (lazy (
         value.Value :> Node, value.Value
     ))
 
 let tryGet<'a when 'a :> Node> path node =
     map
-    |> OwnerDict.tryGet node path
+    |> OwnerMeta.tryGet node path
     |> Option.bind predictor<'a>
 
 let get<'a when 'a :> Node> path node =
@@ -42,7 +41,7 @@ let get<'a when 'a :> Node> path node =
 
 let getOrAdd<'a when 'a :> Node> key (value : Lazy<'a>)  (node : Node) =
     map
-    |> OwnerDict.getOrAdd node key predictor<'a> (lazy (
+    |> OwnerMeta.getOrAdd node key predictor<'a> (lazy (
         value.Value :> Node, value.Value
     ))
 
@@ -50,23 +49,25 @@ let private predictorFs<'a> (node: Node) =
     node |> FScript.tryGet<'a>
 
 let findAllFs<'a> node =
-    map |> OwnerDict.findAll node predictorFs<'a>
+    map |> OwnerMeta.findAll node predictorFs<'a>
 
 let tryFindFs<'a> node =
-    node |> findAllFs<'a> |> Seq.tryHead
+    node |> findAllFs<'a> |> List.tryHead
 
 let findFs<'a> node =
-    node |> findAllFs<'a> |> Seq.head
+    node |> findAllFs<'a> |> List.head
 
 let findOrAddFs<'a> (value : Lazy<Node>) (node : Node)=
     map
-    |> OwnerDict.findOrAdd node predictorFs<'a> (lazy (
+    |> OwnerMeta.findOrAdd node predictorFs<'a> (lazy (
+        if value.Value.IsInsideTree() |> not then
+            node |> Node.getOwnerOrSelf |> Node.addChild value.Value
         value.Value, value.Value |> FScript.attach<'a>
     ))
 
 let tryGetFs<'a> path node =
     map
-    |> OwnerDict.tryGet node path
+    |> OwnerMeta.tryGet node path
     |> Option.bind predictorFs<'a>
 
 let getFs<'a> path node =
@@ -76,7 +77,9 @@ let getFs<'a> path node =
 
 let getOrAddFs<'a> key (value : Lazy<Node>) (node : Node) =
     map
-    |> OwnerDict.getOrAdd node key predictorFs<'a> (lazy (
+    |> OwnerMeta.getOrAdd node key predictorFs<'a> (lazy (
+        if value.Value.IsInsideTree() |> not then
+            node |> Node.getOwnerOrSelf |> Node.addChild value.Value
         value.Value, value.Value |> FScript.attach<'a>
     ))
 
@@ -89,11 +92,7 @@ type ComponentScript(node : Node) =
         if injected || node.Owner = null then () else
         
         injected <- true
-        let dict = map |> WeakMeta.getOrAdd node.Owner (lazy
-            ConcurrentDictionary<string, Node>()
-        )
-        
-        dict[node |> Node.getNameInOwner] <- node
+        map |> OwnerMeta.updateDict node [node |> Node.getNameInOwner, node]
         
     do
         inject ()

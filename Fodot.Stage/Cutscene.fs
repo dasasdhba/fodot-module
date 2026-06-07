@@ -33,7 +33,7 @@ type CutsceneConfig =
 // glue for gdscript
 
 [<FScript("cutscene")>]
-type Cutscene(node : Node2D) =
+type private Cutscene(node : Node2D) =
     static let fadeInInit = new StringName "fade_in_init"
     static let fadeOutInit = new StringName "fade_out_init"
     static let fadeIn = new StringName "fade_in"

@@ -9,12 +9,12 @@ open Godot
 open Moon
 
 [<FScript("test_script")>]
-type TestScript (node : Node) =
+type private TestScript (node : Node) =
     let scene = node |> Node.loadAs<PackedScene> "marker.tscn"
     let loader = node |> AsyncScene.create<Node2D> scene 1 0
     let anode = AsyncNode.NewPhysics node CancellationToken.None
     
-    do node |> GDTask.post (fun _ ->
+    let run () =
         let _ = task {
             while true do
                 do! anode.Delay 0.2
@@ -33,4 +33,5 @@ type TestScript (node : Node) =
         }
         
         ()
-    )
+        
+    do GDThread.post run

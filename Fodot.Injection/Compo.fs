@@ -1,13 +1,12 @@
-module Moon.Script.Compo
+module Fodot.Injection.Compo
 
 open System
 open Fodot.Common
 open Fodot.Core
 open Fodot.Extend
 open Godot
-open Moon.Library
 
-let private map = OwnerMeta<Node> ()
+let map = OwnerMeta<Node> ()
 
 let private predictor<'a when 'a :> Node> (node: Node) =
     match node with
@@ -39,9 +38,9 @@ let get<'a when 'a :> Node> path node =
     |> tryGet<'a> path
     |> Option.defaultWith (fun _ -> failwith $"Component: Node {path} not found")
 
-let getOrAdd<'a when 'a :> Node> key (value : Lazy<'a>)  (node : Node) =
+let getOrAdd<'a when 'a :> Node> path (value : Lazy<'a>)  (node : Node) =
     map
-    |> OwnerMeta.getOrAdd node key predictor<'a> (lazy (
+    |> OwnerMeta.getOrAdd node path predictor<'a> (lazy (
         value.Value :> Node, value.Value
     ))
 
@@ -75,24 +74,28 @@ let getFs<'a> path node =
     |> tryGetFs<'a> path
     |> Option.defaultWith (fun _ -> failwith $"Component: FScript {path} not found")
 
-let getOrAddFs<'a> key (value : Lazy<Node>) (node : Node) =
+let getOrAddFs<'a> path (value : Lazy<Node>) (node : Node) =
     map
-    |> OwnerMeta.getOrAdd node key predictorFs<'a> (lazy (
+    |> OwnerMeta.getOrAdd node path predictorFs<'a> (lazy (
         if value.Value.IsInsideTree() |> not then
             node |> Node.getOwnerOrSelf |> Node.addChild value.Value
         value.Value, value.Value |> FScript.attach<'a>
     ))
 
 [<FScript("component")>]
-type ComponentScript(node : Node) =
+type private ComponentScript(node : Node) =
 
     // inject self into owner
     let mutable injected = false
     let inject() =
-        if injected || node.Owner = null then () else
+        if injected then () else
         
-        injected <- true
-        map |> OwnerMeta.updateDict node [node |> Node.getNameInOwner, node]
+        node
+        |> Node.getSceneOwner
+        |> Option.iter (fun o ->
+            injected <- true
+            map |> OwnerMeta.appendDict o [o.GetPathTo(node, true) |> string, node]
+        )
         
     do
         inject ()

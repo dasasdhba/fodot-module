@@ -1,11 +1,11 @@
-module Moon.Script.Res
+module Fodot.Injection.Res
 
 open System
 open Fodot.Common
+open Fodot.Extend
 open Godot
-open Moon.Library
 
-let private map = OwnerMeta<Resource> ()
+let map = OwnerMeta<Resource> ()
 
 let private predictor<'a when 'a :> Resource> (res: Resource) =
     match res with
@@ -44,7 +44,7 @@ let getOrAdd<'a when 'a :> Resource> key (value : Lazy<'a>)  (node : Node) =
     ))
 
 [<FScript("resource_provider")>]
-type ResourceProvider(node : Node) =
+type private ResourceProvider(node : Node) =
     let bind = Bind.ResourceProvider.From node
     
     // inject all resources to owner
@@ -63,10 +63,14 @@ type ResourceProvider(node : Node) =
 
     let mutable injected = false
     let inject() =
-        if injected || node.Owner = null then () else
+        if injected then () else
         
-        injected <- true
-        map |> OwnerMeta.updateDict node list
+        node
+        |> Node.getSceneOwner
+        |> Option.iter (fun o ->
+            injected <- true
+            map |> OwnerMeta.appendDict o list
+        )
     
     do
         inject ()

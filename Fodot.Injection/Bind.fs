@@ -1,4 +1,4 @@
-namespace Moon.Script.Bind
+namespace Fodot.Injection.Bind
 
 open Fodot.Core
 open Godot

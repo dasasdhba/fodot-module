@@ -14,6 +14,7 @@ type TestPhysics(col : CollisionObject2D) =
         col |> Engine.addPhysicsProcess (fun _ ->
             let result =
                 query.Build().Query()
-                |> Seq.isEmpty
+                |> Seq.tryPick PhysicsQueryResult.getOneWayDirection2D
+                |> Option.defaultValue Vector2.Zero
             Logger.push result
         ) |> ignore

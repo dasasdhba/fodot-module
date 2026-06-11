@@ -9,11 +9,11 @@ open Moon.Library
 type TestPhysics(col : CollisionObject2D) =
     
     let query = PhysicsQueryShape2D col
-    
+
     do
         col |> Engine.addPhysicsProcess (fun _ ->
             let result =
-                query.Build().Query (Vector2.Down * 16f)
+                query.Build().Query()
                 |> Seq.isEmpty
             Logger.push result
         ) |> ignore

@@ -4,6 +4,7 @@ open Fodot.Common
 open Fodot.Core
 open Godot
 open Moon.Library
+open Moon.Library.PhysicsMotion
 
 [<FScript("test_physics")>]
 type TestPhysics(col : CollisionObject2D) =
@@ -13,8 +14,8 @@ type TestPhysics(col : CollisionObject2D) =
     do
         col |> Engine.addPhysicsProcess (fun _ ->
             let result =
-                query.Build().Query()
-                |> Seq.tryPick PhysicsQueryResult.getOneWayDirection2D
-                |> Option.defaultValue Vector2.Zero
+                query.Build().Collide(Vector2.Down * 16f)
+                |> Option.map (fst >> _.SafeFraction)
+                |> Option.defaultValue -1f
             Logger.push result
         ) |> ignore

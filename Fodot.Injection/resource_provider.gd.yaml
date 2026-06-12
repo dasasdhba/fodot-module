@@ -7,6 +7,12 @@ class_name: ResourceProvider
 fscript: [ "resource_provider" ]
 
 property:
+  mode:
+    type: int
+    value: 0
+    hint: PROPERTY_HINT_ENUM
+    hint_string: Owner,Parent
+
   readonly:
     type: bool
     value: true
@@ -14,4 +20,4 @@ property:
   lib:
     type: Dictionary[String, Resource]
     hint: PROPERTY_HINT_DICTIONARY_TYPE
-    hint_string: "String;Resource"
+    hint_string: String;Resource

@@ -16,7 +16,7 @@ type CutsceneProvider(node : Node) =
     let outPool = bind.OutScene |> Option.map poolMapper
     
     let nodeMapper (p :AsyncScene<Node>) =
-        p.Get() |> GodotObject.getInterface<ICutscene>
+        p.Get() |> GodotObject.getScript<ICutscene>
 
     member this.CreateConfig () : CutsceneConfig =
         let inNode = inPool |> Option.map nodeMapper

@@ -8,7 +8,7 @@
 
     <ItemGroup>
         <Compile Include="Bind.fs" />
-        <Compile Include="OwnerMeta.fs" />
+        <Compile Include="MetaDict.fs" />
         <Compile Include="Res.fs" />
         <Compile Include="Compo.fs" />
         <Compile Include="Injector.fs" />

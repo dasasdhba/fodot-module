@@ -2,37 +2,36 @@ namespace Fodot.Injection
 
 open System
 open Fodot.Core
-open Fodot.Extend
 open Godot
 
-type OwnerMeta<'a> = WeakMeta<(string * 'a) list>
+type MetaDict<'a> = WeakMeta<(string * 'a) list>
 
-module OwnerMeta =
+module MetaDict =
     
-    let tryGetDict (node : Node) (dict : OwnerMeta<'a>) =
-        dict |> WeakMeta.tryGet (node |> Node.getOwnerOrSelf)
+    let tryGetDict (node : Node) (dict : MetaDict<'a>) =
+        dict |> WeakMeta.tryGet node
         
-    let getDict (node : Node) (dict : OwnerMeta<'a>) =
-        dict |> WeakMeta.getOrAdd (node |> Node.getOwnerOrSelf) (lazy [])
+    let getDict (node : Node) (dict : MetaDict<'a>) =
+        dict |> WeakMeta.getOrAdd node (lazy [])
     
-    let appendDict (node : Node) list (dict : OwnerMeta<'a>) =
-        dict |> WeakMeta.addOrUpdate (node |> Node.getOwnerOrSelf)
+    let appendDict (node : Node) list (dict : MetaDict<'a>) =
+        dict |> WeakMeta.addOrUpdate node
                 (lazy list)
                 (fun old -> list @ old)
     
-    let tryGet node key (dict : OwnerMeta<'a>) =
+    let tryGet node key (dict : MetaDict<'a>) =
         dict
         |> tryGetDict node
         |> Option.bind (fun d -> d |> List.tryFind (fun (k, _) -> k = key))
         |> Option.map snd
         
-    let findAll node (predictor: 'a -> 'b option) (dict : OwnerMeta<'a>) =
+    let findAll node (predictor: 'a -> 'b option) (dict : MetaDict<'a>) =
         dict
         |> tryGetDict node
         |> Option.map (fun d -> d |> List.choose (fun (_, a) -> predictor a))
         |> Option.defaultValue List.empty
         
-    let findOrAdd (node : Node) (predictor: 'a -> 'b option) (value : Lazy<'a * 'b>) (dict : OwnerMeta<'a>)  =
+    let findOrAdd (node : Node) (predictor: 'a -> 'b option) (value : Lazy<'a * 'b>) (dict : MetaDict<'a>)  =
         dict
         |> getDict node
         |> List.choose (fun (_, a) -> predictor a)
@@ -44,7 +43,7 @@ module OwnerMeta =
             b
         )
         
-    let getOrAdd (node : Node) key (predictor: 'a -> 'b option) (value : Lazy<'a * 'b>) (dict : OwnerMeta<'a>) =
+    let getOrAdd (node : Node) key (predictor: 'a -> 'b option) (value : Lazy<'a * 'b>) (dict : MetaDict<'a>) =
         dict
         |> getDict node
         |> List.tryFind (fun (k, _) -> k = key)

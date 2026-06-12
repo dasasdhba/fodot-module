@@ -1,47 +1,111 @@
-module Fodot.Injection.Res
+namespace Fodot.Injection
 
-open System
 open Fodot.Common
+open Fodot.Core
 open Fodot.Extend
 open Godot
 
-let map = OwnerMeta<Resource> ()
+module OwnerRes =
 
-let private predictor<'a when 'a :> Resource> (res: Resource) =
-    match res with
-    | :? 'a as a -> Some a
-    | _ -> None
+    let map = MetaDict<Resource> ()
+    
+    let findAllWith predictor node =
+        map |> MetaDict.findAll (node |> Node.getOwnerOrSelf) predictor
+    
+    let tryFindWith predictor node =
+        node |> findAllWith predictor |> List.tryHead
+    
+    let findWith predictor node =
+        node |> findAllWith predictor |> List.head
+    
+    let findOrAddWith predictor (value : Lazy<Resource * 'a>)   (node : Node) =
+        map
+        |> MetaDict.findOrAdd (node |> Node.getOwnerOrSelf) predictor value
+    
+    let getOrAddWith key predictor (value : Lazy<Resource * 'a>)  (node : Node) =
+        map
+        |> MetaDict.getOrAdd (node |> Node.getOwnerOrSelf) key predictor value
+    
+    let private predictor<'a when 'a :> Resource> (res: Resource) =
+        match res with
+        | :? 'a as a -> Some a
+        | _ -> None
+    
+    let findAll<'a when 'a :> Resource> node =
+        node |> findAllWith predictor<'a>
 
-let findAll<'a when 'a :> Resource> node =
-    map |> OwnerMeta.findAll node predictor<'a>
+    let tryFind<'a when 'a :> Resource> node =
+        node |> tryFindWith predictor<'a>
 
-let tryFind<'a when 'a :> Resource> node =
-    node |> findAll<'a> |> List.tryHead
+    let find<'a when 'a :> Resource> node =
+        node |> findWith predictor<'a>
 
-let find<'a when 'a :> Resource> node =
-    node |> findAll<'a> |> List.head
+    let findOrAdd<'a when 'a :> Resource> (value : Lazy<'a>)  (node : Node)=
+        node |> findOrAddWith predictor (lazy (value.Value, value.Value))
 
-let findOrAdd<'a when 'a :> Resource> (value : Lazy<'a>)  (node : Node)=
-    map
-    |> OwnerMeta.findOrAdd node predictor<'a> (lazy (
-        value.Value :> Resource, value.Value
-    ))
+    let tryGet<'a when 'a :> Resource> key node =
+        map
+        |> MetaDict.tryGet (node |> Node.getOwnerOrSelf) key
+        |> Option.bind predictor<'a>
 
-let tryGet<'a when 'a :> Resource> key node =
-    map
-    |> OwnerMeta.tryGet node key
-    |> Option.bind predictor<'a>
+    let get<'a when 'a :> Resource> key node =
+        node
+        |> tryGet<'a> key
+        |> Option.defaultWith (fun _ -> failwith $"ResourceProvider: Key {key} not found")
 
-let get<'a when 'a :> Resource> key node =
-    node
-    |> tryGet<'a> key
-    |> Option.defaultWith (fun _ -> failwith $"ResourceProvider: Key {key} not found")
+    let getOrAdd<'a when 'a :> Resource> key (value : Lazy<'a>)  (node : Node) =
+        node |> getOrAddWith key predictor<'a> (lazy (value.Value, value.Value))
+        
+module Res =
 
-let getOrAdd<'a when 'a :> Resource> key (value : Lazy<'a>)  (node : Node) =
-    map
-    |> OwnerMeta.getOrAdd node key predictor<'a> (lazy (
-        value.Value :> Resource, value.Value
-    ))
+    let map = MetaDict<Resource> ()
+    
+    let findAllWith predictor node =
+        map |> MetaDict.findAll node predictor
+    
+    let tryFindWith predictor node =
+        node |> findAllWith predictor |> List.tryHead
+    
+    let findWith predictor node =
+        node |> findAllWith predictor |> List.head
+    
+    let findOrAddWith predictor (value : Lazy<Resource * 'a>)   (node : Node) =
+        map
+        |> MetaDict.findOrAdd node predictor value
+    
+    let getOrAddWith key predictor (value : Lazy<Resource * 'a>)  (node : Node) =
+        map
+        |> MetaDict.getOrAdd node key predictor value
+    
+    let private predictor<'a when 'a :> Resource> (res: Resource) =
+        match res with
+        | :? 'a as a -> Some a
+        | _ -> None
+
+    let findAll<'a when 'a :> Resource> node =
+        node |> findAllWith predictor<'a>
+
+    let tryFind<'a when 'a :> Resource> node =
+        node |> tryFindWith predictor<'a>
+
+    let find<'a when 'a :> Resource> node =
+        node |> findWith predictor<'a>
+
+    let findOrAdd<'a when 'a :> Resource> (value : Lazy<'a>)  (node : Node)=
+        node |> findOrAddWith predictor (lazy (value.Value, value.Value))
+
+    let tryGet<'a when 'a :> Resource> key node =
+        map
+        |> MetaDict.tryGet node key
+        |> Option.bind predictor<'a>
+
+    let get<'a when 'a :> Resource> key node =
+        node
+        |> tryGet<'a> key
+        |> Option.defaultWith (fun _ -> failwith $"ResourceProvider: Key {key} not found")
+
+    let getOrAdd<'a when 'a :> Resource> key (value : Lazy<'a>)  (node : Node) =
+        node |> getOrAddWith key predictor<'a> (lazy (value.Value, value.Value))
 
 [<FScript("resource_provider")>]
 type private ResourceProvider(node : Node) =
@@ -60,16 +124,21 @@ type private ResourceProvider(node : Node) =
                     v
             (k, next) :: l
         ) []
-
+    
+    let map, target =
+        match bind.Mode with
+        | 0L -> OwnerRes.map, Node.getSceneOwner
+        | _ -> Res.map, Node.tryGetParent
+    
     let mutable injected = false
     let inject() =
         if injected then () else
         
         node
-        |> Node.getSceneOwner
+        |> target
         |> Option.iter (fun o ->
             injected <- true
-            map |> OwnerMeta.appendDict o list
+            map |> MetaDict.appendDict o list
         )
     
     do

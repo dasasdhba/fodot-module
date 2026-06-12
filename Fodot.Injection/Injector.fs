@@ -17,19 +17,19 @@ type private Injector(node : Node) =
             injected <- true
             
             Res.map
-            |> OwnerMeta.tryGetDict node
+            |> MetaDict.tryGetDict node
             |> Option.iter (fun r ->
-                Res.map |> OwnerMeta.appendDict o r
+                Res.map |> MetaDict.appendDict o r
             )
             
             Compo.map
-            |> OwnerMeta.tryGetDict node
+            |> MetaDict.tryGetDict node
             |> Option.map (fun l -> l |> List.map (fun (_, n) ->
                 let k = o.GetPathTo(n, true) |> string
                 k, n
             ))
             |> Option.iter (fun r ->
-                Compo.map |> OwnerMeta.appendDict o r
+                Compo.map |> MetaDict.appendDict o r
             )
         )
         

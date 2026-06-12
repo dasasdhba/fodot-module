@@ -10,6 +10,7 @@
         <Compile Include="MarkerFlipSync.fs" />
         <Compile Include="TestScript.fs" />
         <Compile Include="TestPhysics.fs" />
+        <Folder Include="Physics\" />
     </ItemGroup>
 
     <ItemGroup>

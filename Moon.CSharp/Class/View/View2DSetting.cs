@@ -6,7 +6,6 @@ namespace Moon.Class;
 [GlobalClass, Tool]
 public partial class View2DSetting : Node
 {
-    [ExportCategory("View2DSetting")]
     [Export]
     public bool AutoSetup { get; set; } = false;
     
@@ -128,15 +127,15 @@ public partial class View2DSetting : Node
     public override void _ValidateProperty(Dictionary property)
     {
         if (
-            ((string)property["name"] == "RegionRect" && !RegionOverride) ||
-            ((string)property["name"] == "RegionSmoothed" && !RegionOverride) ||
-            ((string)property["name"] == "RegionSmoothTime" && !RegionOverride) ||
-            ((string)property["name"] == "RegionSmoothTime" && !RegionSmoothed) ||
-            ((string)property["name"] == "FollowNode" && !FollowOverride) ||
-            ((string)property["name"] == "Margin" && !MarginOverride) ||
-            ((string)property["name"] == "Offset" && !OffsetOverride) ||
-            ((string)property["name"] == "Zoom" && !ZoomOverride) ||
-            ((string)property["name"] == "MinZoom" && !ZoomOverride)
+            (property["name"].AsStringName() == PropertyName.RegionRect && !RegionOverride) ||
+            (property["name"].AsStringName() == PropertyName.RegionSmoothed && !RegionOverride) ||
+            (property["name"].AsStringName() == PropertyName.RegionSmoothTime && !RegionOverride) ||
+            (property["name"].AsStringName() == PropertyName.RegionSmoothTime && !RegionSmoothed) ||
+            (property["name"].AsStringName() == PropertyName.FollowNode && !FollowOverride) ||
+            (property["name"].AsStringName() == PropertyName.Margin && !MarginOverride) ||
+            (property["name"].AsStringName() == PropertyName.Offset && !OffsetOverride) ||
+            (property["name"].AsStringName() == PropertyName.Zoom && !ZoomOverride) ||
+            (property["name"].AsStringName() == PropertyName.MinZoom && !ZoomOverride)
             )
         {
             property["usage"] = (uint)PropertyUsageFlags.ReadOnly;

@@ -7,7 +7,6 @@ namespace Moon.Component;
 [GlobalClass, Tool]
 public partial class ViewDestroyer : ViewMonitor
 {
-    [ExportCategory("ViewDestroyer")]
     [Export]
     public bool Disabled { get; set; } = false;
     

@@ -9,7 +9,6 @@ public partial class ColorFill : NodeSize2D, ISerializationListener
 public partial class ColorFill : NodeSize2D
 #endif
 {
-    [ExportCategory("ColorFill")]
     [Export]
     public Color Color
     {

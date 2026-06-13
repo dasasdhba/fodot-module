@@ -12,7 +12,6 @@ public partial class RoundRect : NodeSize2D, ISerializationListener
 public partial class RoundRect : NodeSize2D
 #endif
 {
-    [ExportCategory("RoundRect")]
     [Export]
     public Color Color
     {

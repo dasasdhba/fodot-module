@@ -10,7 +10,6 @@ public partial class DebugFill : NodeSize2D
 #endif
 {
 #if DEBUG
-    [ExportCategory("DebugFill")]
     [Export]
     public Color DebugColor
     {

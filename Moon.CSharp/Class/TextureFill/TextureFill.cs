@@ -9,7 +9,6 @@ public partial class TextureFill : NodeSize2D, ISerializationListener
 public partial class TextureFill : NodeSize2D
 #endif
 {
-    [ExportCategory("TextureFill")]
     [Export]
     public Texture2D Texture
     {

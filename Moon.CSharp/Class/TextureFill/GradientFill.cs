@@ -9,7 +9,6 @@ public partial class GradientFill : NodeSize2D, ISerializationListener
 public partial class GradientFill : NodeSize2D
 #endif
 {
-    [ExportCategory("GradientFill")]
     [Export]
     public Gradient Gradient
     {

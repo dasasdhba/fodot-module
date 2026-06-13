@@ -5,7 +5,6 @@ namespace Moon.Class;
 [GlobalClass]
 public partial class InputReal : Inputer
 {
-    [ExportCategory("InputReal")]
     [Export]
     public bool Disabled { get ;set; } = false;
 

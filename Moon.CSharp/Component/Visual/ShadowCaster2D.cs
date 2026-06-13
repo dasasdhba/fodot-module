@@ -14,10 +14,9 @@ namespace Moon.Component;
 // this is due to layer issue, and we don't like to do sort operation like Nodes
 // (which is slow)
 
-[GlobalClass]
+[GlobalClass, Tool]
 public partial class ShadowCaster2D : Node
 {
-    [ExportCategory("ShadowCaster2D")]
     [Export]
     public bool Emitting { get; set; } = false;
     
@@ -53,14 +52,29 @@ public partial class ShadowCaster2D : Node
     public uint BufferCount { get; set; } = 5;
     
     [ExportGroup("Dependency")]
-    [Export]
-    public CanvasItem Root { get; set; }
+    [Export(PropertyHint.NodePathValidTypes, "CanvasItem")]
+    public NodePath Root { get; set; } = "..";
     
     /// <summary>
     /// Must be Sprite2D or AnimatedSprite2D.
     /// </summary>
     [Export]
-    public Array<CanvasItem> ShadowItems { get; set; }
+    public Array<NodePath> ShadowItems { get; set; } = [];
+    
+#if DEBUG
+    public override void _ValidateProperty(Dictionary property)
+    {
+        base._ValidateProperty(property);
+
+        if (property["name"].AsStringName() == PropertyName.ShadowItems)
+        {
+            property["hint"] = (int)PropertyHint.TypeString;
+            property["hint_string"] = $"{Variant.Type.NodePath:D}/{PropertyHint.NodePathValidTypes:D}:Sprite2D,AnimatedSprite2D";
+        }
+    }
+#endif
+    
+    private CanvasItem _Root;
 
     private class ShadowItem
     {
@@ -81,7 +95,7 @@ public partial class ShadowCaster2D : Node
 
         public ShadowItem(ShadowCaster2D caster, CanvasItem syncItem)
         {
-            Parent = caster.Root.GetParent();
+            Parent = caster._Root.GetParent();
             ParentId = Parent is CanvasItem item ? item.GetCanvasItem() : default;
             
             if (Parent != null) Parent.TreeExited += Free;
@@ -204,9 +218,10 @@ public partial class ShadowCaster2D : Node
                 ShadowQueues[i] = new Queue<ShadowItem>();
                 WorkingQueues[i] = new Queue<ShadowItem>();
                 var shadowItem = caster.ShadowItems[i];
+                var shadowNode = caster.GetNode<CanvasItem>(shadowItem);
                 for (int j = 0; j < shadowCount; j++)
                 {
-                    ShadowQueues[i].Enqueue(new ShadowItem(caster, shadowItem));
+                    ShadowQueues[i].Enqueue(new ShadowItem(caster, shadowNode));
                 }
             }
             
@@ -291,10 +306,21 @@ public partial class ShadowCaster2D : Node
 
     public ShadowCaster2D() : base()
     {
+    #if DEBUG
+        if (Engine.IsEditorHint()) return;    
+    #endif
+    
         TreeEntered += () =>
         {
+            _Root = GetNodeOrNull<CanvasItem>(Root);
+            if (_Root == null)
+            {
+                FD.PushError($"ShadowCaster2D {GetPath()}: Root is invalid.");
+                return;
+            }
+        
             ShadowProcessor = new(this);
-            Root.AddSiblingSafely(ShadowProcessor);
+            _Root.AddSiblingSafely(ShadowProcessor);
         };
         
         Ready += () =>

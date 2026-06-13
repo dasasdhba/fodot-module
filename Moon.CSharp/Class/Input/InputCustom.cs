@@ -12,8 +12,7 @@ public partial class InputCustom : Inputer
         Idle,
         Physics
     }
-
-    [ExportCategory("InputCustom")]
+    
     [Export]
     public InputCustomProcessCallback CustomProcessMode { get; set; }
         = InputCustomProcessCallback.Physics;

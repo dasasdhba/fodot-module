@@ -1,14 +1,12 @@
-using System;
 using Fodot.CSharp;
 using Godot;
 using Godot.Collections;
 
 namespace Moon.Class;
 
-[Tool, Obsolete("Obsolete")]
+[Tool]
 public partial class ParallaxLayer2D : ParallaxLayer
 {
-    [ExportCategory("ParallaxLayer2D")]
     [Export]
     public Vector2 AutoScroll { get ;set; }
 
@@ -44,11 +42,13 @@ public partial class ParallaxLayer2D : ParallaxLayer
     public override void _ValidateProperty(Dictionary property)
     {
         // disable transform
+        var name = property["name"].AsStringName();
+        
         if (
-            (string)property["name"] == "position" ||
-            (string)property["name"] == "rotation" ||
-            (string)property["name"] == "scale" ||
-            (string)property["name"] == "skew"
+            name == Node2D.PropertyName.Position ||
+            name == Node2D.PropertyName.Rotation ||
+            name == Node2D.PropertyName.Scale ||
+            name == Node2D.PropertyName.Skew
         )
         {
             property["usage"] = (uint)PropertyUsageFlags.None;

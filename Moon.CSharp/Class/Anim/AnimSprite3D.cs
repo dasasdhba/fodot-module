@@ -5,7 +5,6 @@ namespace Moon.Class;
 [GlobalClass]
 public partial class AnimSprite3D : AnimatedSprite3D
 {
-    [ExportCategory("AnimSprite3D")]
     [Export]
     public bool AutoPlay { get; set; } = true;
 

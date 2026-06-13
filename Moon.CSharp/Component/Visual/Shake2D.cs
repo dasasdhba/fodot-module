@@ -3,9 +3,9 @@ using Moon.CSharp;
 
 namespace Moon.Component;
 
-public partial class Node2DShake : Node2D
+[GlobalClass]
+public partial class Shake2D : Node2D
 {
-    [ExportCategory("Node2DShake")]
     [Export]
     public bool Disabled { get; set; }
     
@@ -20,15 +20,12 @@ public partial class Node2DShake : Node2D
     public void Activate() => Disabled = false;
     public void Disable() => Disabled = true;
     
-    public Node2DShake() : base()
+    public Shake2D() : base()
     {
-         TreeEntered += () =>
-         {
-             Origin = Position;
-         };
-         
          Ready += () =>
          {
+             Origin = Position;
+         
              this.ActionRepeatPhysics(Frequency, () =>
              {
                  if (Disabled)

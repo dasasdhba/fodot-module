@@ -12,12 +12,17 @@ public abstract partial class Inputer : Node
         Idle,
         Physics
     }
-
-    [ExportCategory("Inputer")]
+    
     [Export]
     public InputBufferProcessCallback BufferProcessMode { get; set; }
         = InputBufferProcessCallback.Physics;
         
+    /// <summary>
+    /// Disable buffer recovery when paused, this prevents, e.g.,
+    /// when resume button and jump button is the same key,
+    /// player may jump immediately after resume.
+    /// Add jump key here to prevent this.
+    /// </summary>
     [Export]
     public Array<string> BufferPauseGuards { get; set; } = [];
 

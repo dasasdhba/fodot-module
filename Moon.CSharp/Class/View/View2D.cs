@@ -11,8 +11,7 @@ namespace Moon.Class;
 public partial class View2D : Node2D
 {
     public enum View2DProcessCallbackMode { Idle, Physics }
-
-    [ExportCategory("View2D")]
+    
     [Export]
     public bool AutoCurrent { get; set; } = true;
     

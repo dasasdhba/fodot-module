@@ -6,7 +6,6 @@ namespace Moon.Class;
 [GlobalClass]
 public partial class NodePool : Node
 {
-    [ExportCategory("NodePool")]
     [Export]
     public int PoolSize { get; set; } = 100;
     

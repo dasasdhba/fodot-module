@@ -1,9 +1,11 @@
+using System;
+using System.Collections.Generic;
 using Godot;
 using Moon.CSharp;
 
 namespace Moon.Class;
 
-public partial class DrawParticles2D : DrawProcess2D
+public abstract partial class DrawParticles2D : DrawProcess2D
 {
     [ExportCategory("DrawParticles2D")]
     [Export]
@@ -13,12 +15,9 @@ public partial class DrawParticles2D : DrawProcess2D
     public double Interval { get ;set; } = 0.02d;
     
     /// <summary>
-    /// Make AddDrawProcess call here.
+    /// Yield particle process calls here.
     /// </summary>
-    protected virtual void ParticleSetup()
-    {
-        
-    }
+    protected abstract IEnumerable<Func<double, bool>> ParticleSetup();
 
     public DrawParticles2D() : base()
     {
@@ -28,7 +27,8 @@ public partial class DrawParticles2D : DrawProcess2D
             {
                 if (Emitting)
                 {
-                    ParticleSetup();
+                    foreach (var f in ParticleSetup())
+                        AddDrawProcess(f);
                 }
             },  ProcessCallback == Draw2DProcessCallback.Physics);
         };

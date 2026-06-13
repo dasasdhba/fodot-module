@@ -17,7 +17,6 @@ public partial class FramesFill : NodeSize2D, ISerializationListener
 public partial class FramesFill : NodeSize2D
 #endif
 {
-    [ExportCategory("FramesFill")]
     [Export]
     public SpriteFrames Frames
     {
@@ -196,7 +195,7 @@ public partial class FramesFill : NodeSize2D
     public override void _ValidateProperty(Dictionary property)
     {
         base._ValidateProperty(property);
-        if ((string)property["name"] is "Animation")
+        if (property["name"].AsStringName() == PropertyName.Animation)
         {
             property["hint"] = (uint)PropertyHint.Enum;
             if (Frames == null)

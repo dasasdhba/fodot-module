@@ -4,6 +4,6 @@ namespace Fodot.Injection;
 
 public partial class ParentComponent : Node
 {
-    public string[] _GetFScripts()
+    public static string[] _GetFScripts()
         => ["component"];
 }

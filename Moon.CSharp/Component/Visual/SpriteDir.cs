@@ -1,4 +1,5 @@
 using Fodot.CSharp;
+using Fodot.Injection;
 using Godot;
 using Moon.CSharp;
 using Moon.Interface;
@@ -6,21 +7,14 @@ using Moon.Library;
 
 namespace Moon.Component;
 
-[GlobalClass]
+[GlobalClass, ChildOf("CanvasItem")]
 public partial class SpriteDir : Node, IFlipHInit
 {
     /// <summary>
     /// The monitored moving node.
     /// </summary>
-    [ExportCategory("SpriteDir")]
     [Export(PropertyHint.NodePathValidTypes, "CanvasItem")]
     public NodePath TrackingNode { get ;set; }
-    
-    /// <summary>
-    /// Default value is parent.
-    /// </summary>
-    [Export(PropertyHint.NodePathValidTypes, "CanvasItem")]
-    public NodePath SpriteNode { get ;set; } = "..";
     
     [Export(PropertyHint.NodePathValidTypes, "Rotator")]
     public NodePath RotatorNode { get ;set; }
@@ -36,10 +30,25 @@ public partial class SpriteDir : Node, IFlipHInit
     private Rotator Rotator;
     
     private Recorder2D Recorder;
+    
+    public override void _EnterTree()
+    {
+        base._EnterTree();
+    #if DEBUG
+        if (Engine.IsEditorHint()) return;
+    #endif
+    
+        Sprite = GetParentOrNull<CanvasItem>();
+    }
+    
     public override void _Ready()
     {
+        base._Ready();
+    #if DEBUG
+        if (Engine.IsEditorHint()) return;
+    #endif
+    
         Root = GetNodeOrNull<CanvasItem>(TrackingNode);
-        Sprite = GetNode<CanvasItem>(SpriteNode);
         Rotator = GetNodeOrNull<Rotator>(RotatorNode);
         
         if (IsInstanceValid(Root)) Recorder = Recorder2DModule.get(Root);
@@ -65,7 +74,7 @@ public partial class SpriteDir : Node, IFlipHInit
         if (Disabled) return;
         
         var result = Flip ? !value : value;
-        Sprite.TrySetFlipH(result);
+        Sprite?.TrySetFlipH(result);
         Rotator?.Flip = result;
     }
 }

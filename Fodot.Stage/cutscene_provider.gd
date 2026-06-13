@@ -5,5 +5,5 @@ extends Node
 @export_custom(PROPERTY_HINT_NONE, "") var out_scene : PackedScene
 @export_custom(PROPERTY_HINT_NONE, "") var reuse_in_if_out_is_null : bool = true
 
-func _get_fscripts():
+static func _get_fscripts():
 	return ["cutscene_provider"]

@@ -7,7 +7,6 @@ namespace Moon.Component;
 [GlobalClass, Tool]
 public partial class ViewMonitor : Node
 {
-	[ExportCategory("ViewMonitor")]
 	[Export(PropertyHint.NodePathValidTypes, "CanvasItem")]
 	public NodePath MonitorNode { get; set; } = "..";
 	

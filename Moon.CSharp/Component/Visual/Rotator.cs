@@ -1,18 +1,12 @@
 using Fodot.CSharp;
+using Fodot.Injection;
 using Godot;
 
 namespace Moon.Component;
 
-[GlobalClass]
+[GlobalClass, ChildOf("CanvasItem")]
 public partial class Rotator : Node
 {
-    /// <summary>
-    /// Default value is parent.
-    /// </summary>
-    [ExportCategory("Rotator")]
-    [Export(PropertyHint.NodePathValidTypes, "CanvasItem")]
-    public NodePath RotateNode { get; set; } = "..";
-    
     [Export]
     public float Speed { get; set; } = 500f;
     
@@ -29,18 +23,29 @@ public partial class Rotator : Node
     
     private CanvasItem Parent;
     
-    public Rotator() : base()
+    public override void _EnterTree()
     {
-        Ready += () =>
-        {
-            Parent = GetNodeOrNull<CanvasItem>(RotateNode);
-            this.AddProcess(RotateProcess, ProcessCallback == RotatorProcessCallback.Physics);
-        };
+        base._EnterTree();
+    #if DEBUG
+        if (Engine.IsEditorHint()) return;
+    #endif
+        
+        Parent = GetParentOrNull<CanvasItem>();
+    }
+
+    public override void _Ready()
+    {
+        base._Ready();
+    #if DEBUG
+        if (Engine.IsEditorHint()) return;
+    #endif
+    
+        this.AddProcess(RotateProcess, ProcessCallback == RotatorProcessCallback.Physics);
     }
 
     private void RotateProcess(double delta)
     {
-        if (!IsInstanceValid(Parent) || Disabled) return;
+        if (Disabled || !IsInstanceValid(Parent)) return;
         
         var rotation = Fodot.Module.CanvasItem.getRotation(Parent);
         rotation += (float)Mathf.DegToRad(Speed * delta) * (Flip ? -1 : 1);

@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
         <GenerateDocumentationFile>$(DocumentationFileFlag)</GenerateDocumentationFile>
-        <RootNamespace>Moon</RootNamespace>
+        <RootNamespace>Moon.Script</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

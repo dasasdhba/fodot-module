@@ -57,6 +57,9 @@ type private View2DSettingScript(setting : View2DSetting) =
             v.Zoom <- setting.Zoom
             v.MinZoom <- setting.MinZoom
 
+        if setting.RotationOverride then
+            v.Rotation <- setting.Rotation
+
         if setting.SmoothRateOverride then
             v.SmoothPositionRate <-
                 if setting.SmoothEnabled then Some setting.SmoothRate else None

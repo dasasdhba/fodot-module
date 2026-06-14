@@ -5,6 +5,7 @@
         <EnableDynamicLoading>true</EnableDynamicLoading>
         <RootNamespace>Moon</RootNamespace>
         <EnableFodotChildOfGenerator>true</EnableFodotChildOfGenerator>
+        <NoWarn>$(NoWarn);CS0618</NoWarn>
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\library\Fodot.CSharp\Fodot.CSharp.csproj" />

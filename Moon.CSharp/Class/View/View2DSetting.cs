@@ -106,6 +106,21 @@ public partial class View2DSetting : Node
     [Export]
     public float MinZoom { get ;set; } = 1f;
 
+    [Export]
+    public bool RotationOverride
+    {
+        get => _RotationOverride;
+        set
+        {
+            _RotationOverride = value;
+            NotifyPropertyListChanged();
+        }
+    }
+    private bool _RotationOverride = false;
+
+    [Export(PropertyHint.Range, "-360,360,0.1,radians_as_degrees")]
+    public float Rotation { get ;set; } = 0f;
+
     [ExportGroup("Smooth", "Smooth")]
     [Export]
     public bool SmoothRateOverride
@@ -176,6 +191,7 @@ public partial class View2DSetting : Node
             (name == PropertyName.Margin && !MarginOverride) ||
             (name == PropertyName.Zoom && !ZoomOverride) ||
             (name == PropertyName.MinZoom && !ZoomOverride) ||
+            (name == PropertyName.Rotation && !RotationOverride) ||
             (name == PropertyName.SmoothEnabled && !SmoothRateOverride) ||
             (name == PropertyName.SmoothRate && !SmoothRateOverride) ||
             (name == PropertyName.SmoothZoomEnabled && !SmoothZoomRateOverride) ||

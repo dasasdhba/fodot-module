@@ -31,7 +31,7 @@ public partial class View2DHost : Node
     [Export]
     public float MinZoom { get ;set; } = 1f;
 
-    [Export]
+    [Export(PropertyHint.Range, "-360,360,0.1,radians_as_degrees")]
     public float Rotation { get ; set; } = 0f;
 
     [ExportGroup("Smooth", "Smooth")]

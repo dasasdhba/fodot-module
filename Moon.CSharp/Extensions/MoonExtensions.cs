@@ -75,20 +75,4 @@ public static class MoonExtensions
     }
     
     #endregion
-    
-    #region PhysicsBody
-    
-    public static bool IsOverlapping(this PhysicsBody2D body, Vector2 offset = default)
-        => body.TestMove(
-            body.GlobalTransform with { Origin = body.GlobalPosition + offset },
-            Vector2.Zero
-        );
-        
-    public static bool IsOverlapping(this PhysicsBody3D body, Vector3 offset = default)
-        => body.TestMove(
-            body.GlobalTransform with { Origin = body.GlobalPosition + offset },
-            Vector3.Zero
-        );
-    
-    #endregion
 }

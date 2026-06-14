@@ -34,9 +34,7 @@ public partial class Shake2D : Node2D
                      return;
                  }
         
-                 var offset = new Vector2(
-                     Mathe.RandfRange(-Amp.X, Amp.X), 
-                     Mathe.RandfRange(-Amp.Y, Amp.Y));
+                 var offset = Amp.Randomize();
                  Position = Origin + offset; 
              });
          };

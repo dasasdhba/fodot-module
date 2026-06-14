@@ -4,7 +4,7 @@
 
 shader_type canvas_item;
 
-uniform float zoom = 1.0; 
+uniform vec2 zoom = vec2(1.0, 1.0); 
 
 void fragment() {
 	vec2 c = vec2(0.5, 0.5);

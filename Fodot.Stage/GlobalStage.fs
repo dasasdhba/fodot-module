@@ -1,6 +1,5 @@
 module Fodot.Stage.GlobalStage
 
-open Fodot.Stage.Stage
 open Godot
 open Fodot.Common
 open Fodot.Core
@@ -36,5 +35,5 @@ type GlobalStage (node : Control) =
 
         let stage = node |> FScript.attach<Stage>
         let cutscene = node |> Node.getCutsceneConfig entryCutscene
-        stage |> queueChangeScene first cutscene |> ignore
+        stage.QueueChangeScene(first, cutscene) |> ignore
     )

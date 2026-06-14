@@ -8,10 +8,9 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\library\Fodot.CSharp\Fodot.CSharp.csproj" />
-      <ProjectReference Include="..\..\library\Moon.Utils\Moon.Utils.fsproj" />
       <ProjectReference Include="..\..\library\Moon.Common\Moon.Common.csproj" />
       <ProjectReference Include="..\..\library\Moon\Moon.fsproj" />
       <ProjectReference Include="..\Fodot.Injection.Class\Fodot.Injection.Class.csproj" />
-      <ProjectReference Include="..\Fodot.Stage\Fodot.Stage.fsproj" />
+      <ProjectReference Include="..\Moon.View\Moon.View.fsproj" />
     </ItemGroup>
 </Project>

@@ -5,95 +5,7 @@ open Fodot.Core
 open Godot
 open Fodot.Common
 
-type StageStatus =
-     | Pending
-     | Loading
-     | Ready
-
-[<FScript("stage")>]
-type Stage(node : Control) =
-     static let viewportPath = new NodePath "%Viewport"
-     static let cutscenePath = new NodePath "%Cutscene"
-     
-     member val Root = node
-     member val Viewport : Node =
-          node
-          |> Node.tryGetNode viewportPath
-          |> Option.defaultValue node
-     member val CutsceneRoot : Node =
-          node
-          |> Node.tryGetNode cutscenePath
-          |> Option.defaultValue node
-     
-     member val Status = Pending with get, set
-     member val CurrentScene : Node option = None with get, set
-     member this.CurrentScenePath
-          with get () =
-               match this.CurrentScene with
-               | Some n -> n.SceneFilePath
-               | None -> ""
-
 module Stage =
-     
-     // cutscene
-     
-     let private initCutscene (cutscene : ICutscene) (stage : Stage) = task {
-          let node = cutscene.Root
-          node.SetPosition Vector2.Zero
-          cutscene.SetSize stage.Root.Size
-          
-          if node.GetParent() <> stage.CutsceneRoot then
-               let waiting = node.ToSignalTreeEntered ()
-               if node.IsInsideTree() |> not then
-                    stage.CutsceneRoot |> Node.addChild node
-               else
-                    node |> Node.reparentDirectly stage.CutsceneRoot
-               do! waiting
-     }
-     
-     let fadeIn (cutscene : ICutscene) (stage : Stage) =
-          cutscene.FadeInInit ()
-          task {
-               do! stage |> initCutscene cutscene
-               do! cutscene.FadeIn ()
-          }
-          
-     let fadeOut (cutscene : ICutscene) (stage : Stage) =
-          cutscene.FadeOutInit ()
-          task {
-               do! stage |> initCutscene cutscene
-               do! cutscene.FadeOut ()
-          }
-          
-     let fadeInOutWith (middleTask: unit -> Task<unit>) (cutscene : CutsceneConfig) (stage : Stage) = task {
-          match cutscene.In with
-          | Some i -> do! stage |> fadeIn i
-          | None -> ()
-          
-          do! middleTask ()
-          
-          match cutscene.Out with
-          | Some o ->
-               o.FadeOutInit ()
-               do! stage |> initCutscene o
-               
-               match cutscene.In with
-               | Some i when i <> o -> i.Root.Hide()
-               | _ -> ()
-               
-               do! o.FadeOut ()
-               o.Root.QueueFree ()
-          | None -> ()
-          
-          cutscene.In
-          |> Option.map (fun i -> i.Root.QueueFree ())
-          |> ignore
-     }
-     
-     let fadeInOut (cutscene : CutsceneConfig) (stage : Stage) =
-          stage |> fadeInOutWith (fun () -> task {}) cutscene
-     
-     // load scene
      
      let asRelativePath (path : string) (current : string)=
           match path with
@@ -112,77 +24,165 @@ module Stage =
           
           | "" -> current
           | s -> s
-          
-     let loadScene (path : string) (stage : Stage) =
-          let path = stage.CurrentScenePath |> asRelativePath path
-          Task.Run (fun () ->
-               GD.loadAs<PackedScene> path |> PackedScene.instantiate
-          )
+
+type StageStatus =
+     | Pending
+     | Loading
+     | Ready
+
+[<FScript("stage")>]
+type Stage(node : Control) =
+     static let viewportPath = new NodePath "%Viewport"
+     static let cutscenePath = new NodePath "%Cutscene"
      
-     // change scene
+     let sceneCleared = Event<unit>()
+     let sceneReady = Event<unit>()
      
-     let clearScene (stage : Stage) = task {
-          match stage.CurrentScene with
+     member val Root = node
+     member val Viewport : Node =
+          node
+          |> Node.tryGetNode viewportPath
+          |> Option.defaultValue node
+     member val CutsceneRoot : Node =
+          node
+          |> Node.tryGetNode cutscenePath
+          |> Option.defaultValue node
+     
+     member val Status = Pending with get, set
+     member val CurrentScene : Node option = None with get, set
+     member this.CurrentScenePath
+          with get () =
+               match this.CurrentScene with
+               | Some n -> n.SceneFilePath
+               | None -> ""
+     
+     // scene
+     
+     member val SceneCleared = sceneCleared.Publish
+     member val SceneReady = sceneReady.Publish
+     
+     member this.ClearScene () = task {
+          match this.CurrentScene with
           | Some n ->
                n.QueueFree ()
                if n.IsInsideTree () then
                     do! n.ToSignalTreeExited ()
+               sceneCleared.Trigger ()
           | None -> ()
      }
      
-     let changeSceneWith (middleTask: unit -> Task<unit>) (scene : Node) (stage : Stage) = task {
-          do! stage |> clearScene
-          do! middleTask ()
+     member this.ChangeScene (scene : Node, ?middleTask: unit -> Task<unit>)= task {
+          do! this.ClearScene ()
+          match middleTask with
+          | Some task -> do! task()
+          | _ -> ()
           
-          stage.CurrentScene <- Some scene
-          stage.Viewport |> Node.addChild scene
+          this.CurrentScene <- Some scene
+          this.Viewport |> Node.addChild scene
           if scene.IsNodeReady() |> not then
                do! scene.ToSignalReady ()
-          
+         
           Engine.treeUpdateCache ()
-          stage.Status <- Ready
-          Logger.push $"Stage {stage.Root.GetPath()} is now at {stage.CurrentScenePath}"
+          this.Status <- Ready
+          sceneReady.Trigger ()
+          Logger.push $"Stage {this.Root.GetPath()} is now at {this.CurrentScenePath}"
      }
      
-     let changeScene (scene : Node) (stage : Stage) =
-          stage |> changeSceneWith (fun () -> task {}) scene
+     // cutscene
+     
+     member private this.initCutscene (cutscene : ICutscene)= task {
+          let node = cutscene.Root
+          node.SetPosition Vector2.Zero
+          cutscene.SetSize this.Root.Size
+          
+          if node.GetParent() <> this.CutsceneRoot then
+               let waiting = node.ToSignalTreeEntered ()
+               if node.IsInsideTree() |> not then
+                    this.CutsceneRoot |> Node.addChild node
+               else
+                    node |> Node.reparentDirectly this.CutsceneRoot
+               do! waiting
+     }
+     
+     member this.FadeIn (cutscene : ICutscene)=
+          cutscene.FadeInInit ()
+          task {
+               do! this.initCutscene cutscene
+               do! cutscene.FadeIn ()
+          }
+          
+     member this.FadeOut (cutscene : ICutscene) =
+          cutscene.FadeOutInit ()
+          task {
+               do! this.initCutscene cutscene
+               do! cutscene.FadeOut ()
+          }
+          
+     member this.FadeInOut (cutscene : CutsceneConfig, ?middleTask: unit -> Task<unit>) = task {
+          match cutscene.In with
+          | Some i -> do! this.FadeIn i
+          | None -> ()
+          
+          match middleTask with
+          | Some task -> do! task ()
+          | None -> ()
+          
+          match cutscene.Out with
+          | Some o ->
+               o.FadeOutInit ()
+               do! this.initCutscene o
+               
+               match cutscene.In with
+               | Some i when i <> o -> i.Root.Hide()
+               | _ -> ()
+               
+               do! o.FadeOut ()
+               o.Root.QueueFree ()
+          | None -> ()
+          
+          cutscene.In
+          |> Option.map (fun i -> i.Root.QueueFree ())
+          |> ignore
+     }
+     
+     member this.LoadScene (path : string) =
+          let path = this.CurrentScenePath |> Stage.asRelativePath path
+          Task.Run (fun () ->
+               GD.loadAs<PackedScene> path |> PackedScene.instantiate
+          )
      
      // queued change scene
      
-     let private fadeInOutAndChangeSceneWith (middleTask: unit -> Task<unit>) (path : string) (cutscene : CutsceneConfig) (stage : Stage) = 
-          stage.Status <- Loading
-          let loading = stage |> loadScene path
+     member private this.fadeInOutAndChangeSceneWith (path : string, ?cutscene : CutsceneConfig, ?middleTask: unit -> Task<unit>) = 
+          this.Status <- Loading
+          let loading = this.LoadScene path
           let changing () = task {
                let! scene = loading
-               do! stage |> changeSceneWith middleTask scene
+               do! this.ChangeScene(scene, ?middleTask = middleTask)
           }
-          stage |> fadeInOutWith changing cutscene
+          let cutscene = defaultArg cutscene CutsceneConfig.None
+          this.FadeInOut(cutscene, changing)
           
-     let queueChangeSceneWith (middleTask: unit -> Task<unit>) (path : string) (cutscene : CutsceneConfig) (stage : Stage) = task {
-          if stage.Status = Loading then
-               Logger.pushWarn $"Stage {stage.Root.GetPath()} has been queued for changing scene before, changing task to {path} will be cancelled."
+     member this.QueueChangeScene (path : string, ?cutscene : CutsceneConfig, ?middleTask: unit -> Task<unit>) = task {
+          if this.Status = Loading then
+               Logger.pushWarn $"Stage {this.Root.GetPath()} has been queued for changing scene before, changing task to {path} will be cancelled."
                ()
           else
-               do! stage |> fadeInOutAndChangeSceneWith middleTask path cutscene
+               do! this.fadeInOutAndChangeSceneWith (path, ?cutscene = cutscene, ?middleTask = middleTask)
      }
      
-     let queueChangeScene (path : string) (cutscene : CutsceneConfig) (stage : Stage) =
-          stage |> queueChangeSceneWith (fun () -> task {}) path cutscene
-     
-     let queueReloadWith (middleTask: unit -> Task<unit>) (cutscene : CutsceneConfig) (stage : Stage) =
-          stage |> queueChangeSceneWith middleTask "" cutscene
-     
-     let queueReload cutscene stage =
-          stage |> queueChangeScene "" cutscene
+     member this.QueueReload (?cutscene, ?middleTask) =
+          this.QueueChangeScene("", ?cutscene = cutscene, ?middleTask = middleTask)
 
-     let queueExit (cutscene : CutsceneConfig) (stage : Stage) = task {
-          if stage.Status = Loading then
-               Logger.pushWarn $"Stage {stage.Root.GetPath()} has been queued for changing scene before, exiting task will be cancelled."
+     member this.QueueExit (?cutscene : CutsceneConfig)= task {
+          if this.Status = Loading then
+               Logger.pushWarn $"Stage {this.Root.GetPath()} has been queued for changing scene before, exiting task will be cancelled."
                ()
           else
                let exit () = task {
-                    do! stage |> clearScene
-                    stage.Status <- Pending
+                    do! this.ClearScene ()
+                    this.Status <- Pending
                }
-               do! stage |> fadeInOutWith exit cutscene
+               let cutscene = defaultArg cutscene CutsceneConfig.None
+               do! this.FadeInOut(cutscene, exit)
      }

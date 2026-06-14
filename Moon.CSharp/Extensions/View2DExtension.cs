@@ -1,25 +1,26 @@
 ﻿using System;
-using Fodot.CSharp;
 using Godot;
+using Moon.View;
+using Node = Godot.Node;
 
-namespace Moon.Class;
+namespace Moon;
 
 /// <summary>
 /// Useful function to get current view info.
 /// </summary>
 public static class View2DExtension
 {
-    public static void ViewShake(this Node node, double time = 0.1d)
-        => node.GetView2D().ShakeStart(time);
-
-    public static void ViewShakeStop(this Node node)
-        => node.GetView2D().ShakeStop();
 
     public static View2D GetView2D(this Node node)
     {
-        var v = node.GetViewport();
-        return v.HasData(View2D.ViewMeta) ? 
-            v.GetData<View2D>(View2D.ViewMeta) : null;
+        try
+        {
+            return View2D.tryGet(node).Value;
+        }
+        catch (NullReferenceException)
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -31,7 +32,7 @@ public static class View2DExtension
     
         if (view is not null)
         {
-            return view.GetCurrentViewRect();
+            return view.CurrentRect;
         }
 
         if (node is CanvasItem item)
@@ -123,7 +124,7 @@ public static class View2DExtension
     public static Rect2 GetViewRegion(this Node node)
     {
         var view = node.GetView2D();
-        return view?.GetRegion() ?? default;
+        return view?.Region ?? default;
     }
 
     /// <summary>

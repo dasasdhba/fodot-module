@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+        <GenerateDocumentationFile>$(DocumentationFileFlag)</GenerateDocumentationFile>
+        <RootNamespace>Moon.View</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="View2D.fs" />
+        <Compile Include="Node.fs" />
+        <Compile Include="ViewShake.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\library\Moon.Common\Moon.Common.csproj" />
+      <ProjectReference Include="..\..\library\Moon\Moon.fsproj" />
+      <ProjectReference Include="..\Fodot.Stage\Fodot.Stage.fsproj" />
+    </ItemGroup>
+
+</Project>

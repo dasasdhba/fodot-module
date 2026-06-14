@@ -5,5 +5,5 @@ namespace Moon.Class;
 [GlobalClass, Tool]
 public partial class ViewRect2D : DebugFill
 {
-    public Rect2 GetViewRect() => new(GlobalPosition, Size);
+    public Rect2 GetRect() => new(GlobalPosition, Size);
 }

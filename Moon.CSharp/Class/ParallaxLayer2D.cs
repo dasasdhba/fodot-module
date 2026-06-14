@@ -5,7 +5,9 @@ using Godot.Collections;
 namespace Moon.Class;
 
 [Tool]
+#pragma warning disable CS0618 // Type or member is obsolete
 public partial class ParallaxLayer2D : ParallaxLayer
+#pragma warning restore CS0618 // Type or member is obsolete
 {
     [Export]
     public Vector2 AutoScroll { get ;set; }

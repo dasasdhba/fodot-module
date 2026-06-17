@@ -1,5 +1,6 @@
 namespace Moon.View
 
+open Fodot.Common
 open Fodot.Core
 open Fodot.Module
 open Fodot.Stage
@@ -196,20 +197,14 @@ type View2D(view : Viewport) =
             currentPosition <-
                 match smoothPositionRate with
                 | Some r ->
-                    currentPosition.MoveToward(
-                        target,
-                        (target - currentPosition).Length() * float32 (delta * r)
-                    )
+                    currentPosition.ConvToward(target, float32 (delta * r))
                 | None ->
                     target
                     
             currentZoom <-
                 match smoothZoomRate with
                 | Some r ->
-                    currentZoom.MoveToward(
-                        targetZoom,
-                        (targetZoom - currentZoom).Length() * float32 (delta * r)
-                    )
+                    currentZoom.ConvToward(targetZoom, float32 (delta * r))
                 | None ->
                     targetZoom
                     
@@ -321,7 +316,13 @@ type View2D(view : Viewport) =
     /// in which case the position will be overriden.
     member this.Position
         with get() = position
-        and set v = position <- v
+        and set v =
+            if trackingItem
+               |> Option.filter GodotObject.IsInstanceValid
+               |> Option.isSome then
+                Logger.pushWarn "View2D: trying to set position when TrackingItem is valid"
+            
+            position <- v
         
     member this.TrackingItem
         with get() = trackingItem

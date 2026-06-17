@@ -6,7 +6,7 @@ open Moon.Class
 open Moon.Module
 open Moon.View
 
-[<FScript("view_2d_host")>]
+[<FScript(typeof<View2DHost>)>]
 type private View2DHostScript(host : View2DHost) =
     do host.add_Ready (fun _ ->
         host
@@ -34,7 +34,7 @@ type private View2DHostScript(host : View2DHost) =
         )
     )
 
-[<FScript("view_2d_setting")>]
+[<FScript(typeof<View2DSetting>)>]
 type private View2DSettingScript(setting : View2DSetting) =
     let apply (v : View2D) =
         if setting.RegionOverride then

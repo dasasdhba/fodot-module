@@ -203,9 +203,7 @@ public partial class View2DSetting : Node
             property["usage"] = (uint)PropertyUsageFlags.ReadOnly;
         }
     }
-#endif    
-    
-    public static string[] _GetFScripts() => ["view_2d_setting"];
+#endif
     
     public event Action Applied; 
     

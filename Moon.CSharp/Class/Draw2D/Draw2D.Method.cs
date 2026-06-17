@@ -85,12 +85,17 @@ public partial class Draw2D
     private int DrawZIndex = 0;
     protected void SetDrawZIndex(int zIndex) => DrawZIndex = zIndex;
     protected void ResetDrawZIndex() => DrawZIndex = 0;
+    
+    private int DrawIndex = 0;
+    protected void SetDrawIndex(int index) => DrawIndex = index;
+    protected void ResetDrawIndex() => DrawIndex = 0;
 
     protected void AddDrawingTask(Action<Rid> task)
     {
         var queuedMaterial = (DrawMaterial ?? BlendMaterialMap[BlendMode]).GetRid();
         var queuedModulate = DrawModulate;
         int queuedZIndex = DrawZIndex;
+        var queuedIndex = DrawIndex;
         
         var queuedTransform = DrawTransform;
         var scale = queuedTransform.Scale;
@@ -121,6 +126,7 @@ public partial class Draw2D
             RenderingServer.CanvasItemSetMaterial(drawer, queuedMaterial);
             RenderingServer.CanvasItemSetModulate(drawer, queuedModulate);
             RenderingServer.CanvasItemSetZIndex(drawer, queuedZIndex);
+            RenderingServer.CanvasItemSetDrawIndex(drawer, queuedIndex);
             RenderingServer.CanvasItemSetTransform(drawer, queuedTransform);
             
             task.Invoke(drawer);

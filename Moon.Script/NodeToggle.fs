@@ -4,7 +4,7 @@ open Fodot.Common
 open Moon.Component
 open Moon.Library
 
-[<FScript("node_toggle")>]
+[<FScript(typeof<NodeToggle>)>]
 type private NodeToggleScript(node : NodeToggle) =
     
     let toggle =

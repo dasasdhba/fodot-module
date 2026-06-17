@@ -1,5 +1,6 @@
 ﻿using System;
 using Godot;
+using Microsoft.FSharp.Core;
 using Moon.View;
 using Node = Godot.Node;
 
@@ -13,14 +14,8 @@ public static class View2DExtension
 
     public static View2D GetView2D(this Node node)
     {
-        try
-        {
-            return View2D.tryGet(node).Value;
-        }
-        catch (NullReferenceException)
-        {
-            return null;
-        }
+        var result = View2D.tryGet(node);
+        return OptionModule.IsSome(result) ? result.Value : null;
     }
 
     /// <summary>

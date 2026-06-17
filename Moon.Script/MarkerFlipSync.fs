@@ -7,7 +7,7 @@ open Moon
 open Moon.Module
 open Moon.Component
 
-[<FScript("marker_flip_sync")>]
+[<FScript(typeof<MarkerFlipSync>)>]
 type private MarkerFlipSyncScript (marker : MarkerFlipSync) =
     
     let physics = marker.ProcessCallback = MarkerFlipSync.MarkerFlipSyncProcessCallback.Physics

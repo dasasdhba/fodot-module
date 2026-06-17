@@ -29,6 +29,7 @@ type StageStatus =
      | Pending
      | Loading
      | Ready
+     | Exiting
 
 [<FScript("stage")>]
 type Stage(node : Control) =
@@ -37,6 +38,7 @@ type Stage(node : Control) =
      
      let sceneCleared = Event<unit>()
      let sceneReady = Event<unit>()
+     let sceneExited = Event<unit>()
      
      member val Root = node
      member val Viewport : Node =
@@ -60,8 +62,9 @@ type Stage(node : Control) =
      
      member val SceneCleared = sceneCleared.Publish
      member val SceneReady = sceneReady.Publish
+     member val SceneExited = sceneExited.Publish
      
-     member this.ClearScene () = task {
+     member private this.ClearScene () = task {
           match this.CurrentScene with
           | Some n ->
                n.QueueFree ()
@@ -71,7 +74,16 @@ type Stage(node : Control) =
           | None -> ()
      }
      
-     member this.ChangeScene (scene : Node, ?middleTask: unit -> Task<unit>)= task {
+     member private this.ExitScene() = task {
+          do! this.ClearScene ()
+          
+          this.CurrentScene <- None
+          this.Status <- Pending
+          sceneExited.Trigger ()
+          Logger.push $"Stage {this.Root.GetPath()} has exited."
+     }
+     
+     member private this.ChangeScene (scene : Node, ?middleTask: unit -> Task<unit>)= task {
           do! this.ClearScene ()
           match middleTask with
           | Some task -> do! task()
@@ -153,36 +165,33 @@ type Stage(node : Control) =
      
      // queued change scene
      
-     member private this.fadeInOutAndChangeSceneWith (path : string, ?cutscene : CutsceneConfig, ?middleTask: unit -> Task<unit>) = 
-          this.Status <- Loading
-          let loading = this.LoadScene path
-          let changing () = task {
-               let! scene = loading
-               do! this.ChangeScene(scene, ?middleTask = middleTask)
-          }
-          let cutscene = defaultArg cutscene CutsceneConfig.None
-          this.FadeInOut(cutscene, changing)
+     member this.IsQueueReady() =
+          this.Status = Ready || this.Status = Pending
           
-     member this.QueueChangeScene (path : string, ?cutscene : CutsceneConfig, ?middleTask: unit -> Task<unit>) = task {
-          if this.Status = Loading then
+     member this.QueueChange (path : string, ?cutscene : CutsceneConfig, ?middleTask: unit -> Task<unit>) = task {
+          if this.IsQueueReady() |> not then
                Logger.pushWarn $"Stage {this.Root.GetPath()} has been queued for changing scene before, changing task to {path} will be cancelled."
                ()
           else
-               do! this.fadeInOutAndChangeSceneWith (path, ?cutscene = cutscene, ?middleTask = middleTask)
+               this.Status <- Loading
+               let loading = this.LoadScene path
+               let changing () = task {
+                    let! scene = loading
+                    do! this.ChangeScene(scene, ?middleTask = middleTask)
+               }
+               let cutscene = defaultArg cutscene CutsceneConfig.None
+               do! this.FadeInOut(cutscene, changing)
      }
      
      member this.QueueReload (?cutscene, ?middleTask) =
-          this.QueueChangeScene("", ?cutscene = cutscene, ?middleTask = middleTask)
+          this.QueueChange("", ?cutscene = cutscene, ?middleTask = middleTask)
 
      member this.QueueExit (?cutscene : CutsceneConfig)= task {
-          if this.Status = Loading then
+          if this.IsQueueReady() |> not then
                Logger.pushWarn $"Stage {this.Root.GetPath()} has been queued for changing scene before, exiting task will be cancelled."
                ()
           else
-               let exit () = task {
-                    do! this.ClearScene ()
-                    this.Status <- Pending
-               }
+               this.Status <- Exiting
                let cutscene = defaultArg cutscene CutsceneConfig.None
-               do! this.FadeInOut(cutscene, exit)
+               do! this.FadeInOut(cutscene, this.ExitScene)
      }

@@ -51,6 +51,4 @@ public abstract partial class NodeToggle : Node
     public void QuickOff() => Toggle.QuickOff();
     
     public abstract void OnValueUpdated(double v);
-    
-    public static string[] _GetFScripts() => [ "node_toggle" ];
 }

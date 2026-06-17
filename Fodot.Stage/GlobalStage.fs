@@ -35,5 +35,5 @@ type GlobalStage (node : Control) =
 
         let stage = node |> FScript.attach<Stage>
         let cutscene = node |> Node.getCutsceneConfig entryCutscene
-        stage.QueueChangeScene(first, cutscene) |> ignore
+        stage.QueueChange(first, cutscene) |> ignore
     )

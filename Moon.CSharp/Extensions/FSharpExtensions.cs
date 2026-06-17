@@ -1,9 +1,6 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Fodot.CSharp;
 using Godot;
-using Microsoft.FSharp.Core;
 
 namespace Moon.CSharp;
 

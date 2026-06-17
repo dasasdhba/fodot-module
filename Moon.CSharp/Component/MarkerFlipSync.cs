@@ -18,6 +18,4 @@ public partial class MarkerFlipSync : Marker2D
     public bool FlipH { get; set; } = false;
     public bool FlipV { get; set; } = false;
     public Vector2 Origin { get; set; }
-    
-    public static string[] _GetFScripts() => ["marker_flip_sync"];
 }

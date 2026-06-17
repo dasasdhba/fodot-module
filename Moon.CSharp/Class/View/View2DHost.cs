@@ -68,6 +68,4 @@ public partial class View2DHost : Node
     }
 
 #endif
-
-    public static string[] _GetFScripts() => ["view_2d_host"];
 }

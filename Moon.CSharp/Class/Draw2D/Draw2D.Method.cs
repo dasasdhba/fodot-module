@@ -8,7 +8,7 @@ public partial class Draw2D
 {
     // drawing API used in DrawProcess call.
 
-    protected enum Draw2DBlendMode
+    public enum Draw2DBlendMode
     {
         Mix,
         Add,
@@ -22,8 +22,8 @@ public partial class Draw2D
     /// <summary>
     /// Blend mode will be overridden by custom material.
     /// </summary>
-    protected void SetBlendMode(Draw2DBlendMode blendMode) => BlendMode = blendMode;
-    protected void ResetBlendMode() => BlendMode = Draw2DBlendMode.Mix;
+    public void SetBlendMode(Draw2DBlendMode blendMode) => BlendMode = blendMode;
+    public void ResetBlendMode() => BlendMode = Draw2DBlendMode.Mix;
 
     private Dictionary<Draw2DBlendMode, Material> BlendMaterialMap = new()
     {
@@ -49,51 +49,63 @@ public partial class Draw2D
     /// <summary>
     /// Non-null material will override blend mode setting.
     /// </summary>
-    protected void SetDrawMaterial(Material material) => DrawMaterial = material;
-    protected void ResetDrawMaterial() => DrawMaterial = null;
+    public void SetDrawMaterial(Material material) => DrawMaterial = material;
+    public void ResetDrawMaterial() => DrawMaterial = null;
 
-    private Color DrawModulate = new(1f, 1f, 1f);
+    private Color DrawModulate = Colors.White;
 
-    protected void SetDrawModulate(Color modulate) => DrawModulate = modulate;
-    protected void SetDrawModulateRGB(Color modulate)
+    public void SetDrawModulate(Color modulate) => DrawModulate = modulate;
+    public void SetDrawModulateRGB(Color modulate)
     {
         DrawModulate.R = modulate.R;
         DrawModulate.G = modulate.G;
         DrawModulate.B = modulate.B;
     }
-    protected void SetDrawModulateAlpha(float alpha) => DrawModulate.A = alpha;
-    protected void ResetDrawModulate() => DrawModulate = new(1f, 1f, 1f);
+    public void SetDrawModulateAlpha(float alpha) => DrawModulate.A = alpha;
+    public void ResetDrawModulate() => DrawModulate = Colors.White;
+    
+    private Color DrawSelfModulate = Colors.White;
+    public void SetDrawSelfModulate(Color modulate) => DrawSelfModulate = modulate;
+    public void SetDrawSelfModulateRGB(Color modulate)
+    {
+        DrawSelfModulate.R = modulate.R;
+        DrawSelfModulate.G = modulate.G;
+        DrawSelfModulate.B = modulate.B;
+    }
+    public void SetDrawSelfModulateAlpha(float alpha) => DrawSelfModulate.A = alpha;
+    public void ResetDrawSelfModulate() => DrawSelfModulate = Colors.White;
 
     private Transform2D DrawTransform = new(0f, new Vector2(0f, 0f));
     private bool DrawGlobal = false;
     
-    protected void SetDrawGlobal(bool global) => DrawGlobal = global;
-    protected void SetDrawTransform(Transform2D transform) => DrawTransform = transform;
-    protected void ResetDrawTransform()
+    public void SetDrawGlobal(bool global) => DrawGlobal = global;
+    public void SetDrawTransform(Transform2D transform) => DrawTransform = transform;
+    public void ResetDrawTransform()
     {
-        DrawTransform = new(0f, new Vector2(0f, 0f));
+        DrawTransform = Transform2D.Identity;
         DrawGlobal = false;
     }
-    protected void SetDrawPosition(Vector2 pos) => DrawTransform.Origin = pos;
-    protected void SetDrawRotation(float rotation) => DrawTransform = new(rotation, 
+    public void SetDrawPosition(Vector2 pos) => DrawTransform.Origin = pos;
+    public void SetDrawRotation(float rotation) => DrawTransform = new(rotation, 
         DrawTransform.Scale, DrawTransform.Skew, DrawTransform.Origin);
-    protected void SetDrawScale(Vector2 scale) => DrawTransform = new(DrawTransform.Rotation,
+    public void SetDrawScale(Vector2 scale) => DrawTransform = new(DrawTransform.Rotation,
         scale, DrawTransform.Skew, DrawTransform.Origin);
-    protected void SetDrawSkew(float skew) => DrawTransform = new(DrawTransform.Rotation,
+    public void SetDrawSkew(float skew) => DrawTransform = new(DrawTransform.Rotation,
         DrawTransform.Scale, skew, DrawTransform.Origin);
 
     private int DrawZIndex = 0;
-    protected void SetDrawZIndex(int zIndex) => DrawZIndex = zIndex;
-    protected void ResetDrawZIndex() => DrawZIndex = 0;
+    public void SetDrawZIndex(int zIndex) => DrawZIndex = zIndex;
+    public void ResetDrawZIndex() => DrawZIndex = 0;
     
     private int DrawIndex = 0;
-    protected void SetDrawIndex(int index) => DrawIndex = index;
-    protected void ResetDrawIndex() => DrawIndex = 0;
+    public void SetDrawIndex(int index) => DrawIndex = index;
+    public void ResetDrawIndex() => DrawIndex = 0;
 
-    protected void AddDrawingTask(Action<Rid> task)
+    public void AddDrawingTask(Action<Rid> task)
     {
         var queuedMaterial = (DrawMaterial ?? BlendMaterialMap[BlendMode]).GetRid();
         var queuedModulate = DrawModulate;
+        var queuedSelfModulate = DrawSelfModulate;
         int queuedZIndex = DrawZIndex;
         var queuedIndex = DrawIndex;
         
@@ -121,10 +133,11 @@ public partial class Draw2D
             queuedTransform = GlobalTransform.AffineInverse() * queuedTransform;
         }
 
-        QueuedDrawingTasks.Add((drawer) =>
+        QueuedDrawingTasks.Add(drawer =>
         {
             RenderingServer.CanvasItemSetMaterial(drawer, queuedMaterial);
             RenderingServer.CanvasItemSetModulate(drawer, queuedModulate);
+            RenderingServer.CanvasItemSetSelfModulate(drawer, queuedSelfModulate);
             RenderingServer.CanvasItemSetZIndex(drawer, queuedZIndex);
             RenderingServer.CanvasItemSetDrawIndex(drawer, queuedIndex);
             RenderingServer.CanvasItemSetTransform(drawer, queuedTransform);
@@ -138,7 +151,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawLine(Vector2, Vector2, Color, float, bool)"/>
     /// </summary>
-    protected void QueuedDrawLine(Vector2 from, Vector2 to, Color color, 
+    public void QueuedDrawLine(Vector2 from, Vector2 to, Color color, 
         float width = -1f, bool antialiased = false)
     {
         AddDrawingTask((drawer) =>
@@ -150,7 +163,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawMultiline(Vector2[], Color, float)"/>
     /// </summary>
-    protected void QueuedDrawMultiline(Vector2[] points, Color color, float width = -1f, bool antialiased = false)
+    public void QueuedDrawMultiline(Vector2[] points, Color color, float width = -1f, bool antialiased = false)
     {
         var colors = new Color[points.Length - 1];
         Array.Fill(colors, color);
@@ -164,7 +177,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawMultilineColors(Vector2[], Color[], float)"/>
     /// </summary>
-    protected void QueuedDrawMultilineColors(Vector2[] points, Color[] colors, float width = -1f, bool antialiased = false)
+    public void QueuedDrawMultilineColors(Vector2[] points, Color[] colors, float width = -1f, bool antialiased = false)
     {
         AddDrawingTask((drawer) =>
         {
@@ -175,7 +188,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawPolyline(Vector2[], Color, float, bool)"/>
     /// </summary>
-    protected void QueuedDrawPolyline(Vector2[] points, Color color,
+    public void QueuedDrawPolyline(Vector2[] points, Color color,
         float width = -1f, bool antialiased = false)
     {
         var colors = new Color[points.Length];
@@ -190,7 +203,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawPolylineColors(Vector2[], Color[], float, bool)"/>
     /// </summary>
-    protected void QueuedDrawPolylineColors(Vector2[] points, Color[] colors,
+    public void QueuedDrawPolylineColors(Vector2[] points, Color[] colors,
         float width = -1f, bool antialiased = false)
     {
         AddDrawingTask((drawer) =>
@@ -204,7 +217,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawArc(Vector2, float, float, float, int, Color, float, bool)"/>
     /// </summary>
-    protected void QueuedDrawArc(Vector2 center, float radius, float startAngle, float endAngle,
+    public void QueuedDrawArc(Vector2 center, float radius, float startAngle, float endAngle,
         Color color, int pointCount = 128, float width = -1f, bool antialiased = false)
     {
         var points = new Vector2[pointCount];
@@ -222,7 +235,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawCircle(Vector2, float, Color)"/>
     /// </summary>
-    protected void QueuedDrawCircle(Vector2 center, float radius, Color color, bool anitiliased = false)
+    public void QueuedDrawCircle(Vector2 center, float radius, Color color, bool anitiliased = false)
     {
         AddDrawingTask((drawer) =>
         {
@@ -233,7 +246,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawRect(Rect2, Color, bool, float)"/>
     /// </summary>
-    protected void QueuedDrawRect(Rect2 rect, Color color, bool antialiased = false)
+    public void QueuedDrawRect(Rect2 rect, Color color, bool antialiased = false)
     {
         AddDrawingTask((drawer) =>
         {
@@ -244,7 +257,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawPolygon(Vector2[], Color[], Vector2[], Texture2D)"/>
     /// </summary>
-    protected void QueuedDrawPolygon(Vector2[] points, Color[] colors,
+    public void QueuedDrawPolygon(Vector2[] points, Color[] colors,
         Vector2[] uvs = null, Texture2D texture = null)
     {
         var texId = texture?.GetRid() ?? default;
@@ -258,7 +271,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawColoredPolygon(Vector2[], Color, Vector2[], Texture2D)"/>
     /// </summary>
-    protected void QueuedDrawColoredPolygon(Vector2[] points, Color color,
+    public void QueuedDrawColoredPolygon(Vector2[] points, Color color,
         Vector2[] uvs = null, Texture2D texture = null)
     {
         var colors = new Color[points.Length];
@@ -270,7 +283,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawPrimitive(Vector2[], Color[], Vector2[], Texture2D)"/>
     /// </summary>
-    protected void QueuedDrawPrimitive(Vector2[] points, Color[] colors,
+    public void QueuedDrawPrimitive(Vector2[] points, Color[] colors,
         Vector2[] uvs = null, Texture2D texture = null)
     {
         var texId = texture?.GetRid() ?? default;
@@ -286,7 +299,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawTexture(Texture2D, Vector2, Color?)"/>
     /// </summary>
-    protected void QueuedDrawTexture(Texture2D texture, Vector2 pos, Color? modulate = null)
+    public void QueuedDrawTexture(Texture2D texture, Vector2 pos, Color? modulate = null)
     {
         if (texture == null) return;
         
@@ -305,7 +318,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawTextureRect(Texture2D, Rect2, bool, Color?, bool)"/>
     /// </summary>
-    protected void QueuedDrawTextureRect(Texture2D texture, Rect2 rect, bool tile,
+    public void QueuedDrawTextureRect(Texture2D texture, Rect2 rect, bool tile,
         Color? modulate = null, bool transpose = false)
     {
         if (texture == null) return;
@@ -319,7 +332,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawTextureRectRegion(Texture2D, Rect2, Rect2, Color?, bool, bool)"/>
     /// </summary>
-    protected void QueuedDrawTextureRectRegion(Texture2D texture, Rect2 rect, Rect2 srcRect,
+    public void QueuedDrawTextureRectRegion(Texture2D texture, Rect2 rect, Rect2 srcRect,
         Color? modulate = null, bool transpose = false, bool clipUV = true)
     {
         if (texture == null) return;
@@ -335,7 +348,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="QueuedDrawTexture"/>
     /// </summary>
-    protected void QueuedDrawSpriteFrames(SpriteFrames spr, string animation, int frame, 
+    public void QueuedDrawSpriteFrames(SpriteFrames spr, string animation, int frame, 
         Vector2 pos, Color? modulate = null)
     {
         var texture = spr.GetFrameTexture(animation, frame);
@@ -345,7 +358,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="QueuedDrawTextureRect"/>
     /// </summary>
-    protected void QueuedDrawSpriteFramesRect(SpriteFrames spr, string animation, int frame,
+    public void QueuedDrawSpriteFramesRect(SpriteFrames spr, string animation, int frame,
         Rect2 rect, bool tile, Color? modulate = null, bool transpose = false)
     {
         var texture = spr.GetFrameTexture(animation, frame);
@@ -355,7 +368,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="QueuedDrawTextureRectRegion"/>
     /// </summary>
-    protected void QueuedDrawSpriteFramesRectRegion(SpriteFrames spr, string animation, int frame,
+    public void QueuedDrawSpriteFramesRectRegion(SpriteFrames spr, string animation, int frame,
         Rect2 rect, Rect2 srcRect, Color? modulate = null, 
         bool transpose = false, bool clipUV = true)
     {
@@ -368,7 +381,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="QueuedDrawTexture"/>
     /// </summary>
-    protected void QueuedDrawSprite(Sprite2D spr, Vector2 pos, Color? modulate = null)
+    public void QueuedDrawSprite(Sprite2D spr, Vector2 pos, Color? modulate = null)
     {
         pos += spr.Offset;
         QueuedDrawTexture(spr.Texture, pos, modulate);
@@ -377,7 +390,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="QueuedDrawTextureRect"/>
     /// </summary>
-    protected void QueuedDrawSpriteRect(Sprite2D spr, Rect2 rect, bool tile,
+    public void QueuedDrawSpriteRect(Sprite2D spr, Rect2 rect, bool tile,
         Color? modulate = null, bool transpose = false)
     {
         QueuedDrawTextureRect(spr.Texture, rect, tile, modulate);
@@ -386,7 +399,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="QueuedDrawTextureRectRegion"/>
     /// </summary>
-    protected void QueuedDrawSpriteRectRegion(Sprite2D spr, Rect2 rect, Rect2 srcRect,
+    public void QueuedDrawSpriteRectRegion(Sprite2D spr, Rect2 rect, Rect2 srcRect,
         Color? modulate = null, bool transpose = false, bool clipUV = true)
     {
         QueuedDrawTextureRectRegion(spr.Texture, rect, srcRect, modulate, transpose, clipUV);
@@ -397,7 +410,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="QueuedDrawSpriteFrames"/>
     /// </summary>
-    protected void QueuedDrawAnimatedSprite(AnimatedSprite2D spr, Vector2 pos, Color? modulate = null)
+    public void QueuedDrawAnimatedSprite(AnimatedSprite2D spr, Vector2 pos, Color? modulate = null)
     {
         pos += spr.Offset;
         QueuedDrawSpriteFrames(spr.SpriteFrames, spr.Animation, spr.Frame, pos, modulate);
@@ -406,7 +419,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="QueuedDrawSpriteFramesRect"/>
     /// </summary>
-    protected void QueuedDrawAnimatedSpriteRect(AnimatedSprite2D spr, Rect2 rect, bool tile,
+    public void QueuedDrawAnimatedSpriteRect(AnimatedSprite2D spr, Rect2 rect, bool tile,
         Color? modulate = null, bool transpose = false)
     { 
         QueuedDrawSpriteFramesRect(spr.SpriteFrames, spr.Animation, spr.Frame, 
@@ -416,7 +429,7 @@ public partial class Draw2D
     /// <summary>
     /// <inheritdoc cref="QueuedDrawSpriteFramesRectRegion"/>
     /// </summary>
-    protected void QueuedDrawAnimatedSpriteRectRegion(AnimatedSprite2D spr, Rect2 rect, Rect2 srcRect,
+    public void QueuedDrawAnimatedSpriteRectRegion(AnimatedSprite2D spr, Rect2 rect, Rect2 srcRect,
         Color? modulate = null, bool transpose = false, bool clipUV = true)
     {
         QueuedDrawSpriteFramesRectRegion(spr.SpriteFrames, spr.Animation, spr.Frame,

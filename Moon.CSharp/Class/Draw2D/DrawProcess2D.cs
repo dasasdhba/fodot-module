@@ -9,13 +9,15 @@ namespace Moon.Class;
 public partial class DrawProcess2D : Draw2D
 {    
     private List<Func<double, bool>> QueuedTasks = [];
-    private List<Func<double, bool>> FinishedTasks = [];
+    public int GetQueuedTaskCount() => QueuedTasks.Count;
     
     public void AddDrawProcess(Func<double, bool> process)
         => QueuedTasks.Add(process);
 
     protected override bool DrawProcess(double delta)
     {
+        List<Func<double, bool>> finished = [];
+    
         foreach (var task in QueuedTasks)
         {
             ClearDrawSettings();
@@ -23,16 +25,14 @@ public partial class DrawProcess2D : Draw2D
             var result = task(delta);
             if (result)
             {
-                FinishedTasks.Add(task);
+                finished.Add(task);
             }
         }
         
-        foreach (var task in FinishedTasks)
+        foreach (var task in finished)
         {
             QueuedTasks.Remove(task);
         }
-        
-        FinishedTasks.Clear();
         
         return true;
     }

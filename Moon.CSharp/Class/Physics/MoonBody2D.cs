@@ -7,5 +7,11 @@ namespace Moon.Class;
 public partial class MoonBody2D : ParentComponent
 {
     [Export]
-    public Vector2[] SnapDirections { get ;set; } = [Vector2.Down];
+    public Vector2[] Snaps { get ;set; } = [Vector2.Down];
+    
+    [Signal]
+    public delegate void CrashedEventHandler();
+    
+    [Signal]
+    public delegate void SnappedEventHandler(CollisionObject2D col, Vector2 dir);
 }

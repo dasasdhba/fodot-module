@@ -4,7 +4,7 @@ using Moon.Interface;
 namespace Moon.Class;
 
 [GlobalClass]
-public partial class PlatformShape3D : CollisionShape3D, IPlatformShape
+public partial class PlatformShape3D : CollisionShape3D, IPlatformShape3D
 {
     [ExportGroup("OneWayCollision")]
     [Export(PropertyHint.GroupEnable, "OneWayCollision")]
@@ -12,4 +12,7 @@ public partial class PlatformShape3D : CollisionShape3D, IPlatformShape
 
     [Export(PropertyHint.Range, "0,10,0.001,suffix:m")]
     public float OneWayCollisionMargin { get ;set; } = 0.04f;
+    
+    [Export] 
+    public Vector3 OneWayCollisionDirection { get; set; } = Vector3.Down;
 }

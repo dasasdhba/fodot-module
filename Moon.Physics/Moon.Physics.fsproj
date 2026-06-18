@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+        <GenerateDocumentationFile>$(DocumentationFileFlag)</GenerateDocumentationFile>
+        <RootNamespace>Moon.Physics</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="MoonPhyicsServer.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="GodotSharp" Version="4.6.4-moon" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Fodot.Injection\Fodot.Injection.fsproj" />
+      <ProjectReference Include="..\Moon.CSharp\Moon.CSharp.csproj" />
+    </ItemGroup>
+
+</Project>

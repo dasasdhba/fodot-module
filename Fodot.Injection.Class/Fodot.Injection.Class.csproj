@@ -5,4 +5,7 @@
         <EnableDynamicLoading>true</EnableDynamicLoading>
         <RootNamespace>Fodot.Injection</RootNamespace>
     </PropertyGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\library\Fodot\Fodot.fsproj" />
+    </ItemGroup>
 </Project>

@@ -1,9 +1,10 @@
+using Fodot.Common;
 using Godot;
 
 namespace Fodot.Injection;
 
-public partial class OwnerComponent : Node
+public partial class OwnerComponent : Node, IFScripts
 {
-    public static string[] _GetFScripts()
+    public string[] GetFScripts()
         => ["owner_component"];
 }

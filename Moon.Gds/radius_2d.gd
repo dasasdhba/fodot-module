@@ -6,6 +6,7 @@ class_name Radius2D
 @export_range(-360.0, 360.0, 0.1, "degrees") var phase_degrees = 0.0
 @export var transposed := false
 @export var disabled := false
+@export_enum("Godot", "Fodot") var proc_type = 0
 @export_enum("Idle", "Physics") var proc_mode = 1
 
 var phase:
@@ -17,8 +18,12 @@ var phase:
 @onready var origin := position
 
 func _ready():
-	set_process(proc_mode == 0)
-	set_physics_process(proc_mode == 1)
+	if proc_type == 0:
+		set_process(proc_mode == 0)
+		set_physics_process(proc_mode == 1)
+	else:
+		set_process(false)
+		set_physics_process(false)
 
 func update(delta):
 	phase_degrees = wrap(phase_degrees + speed * delta, -180, 180)
@@ -32,3 +37,13 @@ func _physics_process(delta):
 
 func _process(delta):
 	update(delta)
+
+func _fs_process():
+	if proc_type == 1 && proc_mode == 0:
+		return update
+	return null
+
+func _fs_physics_process():
+	if proc_type == 1 && proc_mode == 1:
+		return update
+	return null

@@ -1,8 +1,9 @@
+using Fodot.Common;
 using Godot;
 
 namespace Fodot.Injection;
 
-public partial class NodeComponent : Node
+public partial class NodeComponent : Node, IFScripts
 {
     private enum ComponentInjectMode
     {
@@ -13,7 +14,7 @@ public partial class NodeComponent : Node
     [Export]
     private ComponentInjectMode InjectMode { get ;set; } = ComponentInjectMode.Parent;
     
-    public string[] _GetFScripts()
+    public string[] GetFScripts()
         => InjectMode == ComponentInjectMode.Parent ?
             ["component"] : ["owner_component"];
 }

@@ -40,10 +40,10 @@ func _process(delta):
 
 func _fs_process():
 	if proc_type == 1 && proc_mode == 0:
-		return update
+		return &"update"
 	return null
 
 func _fs_physics_process():
 	if proc_type == 1 && proc_mode == 1:
-		return update
+		return &"update"
 	return null

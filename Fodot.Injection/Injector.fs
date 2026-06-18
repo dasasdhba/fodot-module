@@ -1,36 +1,43 @@
 namespace Fodot.Injection
 
 open Fodot.Common
+open Fodot.Core
 open Fodot.Extend
 open Godot
 
-[<FScript("injector")>]
-type private Injector(node : Node) =
-    
-    let mutable injected = false
-    let inject() =
-        if injected then () else
-        
+module private InjectorStore =
+    let inject res compo scope (node : Node) =
         node
-        |> Node.getSceneOwner
-        |> Option.iter (fun o ->
-            injected <- true
-            
-            Res.map
+        |> scope
+        |> Option.map (fun o ->
+            res
             |> MetaDict.tryGetDict node
             |> Option.iter (fun r ->
-                Res.map |> MetaDict.appendDict o r
+                res |> MetaDict.appendDict o r
             )
             
-            Compo.map
+            compo
             |> MetaDict.tryGetDict node
             |> Option.map (fun l -> l |> List.map (fun (_, n) ->
                 let k = o.GetPathTo(n, true) |> string
                 k, n
             ))
             |> Option.iter (fun r ->
-                Compo.map |> MetaDict.appendDict o r
+                compo |> MetaDict.appendDict o r
             )
+        )
+
+[<FScript("owner_injector")>]
+type private OwnerInjector(node : Node) =
+    
+    let mutable injected = false
+    let inject() =
+        if injected then () else
+        
+        node
+        |> InjectorStore.inject OwnerRes.map OwnerCompo.map Node.getSceneOwner
+        |> Option.iter (fun _ ->
+            injected <- true
         )
         
     do
@@ -39,3 +46,20 @@ type private Injector(node : Node) =
         else
             inject ()
             node.add_Ready inject
+            
+[<FScript("injector")>]
+type private Injector(node : Node) =
+    
+    let mutable injected = false
+    let inject() =
+        if injected then () else
+        
+        node
+        |> InjectorStore.inject Res.map Compo.map Node.tryGetParent
+        |> Option.iter (fun _ ->
+            injected <- true
+        )
+        
+    do
+        inject ()
+        node.add_Ready inject

@@ -1,7 +1,6 @@
 namespace Moon.View
 
-open Fodot.Common
-open Fodot.Core
+open Fodot
 open Fodot.Module
 open Fodot.Stage
 open Godot
@@ -386,4 +385,3 @@ type View2D(view : Viewport) =
         
     member this.AddTransformers ts =
         queuedTransformers <- queuedTransformers @ ts
-        

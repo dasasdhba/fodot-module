@@ -1,6 +1,7 @@
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Moon.View.Node
 
-open Fodot.Core
+open Fodot
 open Godot
 open Moon.Library
 
@@ -18,4 +19,3 @@ let addViewTransformerBy (vf : View2D -> ProcessOption<View2DTransformer>) (node
 let addViewTransformer (f : ProcessFunc<View2DTransformer option>) node =
     node
     |> addViewTransformerBy (fun _ -> f)
-    

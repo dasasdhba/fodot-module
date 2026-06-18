@@ -1,9 +1,8 @@
 namespace Fodot.Stage
 
 open System.Threading.Tasks
-open Fodot.Core
+open Fodot
 open Godot
-open Fodot.Common
 
 module Stage =
      

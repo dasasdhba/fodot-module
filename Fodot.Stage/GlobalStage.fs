@@ -1,8 +1,7 @@
 module Fodot.Stage.GlobalStage
 
 open Godot
-open Fodot.Common
-open Fodot.Core
+open Fodot
 open Godot.Editor
 
 // this one works fine for single stage game

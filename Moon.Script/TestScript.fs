@@ -2,8 +2,7 @@ module Moon.Script.TestScript
 
 open System.Threading
 open Fodot.Async
-open Fodot.Common
-open Fodot.Core
+open Fodot
 open Fodot.Extend
 open Godot
 open Moon

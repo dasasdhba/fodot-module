@@ -1,6 +1,6 @@
 namespace Fodot.Stage.Bind
 
-open Fodot.Core
+open Fodot
 open Godot
 
 type CutsceneProvider(obj : Node) =

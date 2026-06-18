@@ -1,7 +1,7 @@
 namespace Fodot.Injection
 
 open System
-open Fodot.Core
+open Fodot
 open Godot
 
 type MetaDict<'a> = WeakMeta<(string * 'a) list>

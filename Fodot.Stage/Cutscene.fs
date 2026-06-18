@@ -2,8 +2,7 @@ namespace Fodot.Stage
 
 open System.Threading.Tasks
 open Fodot.Async.GD
-open Fodot.Common
-open Fodot.Core
+open Fodot
 open Godot
 
 type ICutscene =

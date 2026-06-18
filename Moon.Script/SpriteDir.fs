@@ -1,7 +1,6 @@
 namespace Moon.Script
 
-open Fodot.Common
-open Fodot.Core
+open Fodot
 open Godot
 open Moon.Component
 open Moon.Interface

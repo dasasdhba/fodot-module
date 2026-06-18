@@ -1,4 +1,4 @@
-using Fodot.Common;
+using Fodot;
 using Godot;
 
 namespace Fodot.Injection;

@@ -1,7 +1,7 @@
 namespace Fodot.Stage
 
 open Fodot.Async
-open Fodot.Common
+open Fodot
 open Fodot.Extend
 open Godot
 

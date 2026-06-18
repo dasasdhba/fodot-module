@@ -1,6 +1,6 @@
 namespace Moon.View
 
-open Fodot.Core
+open Fodot
 open Godot
 open Moon
 

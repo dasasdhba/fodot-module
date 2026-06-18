@@ -2,7 +2,6 @@
 using Godot;
 using Microsoft.FSharp.Core;
 using Moon.View;
-using Node = Godot.Node;
 
 namespace Moon;
 

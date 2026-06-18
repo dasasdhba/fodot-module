@@ -1,6 +1,6 @@
 namespace Moon.Script
 
-open Fodot.Common
+open Fodot
 open Moon.Component
 open Moon.Library
 

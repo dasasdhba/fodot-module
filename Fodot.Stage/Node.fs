@@ -1,6 +1,6 @@
 module Fodot.Stage.Node
 
-open Fodot.Core
+open Fodot
 open Godot
 open Fodot.Extend
 

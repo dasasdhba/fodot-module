@@ -1,8 +1,7 @@
 namespace Fodot.Injection
 
 open System
-open Fodot.Common
-open Fodot.Core
+open Fodot
 open Fodot.Extend
 open Godot
 

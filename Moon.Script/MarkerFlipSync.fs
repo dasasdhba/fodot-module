@@ -10,7 +10,7 @@ open Moon.Component
 type private MarkerFlipSyncScript (marker : MarkerFlipSync) =
     
     let physics = marker.ProcessCallback = MarkerFlipSync.MarkerFlipSyncProcessCallback.Physics
-    let anim = marker |> Node.tryGetNode marker.AnimNode
+    let anim = marker |> Node.tryGetParent
     
     let update () =
         anim

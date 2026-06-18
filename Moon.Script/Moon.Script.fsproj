@@ -11,8 +11,8 @@
         <Compile Include="MarkerFlipSync.fs" />
         <Compile Include="Rotator.fs" />
         <Compile Include="SpriteDir.fs" />
-        <Compile Include="View2D.fs" />
         <Compile Include="ShadowCaster2D.fs" />
+        <Compile Include="View2D.fs" />
         <Compile Include="TestScript.fs" />
         <Compile Include="TestPhysics.fs" />
         <Compile Include="TestProcess.fs" />

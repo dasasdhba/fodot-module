@@ -1,14 +1,11 @@
+using Fodot.Injection;
 using Godot;
 
 namespace Moon.Component;
 
-[GlobalClass]
+[GlobalClass, ChildOf("Sprite2D, AnimatedSprite2D")]
 public partial class MarkerFlipSync : Marker2D
 {
-    [ExportCategory("MarkerFlipSync")]
-    [Export(PropertyHint.NodePathValidTypes, "Sprite2D, AnimatedSprite2D, Sprite3D, AnimatedSprite3D")]
-    public NodePath AnimNode {  get; set; } = "..";
-    
     public enum MarkerFlipSyncProcessCallback { Idle, Physics }
     
     [Export]

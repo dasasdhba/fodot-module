@@ -1,10 +1,11 @@
 extends Node2D
 
+@export_category("DeferredFollower2D")
 @export var rate : float = 15.0
-@export_enum("Godot", "Fodot") var proc_type = 0
-@export_enum("Idle", "Physics") var proc_mode = 1
 @export_node_path("CanvasItem") var tracking_node : NodePath = ".."
 @export_node_path var reparent_root: NodePath = "../.."
+@export_enum("Godot", "Fodot") var proc_type = 0
+@export_enum("Idle", "Physics") var proc_mode = 1
 
 @onready var parent = get_node(tracking_node)
 

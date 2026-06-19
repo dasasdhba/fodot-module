@@ -13,7 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\library\Moon.Common\Moon.Common.csproj" />
+      <ProjectReference Include="..\..\library\Moon.CSharp\Moon.CSharp.csproj" />
       <ProjectReference Include="..\..\library\Moon\Moon.fsproj" />
       <ProjectReference Include="..\Fodot.Stage\Fodot.Stage.fsproj" />
     </ItemGroup>

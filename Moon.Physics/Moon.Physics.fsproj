@@ -19,7 +19,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\library\Fodot.Module\Fodot.Module.fsproj" />
-      <ProjectReference Include="..\..\library\Moon.Common\Moon.Common.csproj" />
+      <ProjectReference Include="..\..\library\Moon.CSharp\Moon.CSharp.csproj" />
       <ProjectReference Include="..\..\library\Moon.Utils\Moon.Utils.fsproj" />
       <ProjectReference Include="..\Fodot.Injection\Fodot.Injection.fsproj" />
       <ProjectReference Include="..\Moon.Physics.Class\Moon.Physics.Class.csproj" />

@@ -1,7 +1,7 @@
 using Fodot.Injection;
 using Godot;
 
-namespace Moon.Class;
+namespace Moon.Physics;
 
 [GlobalClass, ChildOf("CollisionObject2D")]
 public partial class MoonBody2D : ParentComponent

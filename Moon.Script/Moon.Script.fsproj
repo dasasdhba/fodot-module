@@ -20,6 +20,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Moon.CSharp\Moon.CSharp.csproj" />
+      <ProjectReference Include="..\Moon.Physics\Moon.Physics.fsproj" />
     </ItemGroup>
 
 </Project>

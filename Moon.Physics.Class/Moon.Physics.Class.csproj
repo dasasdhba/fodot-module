@@ -1,0 +1,12 @@
+﻿<Project Sdk="Godot.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+        <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">$(AndroidFrameworkVersion)</TargetFramework>
+        <EnableDynamicLoading>true</EnableDynamicLoading>
+        <RootNamespace>Moon.Physics</RootNamespace>
+        <EnableFodotChildOfGenerator>true</EnableFodotChildOfGenerator>
+    </PropertyGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Fodot.Injection.Class\Fodot.Injection.Class.csproj" />
+    </ItemGroup>
+</Project>

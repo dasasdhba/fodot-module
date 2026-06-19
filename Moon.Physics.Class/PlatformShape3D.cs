@@ -1,7 +1,6 @@
 using Godot;
-using Moon.Interface;
 
-namespace Moon.Class;
+namespace Moon.Physics;
 
 [GlobalClass]
 public partial class PlatformShape3D : CollisionShape3D, IPlatformShape3D

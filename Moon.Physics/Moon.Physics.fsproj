@@ -7,16 +7,22 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="MoonPhyicsServer.fs" />
+        <Compile Include="PhysicsQuery.fs" />
+        <Compile Include="PhysicsQueryResult.fs" />
+        <Compile Include="PhysicsState.fs" />
+        <Compile Include="PhysicsQueryPoint.fs" />
+        <Compile Include="PhysicsQueryRaycast.fs" />
+        <Compile Include="PhysicsQueryShape.fs" />
+        <Compile Include="PhysicsCollide.fs" />
+        <Compile Include="PhysicsServer.fs" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="GodotSharp" Version="4.6.4-moon" />
-    </ItemGroup>
-
-    <ItemGroup>
+      <ProjectReference Include="..\..\library\Fodot.Module\Fodot.Module.fsproj" />
+      <ProjectReference Include="..\..\library\Moon.Common\Moon.Common.csproj" />
+      <ProjectReference Include="..\..\library\Moon.Utils\Moon.Utils.fsproj" />
       <ProjectReference Include="..\Fodot.Injection\Fodot.Injection.fsproj" />
-      <ProjectReference Include="..\Moon.CSharp\Moon.CSharp.csproj" />
+      <ProjectReference Include="..\Moon.Physics.Class\Moon.Physics.Class.csproj" />
     </ItemGroup>
 
 </Project>

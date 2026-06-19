@@ -4,8 +4,6 @@ open Fodot
 open Fodot.Injection
 open Godot
 open Moon
-open Moon.Class
-open Moon.Library
 
 // one should make sure physics server is located
 // at the end of game physics process

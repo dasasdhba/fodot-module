@@ -3,9 +3,6 @@ using Godot.Collections;
 
 namespace Moon.Component;
 
-// we use RenderingServer for better performance
-// DO NOT CHANGE Interval, ShadowTime and ShadowItems in runtime.
-
 // HINT: keep emitting for a long time may cause overflow
 // this is due to layer issue, and we don't like to do sort operation like Nodes
 // (which is slow)

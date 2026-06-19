@@ -13,7 +13,7 @@ public partial class Shake2D : Node2D
     public double Frequency { get ;set; } = 0.02d;
     
     [Export]
-    public Vector2 Amp { get ;set; } = new(1f, 1f);
+    public Vector2 Amp { get ;set; } = new(4f, 4f);
     
     public Vector2 Origin { get ;set; }
     

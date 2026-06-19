@@ -1,4 +1,4 @@
-module Moon.Physics.PhysicsMotion
+module Moon.Physics.PhysicsCollide
 
 open FSharp.Extend
 open Godot

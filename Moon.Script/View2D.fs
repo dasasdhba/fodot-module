@@ -13,7 +13,7 @@ type private View2DHostScript(host : View2DHost) =
         |> Option.iter (fun v ->
             v.Region <-
                 host
-                |> Node.tryGetNode<ViewRect2D> host.RegionRect
+                |> Node.tryGetNode<View2DRect> host.RegionRect
                 |> Option.map _.GetRect()
                 |> Option.defaultValue host.Region
             v.Margin <- host.Margin
@@ -39,7 +39,7 @@ type private View2DSettingScript(setting : View2DSetting) =
         if setting.RegionOverride then
             let region =
                 setting
-                |> Node.tryGetNode<ViewRect2D> setting.RegionRect
+                |> Node.tryGetNode<View2DRect> setting.RegionRect
                 |> Option.map _.GetRect()
                 |> Option.defaultValue setting.Region
             let time =

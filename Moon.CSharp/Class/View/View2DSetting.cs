@@ -26,7 +26,7 @@ public partial class View2DSetting : Node
 
     private bool _RegionOverride = false;
 
-    [Export(PropertyHint.NodePathValidTypes, "ViewRect2D")]
+    [Export(PropertyHint.NodePathValidTypes, "View2DRect")]
     public NodePath RegionRect
     {
         get => _RegionRect;

@@ -6,7 +6,7 @@ namespace Moon.Class;
 [GlobalClass, Tool]
 public partial class View2DHost : Node
 {
-    [Export(PropertyHint.NodePathValidTypes, "ViewRect2D")]
+    [Export(PropertyHint.NodePathValidTypes, "View2DRect")]
     public NodePath RegionRect
     {
         get => _RegionRect;

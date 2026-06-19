@@ -14,7 +14,22 @@ module private MoonPhysicsScope2D =
         ResizeArray<CollisionObject2D * MoonBody2D>()
     let blocks =
         ResizeArray<CollisionObject2D * MoonBlock2D>()
+    
+    let private bodyQueries =
+        WeakMeta<PhysicsQueryShape2D>()
+    let private blockQueries =
+        WeakMeta<PhysicsQueryShape2D>()
         
+    let getBodyQuery (body : CollisionObject2D) =
+        bodyQueries |> WeakMeta.getOrAdd body (lazy (
+            PhysicsQueryShape2D body
+        ))
+        
+    let getBlockQuery (block : CollisionObject2D) =
+        blockQueries |> WeakMeta.getOrAdd block (lazy (
+            PhysicsQueryShape2D block
+        ))
+    
     [<FScript(typeof<CollisionObject2D>)>]
     type private MoonPhysicsObject2D(col : CollisionObject2D) =
         do
@@ -35,9 +50,6 @@ module private MoonPhysicsScope2D =
 
 [<FScript("moon_physics_server_2d")>]
 type private MoonPhysicsServer2D(node : Node) =
-    
-    let bodyQueries = WeakMeta<PhysicsQueryShape2D>()
-    let blockQueries = WeakMeta<PhysicsQueryShape2D>()
     
     let update (delta : float) =
         ()

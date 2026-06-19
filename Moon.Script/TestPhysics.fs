@@ -3,7 +3,7 @@ namespace Moon.Script
 open Fodot
 open Godot
 open Moon.Physics
-open Moon.Physics.PhysicsMotion
+open Moon.Physics.PhysicsCollide
 
 [<FScript("test_physics")>]
 type TestPhysics(col : CollisionObject2D) =

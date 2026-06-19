@@ -1,15 +1,15 @@
+using Fodot.CSharp;
 using Godot;
 using Godot.Collections;
-using Moon.Class;
 
 namespace Moon.Component;
 
 [GlobalClass, Tool]
-public partial class ViewMonitor : Node
+public partial class View2DMonitor : Marker2D
 {
-	[Export(PropertyHint.NodePathValidTypes, "CanvasItem")]
-	public NodePath MonitorNode { get; set; } = "..";
-	
+	[Export]
+	public bool AutoInvoke { get ;set; } = false;
+
 	public enum ViewArea { Current, All }
 	
 	[Export]
@@ -88,40 +88,29 @@ public partial class ViewMonitor : Node
 	}
 	
 #endif
-
-	protected CanvasItem Monitor { get; private set; }
-
-	public ViewMonitor() : base()
-	{
-	#if DEBUG
-		if (Engine.IsEditorHint()) return;
-	#endif	
-	
-		Ready += () => Monitor = GetNode<CanvasItem>(MonitorNode);
-	}
 	
 	private bool IsInArea() => Area == ViewArea.Current ?
-		Monitor.IsInView(Range) : Monitor.IsInViewRegion(Range);
+		this.IsInView(Range) : this.IsInViewRegion(Range);
 	
 	private bool IsInAreaDir() => Area == ViewArea.Current ?
-		Monitor.IsInViewDir(Direction, Range) :
-		Monitor.IsInViewRegionDir(Direction, Range);
+		this.IsInViewDir(Direction, Range) :
+		this.IsInViewRegionDir(Direction, Range);
 		
 	private bool IsInAreaTop() => Area == ViewArea.Current ?
-		Monitor.IsInViewTop(UpRange) :
-		Monitor.IsInViewRegionTop(UpRange);
+		this.IsInViewTop(UpRange) :
+		this.IsInViewRegionTop(UpRange);
 		
 	private bool IsInAreaBottom() => Area == ViewArea.Current ?
-		Monitor.IsInViewBottom(DownRange) :
-		Monitor.IsInViewRegionBottom(DownRange);
+		this.IsInViewBottom(DownRange) :
+		this.IsInViewRegionBottom(DownRange);
 		
 	private bool IsInAreaLeft() => Area == ViewArea.Current ?
-		Monitor.IsInViewLeft(LeftRange) :
-		Monitor.IsInViewRegionLeft(LeftRange);
+		this.IsInViewLeft(LeftRange) :
+		this.IsInViewRegionLeft(LeftRange);
 	
 	private bool IsInAreaRight() => Area == ViewArea.Current ?
-		Monitor.IsInViewRight(RightRange) :
-		Monitor.IsInViewRegionRight(RightRange);
+		this.IsInViewRight(RightRange) :
+		this.IsInViewRegionRight(RightRange);
 
 	public bool IsInView()
 	{
@@ -143,7 +132,19 @@ public partial class ViewMonitor : Node
 
 	public void Invoke()
 	{
-		if (IsInView()) EmitSignal(SignalName.InvokeInView);
-		else EmitSignal(SignalName.InvokeOutView);
+		if (IsInView()) EmitSignalInvokeInView();
+		else EmitSignalInvokeOutView();
+	}
+
+	public View2DMonitor() : base()
+	{
+	#if DEBUG
+		if (Engine.IsEditorHint()) return;	
+	#endif
+	
+		Ready += () =>
+		{
+			if (AutoInvoke) this.AddPhysicsProcess(Invoke);	
+		};
 	}
 }

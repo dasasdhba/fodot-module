@@ -14,7 +14,7 @@ type TestPhysics(col : CollisionObject2D) =
         col |> Engine.addPhysicsProcess (fun _ ->
             let result =
                 query.Build().Collide(Vector2.Down * 16f)
-                |> Option.map (fst >> _.SafeFraction)
+                |> Option.map _.Motion.SafeFraction
                 |> Option.defaultValue -1f
             Logger.push result
         ) |> ignore

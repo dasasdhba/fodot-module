@@ -17,7 +17,7 @@ let getInstance () =
     |> Option.defaultWith (fun _ -> failwith "GlobalStage singleton is not created yet.")
     
 [<FScript("global_stage")>]
-type GlobalStage (node : Control) =
+type private GlobalStage (node : Control) =
     do if Singleton.attach node &instance then
         Logger.push "GlobalStage loaded."
     

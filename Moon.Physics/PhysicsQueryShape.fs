@@ -205,6 +205,7 @@ type PhysicsShapeQuerier2D(parent : PhysicsQueryShape2D, shapes: (Shape2D * Tran
             |> Seq.truncate maxResult
         )
         |> Option.defaultValue Seq.empty
+        |> Seq.map PhysicsQueryShapeCastResult2D.From
     
     member this.Query (?offset : Vector2, ?maxResult : int, ?margin : float32) =
         state.SpaceState
@@ -401,6 +402,7 @@ type PhysicsShapeQuerier3D(parent : PhysicsQueryShape3D, shapes: (Shape3D * Tran
             |> Seq.truncate maxResult
         )
         |> Option.defaultValue Seq.empty
+        |> Seq.map PhysicsQueryShapeCastResult3D.From
     
     member this.Query (?offset : Vector3, ?maxResult : int, ?margin : float32) =
         state.SpaceState

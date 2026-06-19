@@ -1,5 +1,6 @@
 namespace Moon.Physics
 
+open Fodot
 open Godot
 open Moon.Utils
 
@@ -120,6 +121,9 @@ module PhysicsQuery =
     let setExclude (exclude : Rid list) (q : IPhysicsQuery) =
         let param = q.Param
         q.Param <- { param with Exclude = exclude }
+    
+    let appendExclude (exclude : Rid list) (q : IPhysicsQuery) =
+        q |> setExclude (exclude @ q.Param.Exclude)
     
     let addExclude (exclude : Rid) (q : IPhysicsQuery) =
         q |> setExclude (exclude :: q.Param.Exclude)

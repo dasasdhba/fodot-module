@@ -1,5 +1,6 @@
 namespace Moon.Physics
 
+open Fodot.Injection
 open Fodot.Module.PhysicsServer
 open Godot
 
@@ -172,25 +173,75 @@ type PhysicsQueryMotionResult =
             UnsafeFraction = result[1]
         }
 
+type PhysicsQueryShapeCastResult2D =
+    {
+        Motion : PhysicsQueryMotionResult
+        Result : PhysicsQueryShapeResult2D
+    }
+    
+    interface IPhysicsQueryResult with
+        member this.Collider = this.Result.Collider
+        member this.Rid = this.Result.Rid
+        member this.Shape = this.Result.Shape
+        
+    static member From (motion : PhysicsQueryMotionResult, result : PhysicsQueryShapeResult2D) =
+        {
+            Motion = motion
+            Result = result
+        }
+        
+type PhysicsQueryShapeCastResult3D =
+    {
+        Motion : PhysicsQueryMotionResult
+        Result : PhysicsQueryShapeResult3D
+    }
+    
+    interface IPhysicsQueryResult with
+        member this.Collider = this.Result.Collider
+        member this.Rid = this.Result.Rid
+        member this.Shape = this.Result.Shape
+        
+    static member From (motion : PhysicsQueryMotionResult, result : PhysicsQueryShapeResult3D) =
+        {
+            Motion = motion
+            Result = result
+        }
+
 module PhysicsQueryResult =
 
     let getOneWayParameters2D (r : IPhysicsQueryResult) =
-        if PhysicsServer2D.BodyIsShapeSetAsOneWayCollision(r.Rid, r.Shape) &&
-           PhysicsServer2D.ShapeIsOneWayCollisionAllowed(
-                PhysicsServer2D.BodyGetShape(r.Rid, r.Shape)
-           ) then
-            let margin = PhysicsServer2D.BodyGetShapeOneWayCollisionMargin(r.Rid, r.Shape)
-            let dir = PhysicsServer2D.BodyGetShapeOneWayCollisionDirection(r.Rid, r.Shape)
-            let bt = PhysicsServer2D.BodyGetTransform(r.Rid)
-            let st = PhysicsServer2D.BodyGetShapeTransform(r.Rid, r.Shape)
-            let gt = bt * st
-            let dir =
-                dir
-                |> gt.BasisXform
-                |> _.Normalized()
-            Some (dir, margin)
-        else
-            None
+        let fallback() =
+            if PhysicsServer2D.BodyIsShapeSetAsOneWayCollision(r.Rid, r.Shape) &&
+               PhysicsServer2D.ShapeIsOneWayCollisionAllowed(
+                    PhysicsServer2D.BodyGetShape(r.Rid, r.Shape)
+               ) then
+                let margin = PhysicsServer2D.BodyGetShapeOneWayCollisionMargin(r.Rid, r.Shape)
+                let dir = PhysicsServer2D.BodyGetShapeOneWayCollisionDirection(r.Rid, r.Shape)
+                let bt = PhysicsServer2D.BodyGetTransform(r.Rid)
+                let st = PhysicsServer2D.BodyGetShapeTransform(r.Rid, r.Shape)
+                let gt = bt * st
+                let dir =
+                    dir
+                    |> gt.BasisXform
+                    |> _.Normalized()
+                Some (dir, margin)
+            else
+                None
+        
+        match r.Collider with
+        | :? CollisionObject2D as col ->
+            col
+            |> Compo.tryFind<MoonPlatform2D>
+            |> Option.map(fun p ->
+                let margin = p.Margin
+                let dir =
+                    p.Direction
+                    |> col.GlobalTransform.BasisXform
+                    |> _.Normalized()
+                dir, margin
+            )
+            |> Option.orElseWith fallback
+        | _ -> fallback()
     
     let getOneWayDirection2D (r : IPhysicsQueryResult) =
         r
@@ -200,26 +251,71 @@ module PhysicsQueryResult =
     let getOneWayParameters3D (r : IPhysicsQueryResult) =
         match r.Collider with
         | :? CollisionObject3D as col ->
-            let owner =
-                r.Shape
-                |> col.ShapeFindOwner
-                |> col.ShapeOwnerGetOwner
-            match owner :> obj with
-            | :? IPlatformShape3D as p when p.OneWayCollision ->
-                let margin = p.OneWayCollisionMargin
-                let dir = p.OneWayCollisionDirection.Normalized ()
+            col
+            |> Compo.tryFind<MoonPlatform3D>
+            |> Option.map(fun p ->
+                let margin = p.Margin
                 let dir =
-                    p.GetGlobalTransform().Basis * dir
+                    col.GetGlobalTransform().Basis * p.Direction
                     |> _.Normalized()
-                Some (dir, margin)
-            | _ ->
-                None
+                dir, margin
+            )
+            |> Option.orElseWith (fun _ ->
+                let owner =
+                    r.Shape
+                    |> col.ShapeFindOwner
+                    |> col.ShapeOwnerGetOwner
+                match owner :> obj with
+                | :? IPlatformShape3D as p when p.OneWayCollision ->
+                    let margin = p.OneWayCollisionMargin
+                    let dir = p.OneWayCollisionDirection.Normalized ()
+                    let dir =
+                        p.GetGlobalTransform().Basis * dir
+                        |> _.Normalized()
+                    Some (dir, margin)
+                | _ ->
+                    None
+            )
         | _ -> None
     
     let getOneWayDirection3D (r : IPhysicsQueryResult) =
         r
         |> getOneWayParameters3D
         |> Option.map fst
+        
+    let allowTravelWhenCrash (r : IPhysicsQueryResult) =
+        match r.Collider with
+        | :? CollisionObject2D as col ->
+            col
+            |> Compo.tryFind<MoonPlatform2D>
+            |> Option.map _.CrashAsTravel
+            |> Option.defaultWith (fun _ ->
+                let owner =
+                    r.Shape
+                    |> col.ShapeFindOwner
+                    |> col.ShapeOwnerGetOwner
+                match owner :> obj with
+                | :? IPlatformShape as p ->
+                    p.CrashAsTravel
+                | _ ->
+                    false
+            )
+        | :? CollisionObject3D as col ->
+            col
+            |> Compo.tryFind<MoonPlatform3D>
+            |> Option.map _.CrashAsTravel
+            |> Option.defaultWith (fun _ ->
+                let owner =
+                    r.Shape
+                    |> col.ShapeFindOwner
+                    |> col.ShapeOwnerGetOwner
+                match owner :> obj with
+                | :? IPlatformShape as p ->
+                    p.CrashAsTravel
+                | _ ->
+                    false
+            )
+        | _ -> false
         
     let chooseAndExclude<'a, 'b when 'a :> IPhysicsQueryResult>
         (query : IPhysicsQuery)
@@ -234,3 +330,43 @@ module PhysicsQueryResult =
                 query |> PhysicsQuery.addExclude r.Rid
                 None
         )
+        
+    let filterAndExclude<'a when 'a :> IPhysicsQueryResult>
+        (query : IPhysicsQuery)
+        (pattern : 'a -> bool)
+        (results : 'a seq) : 'a seq =
+        
+        results
+        |> chooseAndExclude query (fun r ->
+            if pattern r then
+                Some r
+            else
+                None
+        )
+        
+    let existsAndExclude<'a when 'a :> IPhysicsQueryResult>
+        (query : IPhysicsQuery)
+        (pattern : 'a -> bool)
+        (results : 'a seq) : bool =
+        
+        results
+        |> filterAndExclude query pattern
+        |> Seq.isEmpty |> not
+        
+    let tryFindAndExclude<'a when 'a :> IPhysicsQueryResult>
+        (query : IPhysicsQuery)
+        (pattern : 'a -> bool)
+        (results : 'a seq) : 'a option =
+        
+        results
+        |> filterAndExclude query pattern
+        |> Seq.tryHead
+        
+    let tryPickAndExclude<'a, 'b when 'a :> IPhysicsQueryResult>
+        (query : IPhysicsQuery)
+        (pattern : 'a -> 'b option)
+        (results : 'a seq) : 'b option =
+        
+        results
+        |> chooseAndExclude query pattern
+        |> Seq.tryHead

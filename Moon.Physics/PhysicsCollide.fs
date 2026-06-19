@@ -30,13 +30,13 @@ type PhysicsShapeQuerier2D with
                 let minus = - maxDepth / motion.Length()
                 this.CastAndQuery(dir * (len + maxDepth), shift, ?margin = margin, ?maxResult = maxResult, hitFromInside = false)
                 |> Seq.tryHead
-                |> Option.map (fun (c, r) ->
+                |> Option.map (fun r ->
                     let c = {
-                        c with
-                            SafeFraction = c.SafeFraction + minus
-                            UnsafeFraction = c.UnsafeFraction + minus
+                        r.Motion with
+                            SafeFraction = r.Motion.SafeFraction + minus
+                            UnsafeFraction = r.Motion.UnsafeFraction + minus
                     }
-                    c, r
+                    { r with Motion = c }
                 )
             else
                 None
@@ -49,7 +49,7 @@ type PhysicsShapeQuerier2D with
             |> Seq.choose (fun (r, o) ->
                 o
                 |> Option.bind (function
-                    | v, m when v.Dot dir >= 0f && m > 0f -> Some (r, m)
+                    | v, m when m > 0f && v.Dot dir >= 0f -> Some (r, m)
                     | _ -> None
                 )
             )
@@ -63,25 +63,25 @@ type PhysicsShapeQuerier2D with
                         let minus = - m / len
                         this.CastAndQuery(dir * (len + m), shift, ?margin = margin, ?maxResult = maxResult, hitFromInside = false)
                         |> Seq.tryHead
-                        |> Option.map (fun (c, r) ->
+                        |> Option.map (fun r ->
                             let c = {
-                                c with
-                                    SafeFraction = c.SafeFraction + minus
-                                    UnsafeFraction = c.UnsafeFraction + minus
+                                r.Motion with
+                                    SafeFraction = r.Motion.SafeFraction + minus
+                                    UnsafeFraction = r.Motion.UnsafeFraction + minus
                             }
-                            c, r
+                            { r with Motion = c }
                         )
                     | _ -> None
             )
             |> Seq.choose id
-            |> Seq.tryMinBy (fst >> _.SafeFraction)
+            |> Seq.tryMinBy _.Motion.SafeFraction
         
         if solids |> Array.isEmpty |> not then
             travelSolid()
             |> Option.orElseWith (fun _ ->
                 this.Query(?offset = offset, ?maxResult = maxResult, ?margin = margin)
                 |> Seq.tryHead
-                |> Option.map (fun r -> PhysicsQueryMotionResult.Zero, r)
+                |> Option.map (fun r -> { Motion = PhysicsQueryMotionResult.Zero; Result = r})
             )
 
         elif platforms |> Array.isEmpty |> not then
@@ -92,14 +92,10 @@ type PhysicsShapeQuerier2D with
         // now do normal casting
         
         this.CastAndQuery(motion, ?offset = offset, ?maxResult = maxResult, ?margin = margin, hitFromInside = false)
-        |> Seq.choose (fun (c, r) ->
-            match 
-                r
-                |> PhysicsQueryResult.getOneWayParameters2D
-            with
-            
+        |> Seq.choose (fun r ->
+            match r |> PhysicsQueryResult.getOneWayParameters2D with
             | Some (d, _) when d.Dot motion <= 0f -> None
-            | _ -> Some (c, r)
+            | _ -> Some r
         )
         
         |> Seq.tryHead
@@ -131,13 +127,13 @@ type PhysicsShapeQuerier3D with
                 let minus = - maxDepth / motion.Length()
                 this.CastAndQuery(dir * (len + maxDepth), shift, ?margin = margin, ?maxResult = maxResult, hitFromInside = false)
                 |> Seq.tryHead
-                |> Option.map (fun (c, r) ->
+                |> Option.map (fun r ->
                     let c = {
-                        c with
-                            SafeFraction = c.SafeFraction + minus
-                            UnsafeFraction = c.UnsafeFraction + minus
+                        r.Motion with
+                            SafeFraction = r.Motion.SafeFraction + minus
+                            UnsafeFraction = r.Motion.UnsafeFraction + minus
                     }
-                    c, r
+                    { r with Motion = c }
                 )
             else
                 None
@@ -150,7 +146,7 @@ type PhysicsShapeQuerier3D with
             |> Seq.choose (fun (r, o) ->
                 o
                 |> Option.bind (function
-                    | v, m when v.Dot dir >= 0f && m > 0f -> Some (r, m)
+                    | v, m when m > 0f && v.Dot dir >= 0f -> Some (r, m)
                     | _ -> None
                 )
             )
@@ -164,25 +160,25 @@ type PhysicsShapeQuerier3D with
                         let minus = - m / len
                         this.CastAndQuery(dir * (len + m), shift, ?margin = margin, ?maxResult = maxResult, hitFromInside = false)
                         |> Seq.tryHead
-                        |> Option.map (fun (c, r) ->
+                        |> Option.map (fun r ->
                             let c = {
-                                c with
-                                    SafeFraction = c.SafeFraction + minus
-                                    UnsafeFraction = c.UnsafeFraction + minus
+                                r.Motion with
+                                    SafeFraction = r.Motion.SafeFraction + minus
+                                    UnsafeFraction = r.Motion.UnsafeFraction + minus
                             }
-                            c, r
+                            { r with Motion = c }
                         )
                     | _ -> None
             )
             |> Seq.choose id
-            |> Seq.tryMinBy (fst >> _.SafeFraction)
+            |> Seq.tryMinBy _.Motion.SafeFraction
         
         if solids |> Array.isEmpty |> not then
             travelSolid()
             |> Option.orElseWith (fun _ ->
                 this.Query(?offset = offset, ?maxResult = maxResult, ?margin = margin)
                 |> Seq.tryHead
-                |> Option.map (fun r -> PhysicsQueryMotionResult.Zero, r)
+                |> Option.map (fun r -> { Motion = PhysicsQueryMotionResult.Zero; Result = r})
             )
 
         elif platforms |> Array.isEmpty |> not then
@@ -193,14 +189,10 @@ type PhysicsShapeQuerier3D with
         // now do normal casting
         
         this.CastAndQuery(motion, ?offset = offset, ?maxResult = maxResult, ?margin = margin, hitFromInside = false)
-        |> Seq.choose (fun (c, r) ->
-            match 
-                r
-                |> PhysicsQueryResult.getOneWayParameters3D
-            with
-            
+        |> Seq.choose (fun r ->
+            match r |> PhysicsQueryResult.getOneWayParameters3D with
             | Some (d, _) when d.Dot motion <= 0f -> None
-            | _ -> Some (c, r)
+            | _ -> Some r
         )
         
         |> Seq.tryHead

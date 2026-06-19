@@ -1,5 +1,6 @@
 using Fodot.Injection;
 using Godot;
+using Microsoft.FSharp.Core;
 
 namespace Moon.Physics;
 
@@ -11,4 +12,7 @@ public partial class MoonBlock2D : ParentComponent
 
     [Export]
     public Vector2[] InvalidSnaps { get ;set; } = [];
+    
+    [Export]
+    public int MaxCollision { get ;set; } = 32;
 }

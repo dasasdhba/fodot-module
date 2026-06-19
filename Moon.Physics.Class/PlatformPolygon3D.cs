@@ -3,8 +3,11 @@ using Godot;
 namespace Moon.Physics;
 
 [GlobalClass]
-public partial class PlatformPolygon3D : CollisionPolygon3D, IPlatformShape3D
+public partial class PlatformPolygon3D : CollisionPolygon3D, IPlatformShape3D, IPlatformShape
 {
+    [Export] 
+    public bool CrashAsTravel { get; set; } = true;
+
     [ExportGroup("OneWayCollision")]
     [Export(PropertyHint.GroupEnable, "OneWayCollision")]
     public bool OneWayCollision { get ;set; } = true;

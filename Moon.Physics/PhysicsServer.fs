@@ -98,9 +98,12 @@ module private MoonPhysics2D =
         
         if shift = origin then Seq.empty else
         
-        let platformDir =
+        let platform =
             block
             |> Compo.tryFind<MoonPlatform2D>
+
+        let platformDir =
+            platform
             |> Option.map (fun p ->
                 p.Direction
                 |> shift.BasisXform
@@ -141,11 +144,36 @@ module private MoonPhysics2D =
             )
             |> Seq.filter (fun ((col, _, _, _), _) -> col.CanProcess())
         
+        let originInsideMargin =
+            platform
+            |> Option.map (fun p -> -(max p.Margin 1e-3f))
+            |> Option.defaultValue -1e-3f
+
         let originExclude =
             originQuery
-            |> getOverlappedInside -1e-3f
+            |> getOverlappedInside originInsideMargin
             |> Seq.map snd
             |> List.ofSeq
+
+        let originBlocking =
+            match platform with
+            | Some p ->
+                let dir =
+                    p.Direction
+                    |> origin.BasisXform
+                    |> _.Normalized()
+                originQuery
+                |> getOverlapped 1f
+                |> Seq.choose (fun ((_, _, _, normal), bodyRid) ->
+                    if originExclude |> List.contains bodyRid ||
+                       dir.Dot normal >= 0f then
+                        None
+                    else
+                        Some bodyRid
+                )
+                |> Seq.distinct
+            | None ->
+                Seq.empty
 
         originQuery
         |> PhysicsQuery.appendExclude originExclude
@@ -197,7 +225,9 @@ module private MoonPhysics2D =
                 // ignore push for platform
                 let canPush =
                     match platformDir with
-                    | Some dir -> dir.Dot motion > 0f
+                    | Some dir ->
+                        dir.Dot motion > 0f ||
+                        originBlocking |> Seq.contains cid
                     | _ -> true
                 
                 if canPush |> not then None else
@@ -218,24 +248,34 @@ module private MoonPhysics2D =
                 
                 // binarySearchAndPick expands past 1 when pick(1) succeeds.
                 // First contact is only meaningful between shift and origin,
-                // so reject an origin overlap instead of extrapolating.
+                // so do not extrapolate. For one-way platforms, a body that
+                // reaches this point was not deeply overlapped enough for
+                // originExclude; treat that shallow residual contact as a
+                // contact beginning at the origin transform.
                 let contactSearch =
-                    if pickNormalAt 1f |> Option.isSome then
+                    match pickNormalAt 1f, platform with
+                    | Some normal, Some _ ->
+                        Some ((1f, 1f), Some normal)
+                    | Some _, None ->
                         None
-                    else
+                    | None, _ ->
                         Some (Math.binarySearchAndPick 16 1e-3f pickNormalAt)
 
-                contactSearch
-                |> Option.bind (fun search ->
-                    search
-                    |> snd
-                    |> Option.filter (fun normal ->
-                        match platformDir with
-                        | Some d -> d.Dot normal < 0f
-                        | None -> true
+                let resolvedContact =
+                    contactSearch
+                    |> Option.bind (fun search ->
+                        search
+                        |> snd
+                        |> Option.map (fun normal -> search, normal)
                     )
-                    |> Option.map (fun normal -> search, normal)
-                )
+
+                if platform |> Option.isSome &&
+                   resolvedContact |> Option.isNone &&
+                   (contactSearch |> Option.exists (snd >> Option.isNone)) then
+                    Logger.pushWarn
+                        $"physics platform skipped: stage=no-contact-normal, block={rid}, body={cid}, contact={contact}"
+
+                resolvedContact
                 |> Option.bind (fun (contactSearch, v) ->
                     
                     // push through normal

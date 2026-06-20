@@ -1,5 +1,6 @@
 namespace Moon.Physics
 
+open Fodot
 open Fodot.Module
 open Godot
 
@@ -54,7 +55,7 @@ type PhysicsQueryShape2D(node : CollisionObject2D, param : PhysicsQueryBasicPara
     
     member val private Col = node
     member val State = state
-    member val Margin = 0f with get, set
+    member val Margin = -1e-5f with get, set
     member val HitFromInside = false with get, set
     member val MaxResult = 32 with get, set
 
@@ -95,21 +96,35 @@ type PhysicsShapeQuerier2D(parent : PhysicsQueryShape2D, shapes: (Shape2D * Tran
         
         if cast.SafeFraction >= 1f then None else
         
-        let travel = min 1f (cast.UnsafeFraction + 1e-5f)
-        let gt = gt |> Transform2D.withOrigin (gt.Origin + motion * travel)
         query.Shape <- s
-        query.Transform <- gt
         query.Motion <- Vector2.Zero
-       
-        dss.GetRestInfo query
-        |> Option.ofObj
-        |> Option.map (fun r ->
-            let res = PhysicsQueryShapeResult2D.From r
-            query.Exclude <-
-                let ex = query.Exclude
-                ex.Add res.Rid
-                ex
-            cast, res
+        
+        let travel = min 1f (cast.UnsafeFraction + 1e-3f)
+        let motion = motion * travel
+        let dir = motion.Normalized ()
+        let len = motion.Length ()
+        
+        let rec getRestInfo step maxTry =
+            if maxTry <= 0 then None else
+            
+            let gt = gt |> Transform2D.withOrigin (gt.Origin + dir * (len + step))
+            query.Transform <- gt
+           
+            match dss.GetRestInfo query with
+            | null ->
+                getRestInfo (step + 1f) (maxTry - 1)
+            | r ->
+                let res = PhysicsQueryShapeResult2D.From r
+                query.Exclude <-
+                    let ex = query.Exclude
+                    ex.Add res.Rid
+                    ex
+                (cast, res) |> Some
+        
+        getRestInfo 0f 4
+        |> Option.orElseWith (fun _ ->
+            Logger.pushWarn "MoonPhysics2D: Failed getting res info."
+            None
         )
     
     interface IPhysicsQuery with
@@ -122,7 +137,7 @@ type PhysicsShapeQuerier2D(parent : PhysicsQueryShape2D, shapes: (Shape2D * Tran
         |> Option.map (fun dss ->
             let offset = defaultArg offset Vector2.Zero
             let maxResult = defaultArg maxResult parent.MaxResult
-            let margin = (defaultArg margin parent.Margin) - 1e-5f
+            let margin = (defaultArg margin parent.Margin)
             
             seq {
                 let query = new PhysicsShapeQueryParameters2D()
@@ -206,7 +221,8 @@ type PhysicsShapeQuerier2D(parent : PhysicsQueryShape2D, shapes: (Shape2D * Tran
                         |> Seq.truncate maxResult
                         |> Seq.filter (fun (_ ,r) -> inside |> Array.exists (fun x -> x = r.Rid))
                 
-                yield! () |> Seq.unfold castUnfold
+                if motion <> Vector2.Zero then
+                    yield! () |> Seq.unfold castUnfold
             }
             |> Seq.truncate maxResult
         )
@@ -263,7 +279,7 @@ type PhysicsQueryShape3D(node : CollisionObject3D, param : PhysicsQueryBasicPara
     
     member val private Col = node
     member val State = state
-    member val Margin = 0f with get, set
+    member val Margin = -1e-5f with get, set
     member val HitFromInside = false with get, set
     member val MaxResult = 32 with get, set
 
@@ -304,21 +320,35 @@ type PhysicsShapeQuerier3D(parent : PhysicsQueryShape3D, shapes: (Shape3D * Tran
         
         if cast.SafeFraction >= 1f then None else
         
-        let travel = min 1f (cast.UnsafeFraction + 1e-5f)
-        let gt = gt |> Transform3D.withOrigin (gt.Origin + motion * travel)
         query.Shape <- s
-        query.Transform <- gt
         query.Motion <- Vector3.Zero
-       
-        dss.GetRestInfo query
-        |> Option.ofObj
-        |> Option.map (fun r ->
-            let res = PhysicsQueryShapeResult3D.From r
-            query.Exclude <-
-                let ex = query.Exclude
-                ex.Add res.Rid
-                ex
-            cast, res
+        
+        let travel = min 1f (cast.UnsafeFraction + 1e-3f)
+        let motion = motion * travel
+        let dir = motion.Normalized ()
+        let len = motion.Length ()
+        
+        let rec getRestInfo step maxTry =
+            if maxTry <= 0 then None else
+            
+            let gt = gt |> Transform3D.withOrigin (gt.Origin + dir * (len + step))
+            query.Transform <- gt
+           
+            match dss.GetRestInfo query with
+            | null ->
+                getRestInfo (step + 0.05f) (maxTry - 1)
+            | r ->
+                let res = PhysicsQueryShapeResult3D.From r
+                query.Exclude <-
+                    let ex = query.Exclude
+                    ex.Add res.Rid
+                    ex
+                (cast, res) |> Some
+        
+        getRestInfo 0f 4
+        |> Option.orElseWith (fun _ ->
+            Logger.pushWarn "MoonPhysics3D: Failed getting res info."
+            None
         )
     
     interface IPhysicsQuery with
@@ -331,7 +361,7 @@ type PhysicsShapeQuerier3D(parent : PhysicsQueryShape3D, shapes: (Shape3D * Tran
         |> Option.map (fun dss ->
             let offset = defaultArg offset Vector3.Zero
             let maxResult = defaultArg maxResult parent.MaxResult
-            let margin = (defaultArg margin parent.Margin) - 1e-5f
+            let margin = (defaultArg margin parent.Margin)
             
             seq {
                 let query = new PhysicsShapeQueryParameters3D()
@@ -415,7 +445,8 @@ type PhysicsShapeQuerier3D(parent : PhysicsQueryShape3D, shapes: (Shape3D * Tran
                         |> Seq.truncate maxResult
                         |> Seq.filter (fun (_ ,r) -> inside |> Array.exists (fun x -> x = r.Rid))
                 
-                yield! () |> Seq.unfold castUnfold
+                if motion <> Vector3.Zero then
+                    yield! () |> Seq.unfold castUnfold
             }
             |> Seq.truncate maxResult
         )

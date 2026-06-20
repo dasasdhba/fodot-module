@@ -207,6 +207,54 @@ type PhysicsQueryShapeCastResult3D =
             Result = result
         }
 
+type PhysicsQueryCollisionResult2D =
+    {
+        Result : PhysicsQueryShapeResult2D
+        Motion : PhysicsQueryMotionResult
+        Recovered : bool
+    }
+    
+    interface IPhysicsQueryResult with
+        member this.Collider = this.Result.Collider
+        member this.Rid = this.Result.Rid
+        member this.Shape = this.Result.Shape
+        
+    static member From (result : PhysicsQueryShapeCastResult2D) = {
+        Result = result.Result
+        Motion = result.Motion
+        Recovered = false
+    }
+    
+    static member FromRecovered (result : PhysicsQueryShapeCastResult2D) = {
+        Result = result.Result
+        Motion = result.Motion
+        Recovered = true
+    }
+    
+type PhysicsQueryCollisionResult3D =
+    {
+        Result : PhysicsQueryShapeResult3D
+        Motion : PhysicsQueryMotionResult
+        Recovered : bool
+    }
+    
+    interface IPhysicsQueryResult with
+        member this.Collider = this.Result.Collider
+        member this.Rid = this.Result.Rid
+        member this.Shape = this.Result.Shape
+    
+    static member From (result : PhysicsQueryShapeCastResult3D) = {
+        Result = result.Result
+        Motion = result.Motion
+        Recovered = false
+    }
+    
+    static member FromRecovered (result : PhysicsQueryShapeCastResult3D) = {
+        Result = result.Result
+        Motion = result.Motion
+        Recovered = true
+    }
+    
 module PhysicsQueryResult =
 
     let getOneWayParameters2D (r : IPhysicsQueryResult) =

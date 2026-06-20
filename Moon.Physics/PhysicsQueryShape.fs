@@ -194,11 +194,17 @@ type PhysicsShapeQuerier2D(parent : PhysicsQueryShape2D, shapes: (Shape2D * Tran
                     castQuery motion offset dss query
                     |> Option.map (fun r -> r, ())
                 
-                if hitFromInside &&
-                   this.QueryInside(offset = offset, maxResult = 1, margin = margin)
-                   |> Seq.isEmpty |> not then
+                if hitFromInside then
+                    let inside =
+                        this.QueryInside(offset = offset, maxResult = maxResult, margin = margin)
+                        |> Seq.map _.Rid
+                        |> Array.ofSeq
                     
-                    yield! () |> Seq.unfold insideUnfold
+                    yield!
+                        ()
+                        |> Seq.unfold insideUnfold
+                        |> Seq.truncate maxResult
+                        |> Seq.filter (fun (_ ,r) -> inside |> Array.exists (fun x -> x = r.Rid))
                 
                 yield! () |> Seq.unfold castUnfold
             }
@@ -223,10 +229,16 @@ type PhysicsShapeQuerier2D(parent : PhysicsQueryShape2D, shapes: (Shape2D * Tran
                     insideQuery offset dss query
                     |> Option.map (fun r -> r, ())
                 
-                if this.QueryInside(offset = offset, maxResult = 1, margin = margin)
-                   |> Seq.isEmpty |> not then
+                let inside =
+                    this.QueryInside(offset = offset, maxResult = maxResult, margin = margin)
+                    |> Seq.map _.Rid
+                    |> Array.ofSeq
                     
-                    yield! () |> Seq.unfold insideUnfold
+                yield!
+                    ()
+                    |> Seq.unfold insideUnfold
+                    |> Seq.truncate maxResult
+                    |> Seq.filter (fun r -> inside |> Array.exists (fun x -> x = r.Rid))
             }
             |> Seq.truncate maxResult
         )
@@ -391,11 +403,17 @@ type PhysicsShapeQuerier3D(parent : PhysicsQueryShape3D, shapes: (Shape3D * Tran
                     castQuery motion offset dss query
                     |> Option.map (fun r -> r, ())
                 
-                if hitFromInside &&
-                   this.QueryInside(offset = offset, maxResult = 1, margin = margin)
-                   |> Seq.isEmpty |> not then
+                if hitFromInside then
+                    let inside =
+                        this.QueryInside(offset = offset, maxResult = maxResult, margin = margin)
+                        |> Seq.map _.Rid
+                        |> Array.ofSeq
                     
-                    yield! () |> Seq.unfold insideUnfold
+                    yield!
+                        ()
+                        |> Seq.unfold insideUnfold
+                        |> Seq.truncate maxResult
+                        |> Seq.filter (fun (_ ,r) -> inside |> Array.exists (fun x -> x = r.Rid))
                 
                 yield! () |> Seq.unfold castUnfold
             }
@@ -420,10 +438,16 @@ type PhysicsShapeQuerier3D(parent : PhysicsQueryShape3D, shapes: (Shape3D * Tran
                     insideQuery offset dss query
                     |> Option.map (fun r -> r, ())
                 
-                if this.QueryInside(offset = offset, maxResult = 1, margin = margin)
-                   |> Seq.isEmpty |> not then
+                let inside =
+                    this.QueryInside(offset = offset, maxResult = maxResult, margin = margin)
+                    |> Seq.map _.Rid
+                    |> Array.ofSeq
                     
-                    yield! () |> Seq.unfold insideUnfold
+                yield!
+                    ()
+                    |> Seq.unfold insideUnfold
+                    |> Seq.truncate maxResult
+                    |> Seq.filter (fun r -> inside |> Array.exists (fun x -> x = r.Rid))
             }
             |> Seq.truncate maxResult
         )

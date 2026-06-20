@@ -6,6 +6,7 @@ open Fodot.Module.PhysicsServer
 open Godot
 open Moon
 open Moon.Physics.PhysicsCollide
+open Moon.Utils
 
 // one should make sure physics server is located
 // at the end of game physics process
@@ -38,6 +39,13 @@ module private MoonPhysics2D =
     let getBlockQuery (block : CollisionObject2D) =
         blockQueries |> WeakMeta.getOrAdd block (lazy (
             PhysicsQueryShape2D block
+        ))
+    
+    let bodyRays = WeakMeta<PhysicsQueryRaycast2D>()
+    
+    let getBodyRay (body : CollisionObject2D) =
+        bodyRays |> WeakMeta.getOrAdd body (lazy (
+            PhysicsQueryRaycast2D body
         ))
     
     let snapCheckAngle (angle : float32) (snap : Vector3)=
@@ -92,7 +100,7 @@ module private MoonPhysics2D =
             |> Compo.tryFind<MoonPlatform2D>
             |> Option.map (fun p ->
                 p.Direction
-                |> block.GlobalTransform.BasisXform
+                |> shift.BasisXform
                 |> _.Normalized()
             )
         
@@ -103,6 +111,18 @@ module private MoonPhysics2D =
         let currentQuery = query.Build ()
         
         // first check overlapped bodies and ignore them later
+        
+        let getOverlappedInside margin (q : PhysicsShapeQuerier2D) =
+            q.QueryInside (margin = margin, maxResult = arg.MaxCollision)
+            |> PhysicsQueryResult.chooseAndExclude q (fun r ->
+                match r.Collider with
+                | :? CollisionObject2D as col ->
+                    col
+                    |> Compo.tryFind<MoonBody2D>
+                    |> Option.map (fun _ -> col, r.Rid)
+                | _ -> None
+            )
+            |> Seq.filter (fun (col, _) -> col.CanProcess())
         
         let getOverlapped margin (q : PhysicsShapeQuerier2D) =
             q.Query (margin = margin, maxResult = arg.MaxCollision)
@@ -118,7 +138,7 @@ module private MoonPhysics2D =
         
         let originExclude =
             originQuery
-            |> getOverlapped query.Margin
+            |> getOverlappedInside -1f
             |> Seq.map snd
             |> List.ofSeq
         
@@ -159,60 +179,44 @@ module private MoonPhysics2D =
                 // rotation contributes the appropriate tangential motion.
                 let local = currentAf * contact
                 let prev = origin * local
-                let diff = prev - contact
+                let motion = prev - contact
                 
                 // ignore push for platform
-                let diff =
+                let canPush =
                     match platformDir with
-                    | Some dir ->
-                        let proj = dir.Dot diff
-                        if proj > 0f then
-                            proj * dir
-                        else
-                            Vector2.Zero
-                    | _ -> diff
+                    | Some dir -> dir.Dot motion > 0f
+                    | _ -> true
                 
-                if diff = Vector2.Zero then None else
+                if canPush |> not then None else
                 
-                let q = getBodyQuery col
-                let qr = q.Build ()
-                qr.CastAndQuery (motion = diff, maxResult = b.MaxCollision)
-                |> PhysicsQueryResult.tryPickAndExclude qr (fun r ->
-                    if r.Result.Rid = rid then
-                        Some (r.Result.Normal, cid)
+                let ray = getBodyRay col
+                ray.QueryGlobal (contact, contact + motion * 2f, maxResult = b.MaxCollision)
+                |> Seq.tryPick (fun r ->
+                    if r.Rid = rid then
+                        let normal = r.Normal
+                        match platformDir with
+                        | Some d when d.Dot normal >= 0f -> None
+                        | _ -> Some normal
                     else
                         None
                 )
-                |> Option.bind (fun (v, cid) ->
+                |> Option.bind (fun v ->
                     
                     // push through normal
                     
                     PhysicsServer2D.BodySetTransform(rid, shift)
-                    let len = max 1f (diff.Length())
-                    let mutable push = len
-                    let overlapped () =
-                        qr.QueryInside (offset = v * push, maxResult = b.MaxCollision)
+                    let q = getBlockQuery col
+                    let qr = q.Build ()
+                    let overlapped (push: float32) =
+                        qr.QueryInside (offset = v * push, maxResult = b.MaxCollision, margin = 1e-5f)
                         |> PhysicsQueryResult.existsAndExclude qr (fun r ->
                             r.Rid = rid
                         )
                     
-                    while overlapped () do
-                        push <- push + len
+                    let _, push = Math.binarySearch 8 overlapped
+                    let travel = v * push
                     
-                    let offset = v * push
-                    let rec getTravel step =
-                        let motion = -v * (push + step)
-                        qr.CastAndQuery (motion = motion, offset = offset)
-                        |> PhysicsQueryResult.filterAndExclude qr (fun r ->
-                            r.Result.Rid = rid
-                        )
-                        |> Seq.tryHead
-                        |> Option.map (fun r ->
-                            offset + r.Motion.SafeFraction * motion
-                        )
-                        |> Option.defaultWith (fun _ -> getTravel (step + 1f))
-                    
-                    col.GlobalPosition <- col.GlobalPosition + (getTravel 1f)
+                    col.GlobalPosition <- col.GlobalPosition + travel
                     PhysicsServer2D.BodySetTransform(cid, col.GlobalTransform)
                     
                     // report crash
@@ -232,7 +236,6 @@ module private MoonPhysics2D =
                     b
                     |> bodyGetSnap v
                     |> Option.bind (fun s ->
-                        let motion = -diff
                         let motion = motion - v * motion.Dot(v)
                         if motion = Vector2.Zero then
                             None
@@ -275,8 +278,9 @@ module private MoonPhysics2D =
                 remain
                 |> Seq.choose (fun (col, b, s, contact) ->
                     b.EmitSignalSnapped(block, s)
-                    let local = origin.AffineInverse() * contact
-                    let motion = shift * local - contact
+                    let local = currentAf * contact
+                    let prev = origin * local
+                    let motion = contact - prev
                     b.SnapMotions <- motion :: b.SnapMotions
 
                     Some (col, b)

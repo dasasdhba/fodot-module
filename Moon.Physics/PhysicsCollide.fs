@@ -1,7 +1,6 @@
 module Moon.Physics.PhysicsCollide
 
 open FSharp.Extend
-open Fodot
 open Godot
 open Moon.Utils
 
@@ -46,7 +45,7 @@ type PhysicsQueryRaycast3D with
 type PhysicsShapeQuerier2D with
 
     member this.QueryCollide (motion : Vector2, ?offset : Vector2, ?maxResult : int, ?margin : float32, ?hitFromInside : bool) =
-        this.CastAndQuery(motion, ?offset = offset, ?maxResult = maxResult, ?margin = margin, ?hitFromInside = hitFromInside)
+        this.Cast(motion, ?offset = offset, ?maxResult = maxResult, ?margin = margin, ?hitFromInside = hitFromInside)
         |> Seq.choose (fun r ->
             match r |> PhysicsQueryResult.getOneWayParameters2D with
             | Some (d, _) when d.Dot motion <= 0f -> None
@@ -70,18 +69,16 @@ type PhysicsShapeQuerier2D with
         let recover (dir : Vector2) offset depth =
             let overlap d =
                 this.QueryInside(offset + d * dir, ?maxResult = maxResult, ?margin = margin)
-                |> Seq.filter (fun r ->
+                |> Seq.exists (fun r ->
                     r
                     |> PhysicsQueryResult.getOneWayParameters2D
                     |> Option.isNone
                 )
-                |> Seq.isEmpty
-                |> not
             
             let shift = depth * dir
             let travel =
                 cast shift (Some offset) 
-                |> Option.map _.Motion.SafeFraction
+                |> Option.map _.SafeFraction
                 |> Option.defaultValue 1f
             let travel = travel * depth
             if overlap travel |> not then
@@ -94,11 +91,9 @@ type PhysicsShapeQuerier2D with
         let travelSolid (rep : PhysicsQueryShapeResult2D) : PhysicsQueryCollisionResult2D =
             let maxDepth = defaultArg maxDepth 4f
             if motion = Vector2.Zero || maxDepth <= 0f then
-                {
-                    Motion = PhysicsQueryMotionResult.Zero
-                    Result = rep
-                    Recovered = false
-                }
+                rep
+                |> PhysicsQueryShapeCastResult2D.From
+                |> PhysicsQueryCollisionResult2D.From
             else
             
             let offset = defaultArg offset Vector2.Zero
@@ -107,33 +102,22 @@ type PhysicsShapeQuerier2D with
             
             recover -dir offset maxDepth
             |> Option.map (fun (unsafe, safe) ->
-                let m = {
-                    UnsafeFraction = -unsafe / len
-                    SafeFraction = -safe / len
-                }
-                Logger.push $"{unsafe}, {safe}"
-                (m, rep)
+                (rep, -safe / len, -unsafe / len)
                 |> PhysicsQueryShapeCastResult2D.From
                 |> PhysicsQueryCollisionResult2D.From
             )
             |> Option.orElseWith (fun _ ->
                  recover dir offset maxDepth
                  |> Option.map (fun (unsafe, safe) ->
-                    let m = {
-                        UnsafeFraction = unsafe / len
-                        SafeFraction = safe / len
-                    }
-                    (m, rep)
+                    (rep, safe / len, unsafe / len)
                     |> PhysicsQueryShapeCastResult2D.From
                     |> PhysicsQueryCollisionResult2D.FromRecovered
                  )
             )
             |> Option.defaultWith (fun _ ->
-                {
-                    Motion = PhysicsQueryMotionResult.Zero
-                    Result = rep
-                    Recovered = false
-                }
+                rep
+                |> PhysicsQueryShapeCastResult2D.From
+                |> PhysicsQueryCollisionResult2D.From
             )
         
         let travelPlatform () =
@@ -160,16 +144,12 @@ type PhysicsShapeQuerier2D with
                 else
                     let unsafe, safe =
                         Math.binarySearch 16 1e-3f (fun d -> overlap (d * m))
-                    let m = {
-                        UnsafeFraction = -unsafe * m / len
-                        SafeFraction = -safe * m / len
-                    }
-                    (m, r)
+                    (r, -safe * m / len, -unsafe * m / len)
                     |> PhysicsQueryShapeCastResult2D.From
                     |> PhysicsQueryCollisionResult2D.From
                     |> Some
             )
-            |> Seq.tryMinBy _.Motion.SafeFraction
+            |> Seq.tryMinBy _.Result.SafeFraction
         
         if solids |> Array.isEmpty |> not then
             solids
@@ -191,7 +171,7 @@ type PhysicsShapeQuerier2D with
 type PhysicsShapeQuerier3D with
 
     member this.QueryCollide (motion : Vector3, ?offset : Vector3, ?maxResult : int, ?margin : float32, ?hitFromInside : bool) =
-        this.CastAndQuery(motion, ?offset = offset, ?maxResult = maxResult, ?margin = margin, ?hitFromInside = hitFromInside)
+        this.Cast(motion, ?offset = offset, ?maxResult = maxResult, ?margin = margin, ?hitFromInside = hitFromInside)
         |> Seq.choose (fun r ->
             match r |> PhysicsQueryResult.getOneWayParameters3D with
             | Some (d, _) when d.Dot motion <= 0f -> None
@@ -215,18 +195,16 @@ type PhysicsShapeQuerier3D with
         let recover (dir : Vector3) offset depth =
             let overlap d =
                 this.QueryInside(offset + d * dir, ?maxResult = maxResult, ?margin = margin)
-                |> Seq.filter (fun r ->
+                |> Seq.exists (fun r ->
                     r
                     |> PhysicsQueryResult.getOneWayParameters3D
                     |> Option.isNone
                 )
-                |> Seq.isEmpty
-                |> not
             
             let shift = depth * dir
             let travel =
                 cast shift (Some offset) 
-                |> Option.map _.Motion.SafeFraction
+                |> Option.map _.SafeFraction
                 |> Option.defaultValue 1f
             let travel = travel * depth
             if overlap travel |> not then
@@ -239,11 +217,9 @@ type PhysicsShapeQuerier3D with
         let travelSolid (rep : PhysicsQueryShapeResult3D) : PhysicsQueryCollisionResult3D =
             let maxDepth = defaultArg maxDepth 0.25f
             if motion = Vector3.Zero || maxDepth <= 0f then
-                {
-                    Motion = PhysicsQueryMotionResult.Zero
-                    Result = rep
-                    Recovered = false
-                }
+                rep
+                |> PhysicsQueryShapeCastResult3D.From
+                |> PhysicsQueryCollisionResult3D.From
             else
             
             let offset = defaultArg offset Vector3.Zero
@@ -252,33 +228,22 @@ type PhysicsShapeQuerier3D with
             
             recover -dir offset maxDepth
             |> Option.map (fun (unsafe, safe) ->
-                let m = {
-                    UnsafeFraction = -unsafe / len
-                    SafeFraction = -safe / len
-                }
-                Logger.push $"{unsafe}, {safe}"
-                (m, rep)
+                (rep, -safe / len, -unsafe / len)
                 |> PhysicsQueryShapeCastResult3D.From
                 |> PhysicsQueryCollisionResult3D.From
             )
             |> Option.orElseWith (fun _ ->
                  recover dir offset maxDepth
                  |> Option.map (fun (unsafe, safe) ->
-                    let m = {
-                        UnsafeFraction = unsafe / len
-                        SafeFraction = safe / len
-                    }
-                    (m, rep)
+                    (rep, safe / len, unsafe / len)
                     |> PhysicsQueryShapeCastResult3D.From
                     |> PhysicsQueryCollisionResult3D.FromRecovered
                  )
             )
             |> Option.defaultWith (fun _ ->
-                {
-                    Motion = PhysicsQueryMotionResult.Zero
-                    Result = rep
-                    Recovered = false
-                }
+                rep
+                |> PhysicsQueryShapeCastResult3D.From
+                |> PhysicsQueryCollisionResult3D.From
             )
         
         let travelPlatform () =
@@ -305,16 +270,12 @@ type PhysicsShapeQuerier3D with
                 else
                     let unsafe, safe =
                         Math.binarySearch 16 1e-3f (fun d -> overlap (d * m))
-                    let m = {
-                        UnsafeFraction = -unsafe * m / len
-                        SafeFraction = -safe * m / len
-                    }
-                    (m, r)
+                    (r, -safe * m / len, -unsafe * m / len)
                     |> PhysicsQueryShapeCastResult3D.From
                     |> PhysicsQueryCollisionResult3D.From
                     |> Some
             )
-            |> Seq.tryMinBy _.Motion.SafeFraction
+            |> Seq.tryMinBy _.Result.SafeFraction
         
         if solids |> Array.isEmpty |> not then
             solids

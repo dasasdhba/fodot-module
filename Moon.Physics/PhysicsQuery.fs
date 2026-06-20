@@ -1,6 +1,5 @@
 namespace Moon.Physics
 
-open Fodot
 open Godot
 open Moon.Utils
 

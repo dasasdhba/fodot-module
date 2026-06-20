@@ -142,75 +142,92 @@ type PhysicsQueryShapeResult3D =
             Normal = result.GetNormal()
             Velocity = result.GetLinearVelocity()
         }
-        
-type PhysicsQueryMotionResult =
-    {
-        SafeFraction : float32
-        UnsafeFraction : float32
-    }
-    
-    static member Default =
-        {
-            SafeFraction = 1f
-            UnsafeFraction = 1f
-        }
-    
-    static member Zero =
-        {
-            SafeFraction = 0f
-            UnsafeFraction = 0f
-        }
-    
-    static member FromValue(safe, ?unsafe) =
-        {
-            SafeFraction = safe
-            UnsafeFraction = defaultArg unsafe safe
-        }
-    
-    static member From (result: float32[]) =
-        {
-            SafeFraction = result[0]
-            UnsafeFraction = result[1]
-        }
 
 type PhysicsQueryShapeCastResult2D =
     {
-        Motion : PhysicsQueryMotionResult
-        Result : PhysicsQueryShapeResult2D
+        SafeFraction : float32
+        UnsafeFraction : float32
+        Collider : GodotObject
+        Rid : Rid
+        Shape : int
+        Position : Vector2
+        Normal : Vector2
+        Velocity : Vector2
     }
     
     interface IPhysicsQueryResult with
-        member this.Collider = this.Result.Collider
-        member this.Rid = this.Result.Rid
-        member this.Shape = this.Result.Shape
+        member this.Collider = this.Collider
+        member this.Rid = this.Rid
+        member this.Shape = this.Shape
         
-    static member From (motion : PhysicsQueryMotionResult, result : PhysicsQueryShapeResult2D) =
+    static member From (result : PhysicsShapeCastResult2D) =
         {
-            Motion = motion
-            Result = result
+            SafeFraction = result.GetClosestSafe()
+            UnsafeFraction = result.GetClosestUnsafe()
+            Collider = result.GetColliderId() |> GodotObject.InstanceFromId
+            Rid = result.GetRid()
+            Shape = result.GetShape()
+            Position = result.GetPoint()
+            Normal = result.GetNormal()
+            Velocity = result.GetLinearVelocity()
+        }
+        
+    static member From (result : PhysicsQueryShapeResult2D, ?safe : float32, ?unsafe : float32) =
+        {
+            SafeFraction = defaultArg safe 0f
+            UnsafeFraction = defaultArg unsafe 0f
+            Collider = result.Collider
+            Rid = result.Rid
+            Shape = result.Shape
+            Position = result.Position
+            Normal = result.Normal
+            Velocity = result.Velocity
         }
         
 type PhysicsQueryShapeCastResult3D =
     {
-        Motion : PhysicsQueryMotionResult
-        Result : PhysicsQueryShapeResult3D
+        SafeFraction : float32
+        UnsafeFraction : float32
+        Collider : GodotObject
+        Rid : Rid
+        Shape : int
+        Position : Vector3
+        Normal : Vector3
+        Velocity : Vector3
     }
     
     interface IPhysicsQueryResult with
-        member this.Collider = this.Result.Collider
-        member this.Rid = this.Result.Rid
-        member this.Shape = this.Result.Shape
+        member this.Collider = this.Collider
+        member this.Rid = this.Rid
+        member this.Shape = this.Shape
         
-    static member From (motion : PhysicsQueryMotionResult, result : PhysicsQueryShapeResult3D) =
+    static member From (result : PhysicsShapeCastResult3D) =
         {
-            Motion = motion
-            Result = result
+            SafeFraction = result.GetClosestSafe()
+            UnsafeFraction = result.GetClosestUnsafe()
+            Collider = result.GetColliderId() |> GodotObject.InstanceFromId
+            Rid = result.GetRid()
+            Shape = result.GetShape()
+            Position = result.GetPoint()
+            Normal = result.GetNormal()
+            Velocity = result.GetLinearVelocity()
+        }
+        
+    static member From (result : PhysicsQueryShapeResult3D, ?safe : float32, ?unsafe : float32)=
+        {
+            SafeFraction = defaultArg safe 0f
+            UnsafeFraction = defaultArg unsafe 0f
+            Collider = result.Collider
+            Rid = result.Rid
+            Shape = result.Shape
+            Position = result.Position
+            Normal = result.Normal
+            Velocity = result.Velocity
         }
 
 type PhysicsQueryCollisionResult2D =
     {
-        Result : PhysicsQueryShapeResult2D
-        Motion : PhysicsQueryMotionResult
+        Result : PhysicsQueryShapeCastResult2D
         Recovered : bool
     }
     
@@ -220,21 +237,18 @@ type PhysicsQueryCollisionResult2D =
         member this.Shape = this.Result.Shape
         
     static member From (result : PhysicsQueryShapeCastResult2D) = {
-        Result = result.Result
-        Motion = result.Motion
+        Result = result
         Recovered = false
     }
     
     static member FromRecovered (result : PhysicsQueryShapeCastResult2D) = {
-        Result = result.Result
-        Motion = result.Motion
+        Result = result
         Recovered = true
     }
     
 type PhysicsQueryCollisionResult3D =
     {
-        Result : PhysicsQueryShapeResult3D
-        Motion : PhysicsQueryMotionResult
+        Result : PhysicsQueryShapeCastResult3D
         Recovered : bool
     }
     
@@ -244,14 +258,12 @@ type PhysicsQueryCollisionResult3D =
         member this.Shape = this.Result.Shape
     
     static member From (result : PhysicsQueryShapeCastResult3D) = {
-        Result = result.Result
-        Motion = result.Motion
+        Result = result
         Recovered = false
     }
     
     static member FromRecovered (result : PhysicsQueryShapeCastResult3D) = {
-        Result = result.Result
-        Motion = result.Motion
+        Result = result
         Recovered = true
     }
     

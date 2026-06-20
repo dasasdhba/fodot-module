@@ -49,8 +49,11 @@ module private MoonPhysics2D =
         ))
     
     let snapCheckAngle (angle : float32) (snap : Vector3)=
-        let d = Vector2(snap.X, snap.Y).Normalized()
-        let a = Mathf.DegToRad snap.Z
+        let v = Vector2(snap.X, snap.Y)
+        if v = Vector2.Zero then None else
+        
+        let d = v.Normalized()
+        let a = Mathf.DegToRad (if snap.Z > 0f then snap.Z else 45f)
         let diff =
             (angle, d.Angle())
             |> Mathf.AngleDifference
@@ -138,7 +141,7 @@ module private MoonPhysics2D =
         
         let originExclude =
             originQuery
-            |> getOverlappedInside -1f
+            |> getOverlappedInside -1e-3f
             |> Seq.map snd
             |> List.ofSeq
         
@@ -188,32 +191,51 @@ module private MoonPhysics2D =
                     | _ -> true
                 
                 if canPush |> not then None else
-                
-                let ray = getBodyRay col
-                ray.QueryGlobal (contact, contact + motion * 2f, maxResult = b.MaxCollision)
-                |> Seq.tryPick (fun r ->
-                    if r.Rid = rid then
-                        let normal = r.Normal
-                        match platformDir with
-                        | Some d when d.Dot normal >= 0f -> None
-                        | _ -> Some normal
-                    else
-                        None
+
+                let q = getBodyQuery col
+                let qr = q.Build ()
+
+                let overlapsAt (t : float32) =
+                    let transform = origin.InterpolateWith(shift, t)
+                    PhysicsServer2D.BodySetTransform(rid, transform)
+                    qr.QueryInside (maxResult = b.MaxCollision, margin = 1e-5f)
+                    |> PhysicsQueryResult.existsAndExclude qr (fun r ->
+                        r.Rid = rid
+                    )
+
+                let tryFirstContactNormal () =
+                    let isSafe weight = overlapsAt weight |> not
+                    let _, hitWeight = Math.binarySearch 12 1e-4f isSafe
+                    let contactAt = min 1f (hitWeight + 1e-4f)
+                    let transform = origin.InterpolateWith(shift, contactAt)
+                    PhysicsServer2D.BodySetTransform(rid, transform)
+
+                    let result =
+                        qr.Query (maxResult = b.MaxCollision, margin = 0f)
+                        |> PhysicsQueryResult.tryFindAndExclude qr (fun r -> r.Rid = rid)
+                        |> Option.map _.Normal
+
+                    PhysicsServer2D.BodySetTransform(rid, origin)
+                    result
+
+                tryFirstContactNormal ()
+                |> Option.filter (fun normal ->
+                    match platformDir with
+                    | Some d -> d.Dot normal < 0f
+                    | None -> true
                 )
                 |> Option.bind (fun v ->
                     
                     // push through normal
                     
                     PhysicsServer2D.BodySetTransform(rid, shift)
-                    let q = getBlockQuery col
-                    let qr = q.Build ()
                     let overlapped (push: float32) =
-                        qr.QueryInside (offset = v * push, maxResult = b.MaxCollision, margin = 1e-5f)
+                        qr.QueryInside (offset = v * push, maxResult = b.MaxCollision, margin = 1e-3f)
                         |> PhysicsQueryResult.existsAndExclude qr (fun r ->
                             r.Rid = rid
                         )
                     
-                    let _, push = Math.binarySearch 8 overlapped
+                    let _, push = Math.binarySearch 16 1e-3f overlapped
                     let travel = v * push
                     
                     col.GlobalPosition <- col.GlobalPosition + travel

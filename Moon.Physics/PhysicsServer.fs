@@ -105,16 +105,16 @@ module private MoonPhysics2D =
         // first check overlapped bodies and ignore them later
         
         let getOverlapped margin (q : PhysicsShapeQuerier2D) =
-            q.QueryInside (margin = margin, maxResult = arg.MaxCollision)
-            |> PhysicsQueryResult.chooseAndExclude query (fun r ->
+            q.Query (margin = margin, maxResult = arg.MaxCollision)
+            |> PhysicsQueryResult.chooseAndExclude q (fun r ->
                 match r.Collider with
                 | :? CollisionObject2D as col ->
                     col
                     |> Compo.tryFind<MoonBody2D>
-                    |> Option.map (fun b -> (col, b), r.Rid)
+                    |> Option.map (fun b -> (col, b, r.Position), r.Rid)
                 | _ -> None
             )
-            |> Seq.filter (fun (col, _) -> col |> fst |> _.CanProcess())
+            |> Seq.filter (fun ((col, _, _), _) -> col.CanProcess())
         
         let originExclude =
             originQuery
@@ -134,7 +134,7 @@ module private MoonPhysics2D =
             originQuery
             |> getOverlapped 1f
             |> Seq.map fst
-            |> Seq.choose (fun (col, b) ->
+            |> Seq.choose (fun (col, b, contact) ->
                 (col, b)
                 |> bodyCheckSnap (rid, arg)
                 |> Option.filter (fun v ->
@@ -142,7 +142,7 @@ module private MoonPhysics2D =
                     | Some dir when dir.Dot v <= 0f -> false
                     | _ -> true
                 )
-                |> Option.map (fun v -> col, b, v)
+                |> Option.map (fun v -> col, b, v, contact)
             )
             // must build seq here, as pushing will lead to side effect
             |> Array.ofSeq
@@ -154,10 +154,12 @@ module private MoonPhysics2D =
         let pushSnapped =
             currentQuery
             |> getOverlapped query.Margin
-            |> Seq.choose (fun ((col, b), cid) ->
-                let local = currentAf * col.GlobalPosition
+            |> Seq.choose (fun ((col, b, contact), cid) ->
+                // Sample the platform transform at the contact area so
+                // rotation contributes the appropriate tangential motion.
+                let local = currentAf * contact
                 let prev = origin * local
-                let diff = prev - col.GlobalPosition
+                let diff = prev - contact
                 
                 // ignore push for platform
                 let diff =
@@ -198,16 +200,19 @@ module private MoonPhysics2D =
                         push <- push + len
                     
                     let offset = v * push
-                    let motion = -v * (push + 1f)
-                    let travel =
+                    let rec getTravel step =
+                        let motion = -v * (push + step)
                         qr.CastAndQuery (motion = motion, offset = offset)
                         |> PhysicsQueryResult.filterAndExclude qr (fun r ->
                             r.Result.Rid = rid
                         )
-                        |> Seq.head
-                        |> _.Motion.SafeFraction
+                        |> Seq.tryHead
+                        |> Option.map (fun r ->
+                            offset + r.Motion.SafeFraction * motion
+                        )
+                        |> Option.defaultWith (fun _ -> getTravel (step + 1f))
                     
-                    col.GlobalPosition <- col.GlobalPosition + offset + motion * travel
+                    col.GlobalPosition <- col.GlobalPosition + (getTravel 1f)
                     PhysicsServer2D.BodySetTransform(cid, col.GlobalTransform)
                     
                     // report crash
@@ -247,7 +252,7 @@ module private MoonPhysics2D =
         
         let remain =
             originSnapped
-            |> Seq.filter (fun (col, _, _) ->
+            |> Seq.filter (fun (col, _, _, _) ->
                 pushSnapped
                 |> Seq.exists (fun (c, _, _, _) ->
                     col = c
@@ -268,11 +273,10 @@ module private MoonPhysics2D =
                 
             yield!
                 remain
-                |> Seq.choose (fun (col, b, s) ->
+                |> Seq.choose (fun (col, b, s, contact) ->
                     b.EmitSignalSnapped(block, s)
-                    let local = currentAf * col.GlobalPosition
-                    let prev = origin * local
-                    let motion = col.GlobalPosition - prev
+                    let local = origin.AffineInverse() * contact
+                    let motion = shift * local - contact
                     b.SnapMotions <- motion :: b.SnapMotions
 
                     Some (col, b)

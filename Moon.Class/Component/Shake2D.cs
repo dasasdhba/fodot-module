@@ -9,10 +9,10 @@ public partial class Shake2D : Node2D
     [Export]
     public bool Disabled { get; set; }
     
-    [Export]
+    [Export(PropertyHint.None, "suffix:s")]
     public double Frequency { get ;set; } = 0.02d;
     
-    [Export]
+    [Export(PropertyHint.None, "suffix:px")]
     public Vector2 Amp { get ;set; } = new(4f, 4f);
     
     public Vector2 Origin { get ;set; }

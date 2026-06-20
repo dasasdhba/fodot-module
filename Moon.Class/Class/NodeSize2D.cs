@@ -6,7 +6,7 @@ namespace Moon.Class;
 [GlobalClass, Tool]
 public partial class NodeSize2D : Node2D
 {
-    [Export]
+    [Export(PropertyHint.None, "suffix:px")]
     public Vector2 Size
     {
         get => _Size;

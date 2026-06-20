@@ -20,7 +20,7 @@ public partial class Draw2D : Node2D
     /// <summary>
     /// Drawing offset.
     /// </summary>
-    [Export]
+    [Export(PropertyHint.None, "suffix:px")]
     public Vector2 Offset { get; set; } = new Vector2(0f, 0f);
 
     /// <summary>
@@ -40,7 +40,7 @@ public partial class Draw2D : Node2D
     /// Changing it in the runtime is invalid.
     /// </summary>
     [Export]
-    public int MaxDrawingTask { get; set; } = 32;
+    public uint MaxDrawingTask { get; set; } = 32;
 
     /// <summary>
     /// Process callback mode.

@@ -54,7 +54,7 @@ type PhysicsQueryShape2D(node : CollisionObject2D, param : PhysicsQueryBasicPara
     
     member val private Col = node
     member val State = state
-    member val Margin = -1e-5f with get, set
+    member val Margin = 0f with get, set
     member val HitFromInside = false with get, set
     member val MaxResult = 32 with get, set
 
@@ -122,7 +122,7 @@ type PhysicsShapeQuerier2D(parent : PhysicsQueryShape2D, shapes: (Shape2D * Tran
         |> Option.map (fun dss ->
             let offset = defaultArg offset Vector2.Zero
             let maxResult = defaultArg maxResult parent.MaxResult
-            let margin = defaultArg margin parent.Margin
+            let margin = (defaultArg margin parent.Margin) - 1e-5f
             
             seq {
                 let query = new PhysicsShapeQueryParameters2D()
@@ -195,7 +195,7 @@ type PhysicsShapeQuerier2D(parent : PhysicsQueryShape2D, shapes: (Shape2D * Tran
                     |> Option.map (fun r -> r, ())
                 
                 if hitFromInside &&
-                   this.QueryInside(offset = offset, maxResult = 1)
+                   this.QueryInside(offset = offset, maxResult = 1, margin = margin)
                    |> Seq.isEmpty |> not then
                     
                     yield! () |> Seq.unfold insideUnfold
@@ -223,7 +223,7 @@ type PhysicsShapeQuerier2D(parent : PhysicsQueryShape2D, shapes: (Shape2D * Tran
                     insideQuery offset dss query
                     |> Option.map (fun r -> r, ())
                 
-                if this.QueryInside(offset = offset, maxResult = 1)
+                if this.QueryInside(offset = offset, maxResult = 1, margin = margin)
                    |> Seq.isEmpty |> not then
                     
                     yield! () |> Seq.unfold insideUnfold
@@ -251,7 +251,7 @@ type PhysicsQueryShape3D(node : CollisionObject3D, param : PhysicsQueryBasicPara
     
     member val private Col = node
     member val State = state
-    member val Margin = 1e-5f with get, set
+    member val Margin = 0f with get, set
     member val HitFromInside = false with get, set
     member val MaxResult = 32 with get, set
 
@@ -319,7 +319,7 @@ type PhysicsShapeQuerier3D(parent : PhysicsQueryShape3D, shapes: (Shape3D * Tran
         |> Option.map (fun dss ->
             let offset = defaultArg offset Vector3.Zero
             let maxResult = defaultArg maxResult parent.MaxResult
-            let margin = defaultArg margin parent.Margin
+            let margin = (defaultArg margin parent.Margin) - 1e-5f
             
             seq {
                 let query = new PhysicsShapeQueryParameters3D()
@@ -392,7 +392,7 @@ type PhysicsShapeQuerier3D(parent : PhysicsQueryShape3D, shapes: (Shape3D * Tran
                     |> Option.map (fun r -> r, ())
                 
                 if hitFromInside &&
-                   this.QueryInside(offset = offset, maxResult = 1)
+                   this.QueryInside(offset = offset, maxResult = 1, margin = margin)
                    |> Seq.isEmpty |> not then
                     
                     yield! () |> Seq.unfold insideUnfold
@@ -420,7 +420,7 @@ type PhysicsShapeQuerier3D(parent : PhysicsQueryShape3D, shapes: (Shape3D * Tran
                     insideQuery offset dss query
                     |> Option.map (fun r -> r, ())
                 
-                if this.QueryInside(offset = offset, maxResult = 1)
+                if this.QueryInside(offset = offset, maxResult = 1, margin = margin)
                    |> Seq.isEmpty |> not then
                     
                     yield! () |> Seq.unfold insideUnfold

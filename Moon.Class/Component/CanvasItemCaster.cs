@@ -13,7 +13,7 @@ public partial class CanvasItemCaster : Node
 	[Export]
 	public PackedScene ItemScene { get ;set; }
 	
-	[Export]
+	[Export(PropertyHint.None, "suffix:px")]
 	public Vector2 Offset { get ;set; }
 	
 	[Export]

@@ -24,7 +24,7 @@ public partial class RoundRect : NodeSize2D
     }
     private Color _Color = Colors.Black;
     
-    [Export]
+    [Export(PropertyHint.None, "suffix:px")]
     public float Radius
     {
         get  => _Radius;

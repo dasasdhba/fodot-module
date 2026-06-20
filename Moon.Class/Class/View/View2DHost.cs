@@ -18,11 +18,11 @@ public partial class View2DHost : Node
     }
     private NodePath _RegionRect;
     
-    [Export]
+    [Export(PropertyHint.None, "suffix:px")]
     public Rect2 Region { get ;set; } = new(Vector2.Zero, new(512f, 288f));
     
     [ExportGroup("Transform")]
-    [Export]
+    [Export(PropertyHint.None, "suffix:px")]
     public Rect2 Margin { get ;set; } = new(Vector2.Zero, Vector2.Zero);
 
     [Export(PropertyHint.Link)]

@@ -11,10 +11,10 @@ public abstract partial class NodeToggle : Node
     public bool EditorFlag { get; set; } = true;
 
     [Export(PropertyHint.Range, "0,1,0.01")]
-    public double EditorValue { get; set; } = 1f;
+    public double EditorValue { get; set; } = 1d;
 
-    [Export(PropertyHint.Range, "0,3,0.01,or_greater")]
-    public double EditorTime { get; set; } = 0.2f;
+    [Export(PropertyHint.Range, "0,3,0.01,or_greater,suffix:s")]
+    public double EditorTime { get; set; } = 0.2d;
     
     [Export]
     public bool EditorPhysics { get; set; } = true;

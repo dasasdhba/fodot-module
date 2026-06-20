@@ -7,7 +7,7 @@ namespace Moon.Class;
 [Tool]
 public partial class ParallaxLayer2D : ParallaxLayer
 {
-    [Export]
+    [Export(PropertyHint.None, "suffix:px/s")]
     public Vector2 AutoScroll { get ;set; }
 
     public ParallaxLayer2D() : base()

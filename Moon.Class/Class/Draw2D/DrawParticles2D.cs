@@ -11,7 +11,7 @@ public abstract partial class DrawParticles2D : DrawProcess2D
     [Export]
     public bool Emitting { get; set; } = false;
     
-    [Export(PropertyHint.Range, "0.001,4096,or_greater")]
+    [Export(PropertyHint.Range, "0.001,1,or_greater,suffix:s")]
     public double Interval { get ;set; } = 0.02d;
     
     /// <summary>

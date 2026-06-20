@@ -102,7 +102,7 @@ type private ShadowCaster2DScript(caster : ShadowCaster2D) =
         root |> Option.iter (fun r ->
             let draw = new DrawProcess2D()
             draw.MaxDrawingTask <-
-                (Math.Ceiling(caster.ShadowTime / caster.Interval) |> int) + 1
+                (Math.Ceiling(caster.ShadowTime / caster.Interval) |> uint) + 1u
             r |> Node.addSibling draw
             r
             |> Node.getDeleteEvent

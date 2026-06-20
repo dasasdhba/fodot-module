@@ -76,13 +76,16 @@ module private MoonPhysics2D =
             |> PhysicsQueryResult.existsAndExclude q (fun r -> r.Rid = block)
         )
     
-    let updateBlock (block : CollisionObject2D, arg : MoonBlock2D) =
+    let updateBlock (delta: float32) (block : CollisionObject2D, arg : MoonBlock2D) =
         if block.CanProcess() |> not then Seq.empty else
         
         let rid = block.GetRid()
         let origin = PhysicsServer2D.BodyGetTransform(rid)
         let current = block.GetGlobalTransform ()
-        if current = origin then Seq.empty else
+        let ct = Transform2D(arg.ConstAngularVelocity * delta, arg.ConstLinearVelocity * delta)
+        let shift = ct * current
+        
+        if shift = origin then Seq.empty else
         
         let platformDir =
             block
@@ -96,7 +99,7 @@ module private MoonPhysics2D =
         let query = getBlockQuery block
         block.GlobalTransform <- origin
         let originQuery = query.Build ()
-        block.GlobalTransform <- current
+        block.GlobalTransform <- shift
         let currentQuery = query.Build ()
         
         // first check overlapped bodies and ignore them later
@@ -115,7 +118,7 @@ module private MoonPhysics2D =
         
         let originExclude =
             originQuery
-            |> getOverlapped -1f
+            |> getOverlapped query.Margin
             |> Seq.map snd
             |> List.ofSeq
         
@@ -146,7 +149,7 @@ module private MoonPhysics2D =
         
         // push and snap
         
-        let currentAf = current.AffineInverse()
+        let currentAf = shift.AffineInverse()
         
         let pushSnapped =
             currentQuery
@@ -182,7 +185,7 @@ module private MoonPhysics2D =
                     
                     // push through normal
                     
-                    PhysicsServer2D.BodySetTransform(rid, current)
+                    PhysicsServer2D.BodySetTransform(rid, shift)
                     let len = max 1f (diff.Length())
                     let mutable push = len
                     let overlapped () =
@@ -223,10 +226,13 @@ module private MoonPhysics2D =
                     
                     b
                     |> bodyGetSnap v
-                    |> Option.map (fun s ->
+                    |> Option.bind (fun s ->
                         let motion = -diff
                         let motion = motion - v * motion.Dot(v)
-                        col, b, s, motion
+                        if motion = Vector2.Zero then
+                            None
+                        else
+                            Some (col, b, s, motion)
                     )
                 )
             )
@@ -234,6 +240,7 @@ module private MoonPhysics2D =
         
         // update block's transform is necessary for snap
         
+        block.GlobalTransform <- current
         PhysicsServer2D.BodySetTransform(rid, current)
         
         // accumulate snap speed
@@ -286,7 +293,10 @@ module private MoonPhysics2D =
         
         let query = getBodyQuery body
         let query = query.Build ()
-        let motion = getMotion arg.SnapMotions
+        let motion =
+            arg.SnapMotions
+            |> List.filter (fun v -> v <> Vector2.Zero)
+            |> getMotion
 
         let travel =
             query.Collide (motion, maxResult = arg.MaxCollision)
@@ -299,11 +309,11 @@ module private MoonPhysics2D =
     [<FScript("moon_physics_server_2d")>]
     type MoonPhysicsServer2D(node : Node) =
         
-        let update () =
+        let update delta =
             blocks
-            |> Seq.map updateBlock
+            |> Seq.map (fun b -> b |> updateBlock delta)
             |> Seq.concat
             |> Seq.distinct
             |> Seq.iter updateBody
 
-        do node |> Engine.addPhysicsProcess update |> ignore
+        do node |> Engine.addPhysicsDelta32Process update |> ignore

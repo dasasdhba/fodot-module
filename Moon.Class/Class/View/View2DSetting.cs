@@ -38,7 +38,7 @@ public partial class View2DSetting : Node
     }
     private NodePath _RegionRect;
     
-    [Export]
+    [Export(PropertyHint.None, "suffix:px")]
     public Rect2 Region { get ;set; } = new(Vector2.Zero, new(512f, 288f));
 
     [Export]
@@ -85,7 +85,7 @@ public partial class View2DSetting : Node
     }
     private bool _MarginOverride = false;
 
-    [Export]
+    [Export(PropertyHint.None, "suffix:px")]
     public Rect2 Margin { get ;set; } = new(Vector2.Zero, Vector2.Zero);
 
     [Export]

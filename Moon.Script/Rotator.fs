@@ -17,7 +17,7 @@ type private RotatorScript(rot : Rotator) =
         |> Option.filter (fun _ -> rot.Disabled |> not)
         |> Option.iter (fun p ->
             let r = p |> CanvasItem.getRotation
-            let d = Mathf.DegToRad rot.Speed * delta * (1f |> Math.flip rot.Flip)
+            let d = rot.Speed * delta * (1f |> Math.flip rot.Flip)
             let r = Mathe.WrapAngle(r + d);
             p |> CanvasItem.setRotation r
         )

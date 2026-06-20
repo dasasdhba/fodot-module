@@ -24,7 +24,7 @@ public abstract partial class Inputer : Node
     /// Add jump key here to prevent this.
     /// </summary>
     [Export]
-    public Array<string> BufferPauseGuards { get; set; } = [];
+    public string[] BufferPauseGuards { get; set; } = [];
 
     public struct InputKey
     {

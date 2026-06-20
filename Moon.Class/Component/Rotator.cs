@@ -6,8 +6,8 @@ namespace Moon.Component;
 [GlobalClass, ChildOf("CanvasItem")]
 public partial class Rotator : Node
 {
-    [Export]
-    public float Speed { get; set; } = 500f;
+    [Export(PropertyHint.None, "radians_as_degrees,suffix:\u00B0/s")]
+    public float Speed { get; set; } = Mathf.DegToRad(500f);
     
     [Export]
     public bool Flip { get; set; } = false;

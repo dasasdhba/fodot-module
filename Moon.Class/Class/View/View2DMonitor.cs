@@ -34,31 +34,31 @@ public partial class View2DMonitor : Marker2D
 	[Export]
 	public Vector2 Direction { get ;set; } = Vector2.Down;
 	
-	[Export]
+	[Export(PropertyHint.None, "suffix:px")]
 	public float Range { get; set; } = 48f;
 	
 	[Export]
 	public bool MonitorUp { get; set; } = true;
 	
-	[Export]
+	[Export(PropertyHint.None, "suffix:px")]
 	public float UpRange { get; set; } = 48f;
 	
 	[Export]
 	public bool MonitorDown { get; set; } = true;
 	
-	[Export]
+	[Export(PropertyHint.None, "suffix:px")]
 	public float DownRange { get; set; } = 48f;
 	
 	[Export]
 	public bool MonitorLeft { get; set; } = true;
 	
-	[Export]
+	[Export(PropertyHint.None, "suffix:px")]
 	public float LeftRange { get; set; } = 48f;
 	
 	[Export]
 	public bool MonitorRight { get; set; } = true;
 	
-	[Export]
+	[Export(PropertyHint.None, "suffix:px")]
 	public float RightRange { get; set; } = 48f;
 	
 	[Signal]

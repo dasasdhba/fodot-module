@@ -13,10 +13,10 @@ public partial class ShadowCaster2D : Node
     [Export]
     public bool Emitting { get; set; } = false;
     
-    [Export(PropertyHint.Range, "0.001,4096,or_greater")]
+    [Export(PropertyHint.Range, "0.001,1,or_greater,suffix:s")]
     public double Interval { get; set; } = 0.06d;
     
-    [Export(PropertyHint.Range, "0.001,4096,or_greater")]
+    [Export(PropertyHint.Range, "0.001,3,or_greater,suffix:s")]
     public double ShadowTime { get; set; } = 0.5d;
     
     /// <summary>

@@ -2,6 +2,7 @@ namespace Moon.Script
 
 open System
 open Fodot
+open Fodot.Module.PhysicsServer
 open Godot
 open Moon
 open Moon.Physics
@@ -31,9 +32,14 @@ type TestRandomPhysics(col : CollisionObject2D) =
     do
         col |> Engine.addPhysicsDelta32Process (fun delta ->
             let motion = speed * delta * Vector2.Right.Rotated(angle)
-            let travel =
+            let collision =
                 query.Build().Collide(motion, margin = 1e-2f)
+            let travel =
+                collision
                 |> Option.map _.Result.SafeFraction
                 |> Option.defaultValue 1f
+
             col.GlobalPosition <- col.GlobalPosition + motion * travel
+            PhysicsServer2D.BodySetTransform(col.GetRid(), col.GlobalTransform)
+            ()
         ) |> ignore

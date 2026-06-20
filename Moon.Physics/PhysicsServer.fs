@@ -195,26 +195,22 @@ module private MoonPhysics2D =
                 let q = getBodyQuery col
                 let qr = q.Build ()
 
-                let overlapsAt (t : float32) =
-                    let transform = origin.InterpolateWith(shift, t)
+                let pickOverlappedAt (t : float32) =
+                    let transform = shift.InterpolateWith(origin, t)
                     PhysicsServer2D.BodySetTransform(rid, transform)
-                    qr.QueryInside (maxResult = b.MaxCollision, margin = 1e-5f)
-                    |> PhysicsQueryResult.existsAndExclude qr (fun r ->
-                        r.Rid = rid
+                    qr.Query (maxResult = b.MaxCollision)
+                    |> PhysicsQueryResult.tryPickAndExclude qr (fun r ->
+                        if r.Rid = rid then
+                            Some r.Normal
+                        else
+                            None
                     )
 
                 let tryFirstContactNormal () =
-                    let isSafe weight = overlapsAt weight |> not
-                    let _, hitWeight = Math.binarySearch 12 1e-4f isSafe
-                    let contactAt = min 1f (hitWeight + 1e-4f)
-                    let transform = origin.InterpolateWith(shift, contactAt)
-                    PhysicsServer2D.BodySetTransform(rid, transform)
-
                     let result =
-                        qr.Query (maxResult = b.MaxCollision, margin = 0f)
-                        |> PhysicsQueryResult.tryFindAndExclude qr (fun r -> r.Rid = rid)
-                        |> Option.map _.Normal
-
+                        Math.binarySearchAndPick 16 1e-3f pickOverlappedAt
+                        |> snd
+                    
                     PhysicsServer2D.BodySetTransform(rid, origin)
                     result
 

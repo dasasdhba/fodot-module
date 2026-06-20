@@ -98,8 +98,6 @@ module private MoonPhysics2D =
         )
     
     let updateBlock (delta: float32) (block : CollisionObject2D, arg : MoonBlock2D) =
-        if block.CanProcess() |> not then Seq.empty else
-        
         let rid = block.GetRid()
         let origin = PhysicsServer2D.BodyGetTransform(rid)
         let current = block.GetGlobalTransform ()
@@ -345,7 +343,7 @@ module private MoonPhysics2D =
                         col.GlobalPosition <- col.GlobalPosition + travel
                         PhysicsServer2D.BodySetTransform(cid, col.GlobalTransform)
                         b.LastPushMotion <- b.LastPushMotion + travel
-                        b.EmitSignalPushed(col, travel)
+                        b.EmitSignalPushed(block, travel)
 
                         // report crash
 
@@ -482,7 +480,12 @@ module private MoonPhysics2D =
             )
             
             blocks
-            |> Seq.map (fun b -> b |> updateBlock delta)
+            |> Seq.filter (fun (b, _) -> b.CanProcess()) 
+            |> Seq.map (fun (b, arg) ->
+                arg.LastPushed <- lazy [||]
+                arg.LastSnapped <- lazy [||]
+                (b, arg) |> updateBlock delta
+            )
             |> Seq.concat
             |> Seq.distinct
             |> Seq.iter updateBody

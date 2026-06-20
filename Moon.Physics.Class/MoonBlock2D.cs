@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Fodot.Injection;
 using Godot;
 
@@ -20,4 +22,13 @@ public partial class MoonBlock2D : ParentComponent
     
     [Export]
     public int MaxCollision { get ;set; } = 32;
+    
+    public Lazy<CollisionObject2D[]> LastPushed { get ;set; }
+    public Lazy<CollisionObject2D[]> LastSnapped { get ;set; }
+    
+    public CollisionObject2D[] GetLastPushedBodies()
+        => LastPushed.Value;
+        
+    public CollisionObject2D[] GetLastSnappedBodies()
+        => LastSnapped.Value;
 }

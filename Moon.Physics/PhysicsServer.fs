@@ -13,6 +13,8 @@ open Moon.Utils
 
 module private MoonPhysics2D =
     
+    let bodies =
+        ResizeArray<CollisionObject2D * MoonBody2D>()
     let blocks =
         ResizeArray<CollisionObject2D * MoonBlock2D>()
     
@@ -21,10 +23,18 @@ module private MoonPhysics2D =
         do
             col
             |> Compo.tryFind<MoonBlock2D>
-            |> Option.iter (fun block ->
+            |> Option.map (fun block ->
                 let data = col, block
                 blocks.AddWithNode(data, fun d -> d |> fst :> Node)
             )
+            |> Option.orElseWith (fun _ ->
+                col
+                |> Compo.tryFind<MoonBody2D>
+                |> Option.map (fun body ->
+                    let data = col, body
+                    bodies.AddWithNode(data, fun d -> d |> fst :> Node)
+                )
+            ) |> ignore
     
     let bodyQueries =
         WeakMeta<PhysicsQueryShape2D>()
@@ -213,7 +223,7 @@ module private MoonPhysics2D =
             |> getOverlapped query.Margin
             |> Array.ofSeq
 
-        let pushSnapped =
+        let currentPushed =
             currentOverlapped
             |> Seq.choose (fun ((col, b, contact, finalNormal), cid) ->
                 // Sample the platform transform at the contact area so
@@ -334,6 +344,8 @@ module private MoonPhysics2D =
 
                         col.GlobalPosition <- col.GlobalPosition + travel
                         PhysicsServer2D.BodySetTransform(cid, col.GlobalTransform)
+                        b.LastPushMotion <- b.LastPushMotion + travel
+                        b.EmitSignalPushed(col, travel)
 
                         // report crash
 
@@ -357,16 +369,33 @@ module private MoonPhysics2D =
                             if motion = Vector2.Zero then
                                 None
                             else
-                                Some (col, b, s, motion)
+                                (col, b, s, motion) |> Ok |> Some
+                        )
+                        |> Option.orElseWith (fun _ ->
+                            col |> Result.Error |> Some
                         )
                 )
             )
-            |> Array.ofSeq
+            |> List.ofSeq
         
         // update block's transform is necessary for snap
         
         block.GlobalTransform <- current
         PhysicsServer2D.BodySetTransform(rid, current)
+        
+        // record snap and push
+        
+        let pushSnapped, pushOnly =
+            currentPushed
+            |> List.partition Result.isOk
+            
+        let pushSnapped =
+            pushSnapped
+            |> List.choose (function Ok x -> Some x | _ -> None)
+        
+        let pushOnly =
+            pushOnly
+            |> List.choose (function Error e -> Some e | _ -> None)
         
         // accumulate snap speed
         
@@ -380,7 +409,7 @@ module private MoonPhysics2D =
                 |> not
             )
         
-        seq {
+        let snapped = seq {
             yield!
                 pushSnapped
                 |> Seq.choose (fun (col, b, s, motion) ->
@@ -403,6 +432,13 @@ module private MoonPhysics2D =
                     Some (col, b)
                 )
         }
+        
+        let snapped = snapped |> Array.ofSeq
+        
+        arg.LastPushed <- lazy (pushOnly |> Array.ofList)
+        arg.LastSnapped <- lazy (snapped |> Array.map fst)
+        
+        snapped
     
     let updateBody (body : CollisionObject2D, arg : MoonBody2D) =
         let rec getMotion (motions : Vector2 list) =
@@ -424,17 +460,27 @@ module private MoonPhysics2D =
             |> getMotion
 
         let travel =
-            query.Collide (motion, margin = 1e-2f, maxResult = arg.MaxCollision)
+            query.Collide (motion, margin = arg.SafeMargin, maxResult = arg.MaxCollision)
             |> Option.map _.Result.SafeFraction
             |> Option.defaultValue 1f
        
-        body.GlobalPosition <- body.GlobalPosition + motion * travel
+        let snapMotion = motion * travel
+        body.GlobalPosition <- body.GlobalPosition + snapMotion
+        arg.LastSnapMotion <- snapMotion
         arg.SnapMotions <- []
 
     [<FScript("moon_physics_server_2d")>]
     type MoonPhysicsServer2D(node : Node) =
         
         let update delta =
+            bodies
+            |> Seq.filter (fun (body, _) -> body.CanProcess())
+            |> Seq.iter (fun (body, arg) ->
+                PhysicsServer2D.BodySetTransform(body.GetRid(), body.GlobalTransform)
+                arg.LastPushMotion <- Vector2.Zero
+                arg.LastSnapMotion <- Vector2.Zero
+            )
+            
             blocks
             |> Seq.map (fun b -> b |> updateBlock delta)
             |> Seq.concat

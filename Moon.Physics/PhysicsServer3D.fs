@@ -306,12 +306,25 @@ module private MoonPhysicsServer3D =
                         let qr = bodyQuery.Build()
                         qr |> PhysicsQuery.addExclude rid
 
+                        let inside =
+                            qr.QueryInside(
+                                maxResult = bodyArg.MaxCollision,
+                                margin = bodyArg.SafeMargin
+                            )
+                            |> Seq.map _.Rid
+                            |> List.ofSeq
+
                         let skipped =
-                            qr.QueryCollide (motion = travel, margin = bodyArg.SafeMargin, maxResult = bodyArg.MaxCollision)
+                            qr.QueryCollide (
+                                motion = travel,
+                                margin = bodyArg.SafeMargin,
+                                maxResult = bodyArg.MaxCollision
+                            )
                             |> Seq.filter PhysicsQueryResult.allowTravelWhenCrash
                             |> Seq.map _.Rid
                             |> List.ofSeq
 
+                        qr |> PhysicsQuery.appendExclude inside
                         qr |> PhysicsQuery.appendExclude skipped
 
                         let pushMotion, result =
@@ -406,10 +419,10 @@ module private MoonPhysicsServer3D =
             match motions with
             | [] -> Vector3.Zero
             | motion :: _ ->
-                let parallax, remaining =
+                let oriented, remaining =
                     motions
-                    |> List.partition (fun v -> v.ParallelTo motion)
-                (parallax |> List.sum) + getMotion remaining
+                    |> List.partition (fun v -> v.OrientedTo motion)
+                (oriented |> List.maxBy _.LengthSquared()) + getMotion remaining
 
         let motion =
             arg.SnapMotions
@@ -456,6 +469,7 @@ module private MoonPhysicsServer3D =
                 updateBlock delta (block, arg)
             )
             |> Seq.concat
+            |> Array.ofSeq
             |> Seq.distinct
             |> Seq.iter updateBody
 

@@ -331,13 +331,19 @@ module private MoonPhysicsServer2D =
 
                         let qr = q.Build ()
                         qr |> PhysicsQuery.addExclude rid
+                        
+                        let inside =
+                            qr.QueryInside (maxResult = b.MaxCollision, margin = b.SafeMargin)
+                            |> Seq.map _.Rid
+                            |> List.ofSeq
 
                         let skipped =
                             qr.QueryCollide (motion = travel, margin = b.SafeMargin, maxResult = b.MaxCollision)
                             |> Seq.filter PhysicsQueryResult.allowTravelWhenCrash
                             |> Seq.map _.Rid
                             |> List.ofSeq
-
+                        
+                        qr |> PhysicsQuery.appendExclude inside
                         qr |> PhysicsQuery.appendExclude skipped
 
                         let pushMotion, result =
@@ -438,16 +444,16 @@ module private MoonPhysicsServer2D =
             match motions with
             | [] -> Vector2.Zero
             | motion :: _ ->
-                let parallax, remaining =
+                let oriented, remaining =
                     motions
-                    |> List.partition (fun v -> v.ParallelTo motion)
-                (parallax |> List.sum) + getMotion remaining
+                    |> List.partition (fun v -> v.OrientedTo motion)
+                (oriented |> List.maxBy _.LengthSquared()) + getMotion remaining
         
         let motion =
             arg.SnapMotions
             |> List.filter (fun v -> v <> Vector2.Zero)
             |> getMotion
-
+            
         let snapMotion =
             body.CastMotion(motion, margin = arg.SafeMargin, maxResult = arg.MaxCollision)
             |> fst
@@ -481,6 +487,7 @@ module private MoonPhysicsServer2D =
                 (b, arg) |> updateBlock delta
             )
             |> Seq.concat
+            |> Array.ofSeq
             |> Seq.distinct
             |> Seq.iter updateBody
 

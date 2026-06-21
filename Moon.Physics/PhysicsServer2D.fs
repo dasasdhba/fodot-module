@@ -90,6 +90,8 @@ module private MoonPhysicsServer2D =
         let current = block.GetGlobalTransform ()
         let ct = Transform2D(arg.ConstAngularVelocity * delta, arg.ConstLinearVelocity * delta)
         let shift = ct * current
+        let rotationChanged =
+            not (Mathf.IsEqualApprox(shift.Rotation, origin.Rotation))
         
         if shift = origin then Seq.empty else
         
@@ -151,8 +153,8 @@ module private MoonPhysicsServer2D =
             |> List.ofSeq
 
         let originBlocking =
-            match platform with
-            | Some p ->
+            match platform, rotationChanged with
+            | Some p, true ->
                 let dir =
                     p.Direction
                     |> origin.BasisXform
@@ -167,8 +169,9 @@ module private MoonPhysicsServer2D =
                         Some bodyRid
                 )
                 |> Seq.distinct
-            | None ->
-                Seq.empty
+                |> Array.ofSeq
+            | _ ->
+                [||]
 
         originQuery
         |> PhysicsQuery.appendExclude originExclude
@@ -222,7 +225,7 @@ module private MoonPhysicsServer2D =
                     match platformDir with
                     | Some dir ->
                         dir.Dot motion > 0f ||
-                        originBlocking |> Seq.contains cid
+                        (originBlocking |> Array.contains cid)
                     | _ -> true
                 
                 if canPush |> not then None else

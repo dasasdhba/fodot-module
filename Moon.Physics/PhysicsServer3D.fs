@@ -92,6 +92,11 @@ module private MoonPhysicsServer3D =
                 arg.ConstLinearVelocity * delta
             )
         let shift = change * current
+        let rotationChanged =
+            shift.Basis.GetRotationQuaternion().IsEqualApprox(
+                origin.Basis.GetRotationQuaternion()
+            )
+            |> not
 
         if shift = origin then Seq.empty else
 
@@ -150,8 +155,8 @@ module private MoonPhysicsServer3D =
             |> List.ofSeq
 
         let originBlocking =
-            match platform with
-            | Some p ->
+            match platform, rotationChanged with
+            | Some p, true ->
                 let direction =
                     (origin.Basis * p.Direction).Normalized()
                 originQuery
@@ -164,8 +169,9 @@ module private MoonPhysicsServer3D =
                         Some bodyRid
                 )
                 |> Seq.distinct
-            | None ->
-                Seq.empty
+                |> Array.ofSeq
+            | _ ->
+                [||]
 
         originQuery |> PhysicsQuery.appendExclude originExclude
         currentQuery |> PhysicsQuery.appendExclude originExclude
@@ -208,7 +214,7 @@ module private MoonPhysicsServer3D =
                     match platformDir with
                     | Some direction ->
                         direction.Dot(motion) > 0f ||
-                        originBlocking |> Seq.contains bodyRid
+                        (originBlocking |> Array.contains bodyRid)
                     | None ->
                         true
 

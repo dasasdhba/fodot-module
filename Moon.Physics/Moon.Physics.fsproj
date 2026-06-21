@@ -13,14 +13,17 @@
         <Compile Include="PhysicsQueryPoint.fs" />
         <Compile Include="PhysicsQueryRaycast.fs" />
         <Compile Include="PhysicsQueryShape.fs" />
+        <Compile Include="PhysicsScope.fs" />
         <Compile Include="PhysicsCollide.fs" />
-        <Compile Include="PhysicsServer.fs" />
+        <Compile Include="PhysicsMotion.fs" />
+        <Compile Include="PhysicsServer2D.fs" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\library\Fodot.Module\Fodot.Module.fsproj" />
       <ProjectReference Include="..\..\library\Moon.CSharp\Moon.CSharp.csproj" />
       <ProjectReference Include="..\..\library\Moon.Utils\Moon.Utils.fsproj" />
+      <ProjectReference Include="..\..\library\Moon\Moon.fsproj" />
       <ProjectReference Include="..\Fodot.Injection\Fodot.Injection.fsproj" />
       <ProjectReference Include="..\Moon.Physics.Class\Moon.Physics.Class.csproj" />
     </ItemGroup>

@@ -2,7 +2,6 @@ module Moon.Physics.PhysicsCollide
 
 open FSharp.Extend
 open Godot
-open Moon.Utils
 
 type PhysicsQueryRaycast2D with
 
@@ -83,13 +82,13 @@ type PhysicsShapeQuerier2D with
             let travel = travel * depth
             if overlap travel |> not then
                 let in', out =
-                    Math.binarySearch 16 1e-3f (fun d -> overlap (d * travel))
+                    MoonPhysics2D.binarySearch (fun d -> overlap (d * travel))
                 Some (in' * travel, out * travel)
             else
                 None
         
         let travelSolid (rep : PhysicsQueryShapeResult2D) : PhysicsQueryCollisionResult2D =
-            let maxDepth = defaultArg maxDepth 4f
+            let maxDepth = defaultArg maxDepth MoonPhysics2D.bodyMaxRecovery
             if motion = Vector2.Zero || maxDepth <= 0f then
                 rep
                 |> PhysicsQueryShapeCastResult2D.From
@@ -143,7 +142,7 @@ type PhysicsShapeQuerier2D with
                     None
                 else
                     let unsafe, safe =
-                        Math.binarySearch 16 1e-3f (fun d -> overlap (d * m))
+                        MoonPhysics2D.binarySearch (fun d -> overlap (d * m))
                     (r, -safe * m / len, -unsafe * m / len)
                     |> PhysicsQueryShapeCastResult2D.From
                     |> PhysicsQueryCollisionResult2D.From
@@ -209,13 +208,13 @@ type PhysicsShapeQuerier3D with
             let travel = travel * depth
             if overlap travel |> not then
                 let in', out =
-                    Math.binarySearch 16 1e-3f (fun d -> overlap (d * travel))
+                    MoonPhysics3D.binarySearch (fun d -> overlap (d * travel))
                 Some (in' * travel, out * travel)
             else
                 None
         
         let travelSolid (rep : PhysicsQueryShapeResult3D) : PhysicsQueryCollisionResult3D =
-            let maxDepth = defaultArg maxDepth 0.25f
+            let maxDepth = defaultArg maxDepth MoonPhysics3D.bodyMaxRecovery
             if motion = Vector3.Zero || maxDepth <= 0f then
                 rep
                 |> PhysicsQueryShapeCastResult3D.From
@@ -269,7 +268,7 @@ type PhysicsShapeQuerier3D with
                     None
                 else
                     let unsafe, safe =
-                        Math.binarySearch 16 1e-3f (fun d -> overlap (d * m))
+                        MoonPhysics3D.binarySearch (fun d -> overlap (d * m))
                     (r, -safe * m / len, -unsafe * m / len)
                     |> PhysicsQueryShapeCastResult3D.From
                     |> PhysicsQueryCollisionResult3D.From

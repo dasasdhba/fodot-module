@@ -3,11 +3,11 @@ namespace Moon.Script
 open System
 open Fodot
 open Fodot.Injection
-open Fodot.Module.PhysicsServer
 open Godot
 open Moon
 open Moon.Physics
 open Moon.Physics.PhysicsCollide
+open Moon.Physics.PhysicsMotion
 
 [<FScript("test_physics")>]
 type TestPhysics(col : CollisionObject2D) =
@@ -26,7 +26,6 @@ type TestPhysics(col : CollisionObject2D) =
 [<FScript("test_random_physics")>]
 type TestRandomPhysics(col : CollisionObject2D) =
     
-    let query = PhysicsQueryShape2D col
     let speed = Mathe.RandfRange(100f, 200f)
     let angle = Mathe.RandfRange(-Single.Pi, Single.Pi)
     let margin =
@@ -38,13 +37,6 @@ type TestRandomPhysics(col : CollisionObject2D) =
     do
         col |> Engine.addPhysicsDelta32Process (fun delta ->
             let motion = speed * delta * Vector2.Right.Rotated(angle)
-            let collision =
-                query.Build().Collide(motion, margin = margin)
-            let travel =
-                collision
-                |> Option.map _.Result.SafeFraction
-                |> Option.defaultValue 1f
-
-            col.GlobalPosition <- col.GlobalPosition + motion * travel
+            col.CastMotion(motion, margin = margin) |> ignore
             ()
         ) |> ignore

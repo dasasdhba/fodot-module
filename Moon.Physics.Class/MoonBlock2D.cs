@@ -17,7 +17,7 @@ public partial class MoonBlock2D : ParentComponent
     public bool CrashBodies { get ;set; } = true;
 
     [Export]
-    public Vector2[] InvalidSnaps { get ;set; } = [];
+    public Vector2[] InvalidSnapNormals { get ;set; } = [];
     
     [Export]
     public int MaxCollision { get ;set; } = 32;

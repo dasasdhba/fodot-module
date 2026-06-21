@@ -1,92 +1,71 @@
 namespace Moon.Physics
 
+open FSharp.Extend
 open Fodot
 open Fodot.Injection
 open Fodot.Module.PhysicsServer
 open Godot
 open Moon
-open Moon.Physics.PhysicsCollide
-open Moon.Utils
+open Moon.Library
+open Moon.Physics.PhysicsMotion
 
 // one should make sure physics server is located
 // at the end of game physics process
 
-module private MoonPhysics2D =
+module private MoonPhysicsServer2D =
     
     let bodies =
-        ResizeArray<CollisionObject2D * MoonBody2D>()
+        FlushPool<CollisionObject2D * MoonBody2D>(fun (col, _) -> col :> Node)
     let blocks =
-        ResizeArray<CollisionObject2D * MoonBlock2D>()
+        FlushPool<CollisionObject2D * MoonBlock2D>(fun (col, _) -> col :> Node)
     
-    [<FScript(typeof<CollisionObject2D>)>]
-    type MoonPhysicsObject2D(col : CollisionObject2D) =
+    [<FScript(typeof<MoonBody2D>)>]
+    type MoonBody2DScript(arg : MoonBody2D) =
         do
-            col
-            |> Compo.tryFind<MoonBlock2D>
-            |> Option.map (fun block ->
-                let data = col, block
-                blocks.AddWithNode(data, fun d -> d |> fst :> Node)
+            arg
+            |> Node.tryGetParent<CollisionObject2D>
+            |> Option.iter (fun p ->
+                let data = p, arg
+                bodies.Track data
             )
-            |> Option.orElseWith (fun _ ->
-                col
-                |> Compo.tryFind<MoonBody2D>
-                |> Option.map (fun body ->
-                    let data = col, body
-                    bodies.AddWithNode(data, fun d -> d |> fst :> Node)
-                )
-            ) |> ignore
     
-    let bodyQueries =
-        WeakMeta<PhysicsQueryShape2D>()
+    [<FScript(typeof<MoonBlock2D>)>]
+    type MoonBlock2DScript(arg : MoonBlock2D) =
+        do
+            arg
+            |> Node.tryGetParent<CollisionObject2D>
+            |> Option.iter (fun p ->
+                let data = p, arg
+                blocks.Track data
+            )
+    
     let blockQueries =
         WeakMeta<PhysicsQueryShape2D>()
         
-    let getBodyQuery (body : CollisionObject2D) =
-        bodyQueries |> WeakMeta.getOrAdd body (lazy (
-            PhysicsQueryShape2D body
-        ))
-        
     let getBlockQuery (block : CollisionObject2D) =
-        blockQueries |> WeakMeta.getOrAdd block (lazy (
-            PhysicsQueryShape2D block
-        ))
+        let query =
+            blockQueries |> WeakMeta.getOrAdd block (lazy (
+                PhysicsQueryShape2D block
+            ))
+        query |> PhysicsQuery.setCollisionMask block.CollisionMask
+        query
     
-    let bodyRays = WeakMeta<PhysicsQueryRaycast2D>()
-    
-    let getBodyRay (body : CollisionObject2D) =
-        bodyRays |> WeakMeta.getOrAdd body (lazy (
-            PhysicsQueryRaycast2D body
-        ))
-    
-    let snapCheckAngle (angle : float32) (snap : Vector3)=
-        let v = Vector2(snap.X, snap.Y)
-        if v = Vector2.Zero then None else
-        
-        let d = v.Normalized()
-        let a = Mathf.DegToRad (if snap.Z > 0f then snap.Z else 45f)
-        let diff =
-            (angle, d.Angle())
-            |> Mathf.AngleDifference
-            |> Mathf.Abs
-        if diff < a then
-            Some d
-        else
-            None
-    
-    let bodyGetSnap (dir : Vector2) (arg : MoonBody2D) =
-        let angle = (-dir).Angle()
+    let bodyGetSnap (normal: Vector2) (arg : MoonBody2D) =
+        let angle = (-normal).Angle()
         arg.Snaps
-        |> Seq.tryPick (fun s -> s |> snapCheckAngle angle)
+        |> Seq.choose (fun s -> s |> MoonPhysics2D.snapCheckAngle angle)
+        |> Seq.tryMinBy snd
+        |> Option.map fst
     
     let bodyCheckSnap (block : Rid, brg : MoonBlock2D) (body : CollisionObject2D, arg : MoonBody2D) =
-        let query = getBodyQuery body
+        let query = MoonPhysics2D.getBodyQuery body
         let q = query.Build ()
         arg.Snaps
         |> Seq.filter (fun v ->
-            brg.InvalidSnaps
+            brg.InvalidSnapNormals
             |> Seq.exists (fun s ->
                 v
-                |> snapCheckAngle (s.Angle())
+                |> MoonPhysics2D.snapCheckNormal s
                 |> Option.isSome
             )
             |> not
@@ -171,7 +150,7 @@ module private MoonPhysics2D =
                     |> origin.BasisXform
                     |> _.Normalized()
                 originQuery
-                |> getOverlapped 1f
+                |> getOverlapped MoonPhysics2D.blockSnapMargin
                 |> Seq.choose (fun ((_, _, _, normal), bodyRid) ->
                     if originExclude |> List.contains bodyRid ||
                        dir.Dot normal >= 0f then
@@ -193,7 +172,7 @@ module private MoonPhysics2D =
         
         let originSnapped =
             originQuery
-            |> getOverlapped 1f
+            |> getOverlapped MoonPhysics2D.blockSnapMargin
             |> Seq.map fst
             |> Seq.choose (fun (col, b, contact, _) ->
                 (col, b)
@@ -240,7 +219,7 @@ module private MoonPhysics2D =
                 
                 if canPush |> not then None else
 
-                let q = getBodyQuery col
+                let q = MoonPhysics2D.getBodyQuery col
                 let qr = q.Build ()
 
                 let pickNormalAt (t : float32) =
@@ -267,7 +246,7 @@ module private MoonPhysics2D =
                     | Some _, None ->
                         None
                     | None, _ ->
-                        Some (Math.binarySearchAndPick 16 1e-3f pickNormalAt)
+                        Some (MoonPhysics2D.binarySearchAndPick pickNormalAt)
 
                 let resolvedContact =
                     contactSearch
@@ -281,7 +260,7 @@ module private MoonPhysics2D =
                    resolvedContact |> Option.isNone &&
                    (contactSearch |> Option.exists (snd >> Option.isNone)) then
                     Logger.pushWarn
-                        $"physics platform skipped: stage=no-contact-normal, block={rid}, body={cid}, contact={contact}"
+                        $"MoonPhysicsServer2D: physics platform skipped as no contact normal was found, block={rid}, body={cid}, contact={contact}"
 
                 resolvedContact
                 |> Option.bind (fun (contactSearch, v) ->
@@ -305,14 +284,16 @@ module private MoonPhysics2D =
                             r.Rid = rid
                         )
 
-                    let maxPush = surfaceMotion.Length() + 1f
+                    let maxPush =
+                        surfaceMotion.Length() +
+                        MoonPhysics2D.blockPushTolerance
                     let tryDirection (dir: Vector2) =
                         if dir.Dot surfaceMotion <= 1e-3f ||
                            overlapped dir maxPush then
                             None
                         else
                             let _, push =
-                                Math.binarySearch 16 1e-3f (fun t ->
+                                MoonPhysics2D.binarySearch (fun t ->
                                     overlapped dir (t * maxPush)
                                 )
                             Some (dir, push * maxPush)
@@ -335,7 +316,7 @@ module private MoonPhysics2D =
                     match push with
                     | None ->
                         Logger.pushWarn
-                            $"physics push rejected: rid={rid}, contactNormal={v}, finalNormal={finalNormal}, surfaceMotion={surfaceMotion}, maxPush={maxPush}"
+                            $"MoonPhysicsServer2D: physics push rejected: rid={rid}, contactNormal={v}, finalNormal={finalNormal}, surfaceMotion={surfaceMotion}, maxPush={maxPush}"
                         None
                     | Some (pushDir, push) ->
                         let travel = pushDir * push
@@ -450,36 +431,35 @@ module private MoonPhysics2D =
             let motion = para |> List.sum
             motion + getMotion remain
         
-        let query = getBodyQuery body
-        let query = query.Build ()
         let motion =
             arg.SnapMotions
             |> List.filter (fun v -> v <> Vector2.Zero)
             |> getMotion
 
-        let travel =
-            query.Collide (motion, margin = arg.SafeMargin, maxResult = arg.MaxCollision)
-            |> Option.map _.Result.SafeFraction
-            |> Option.defaultValue 1f
-       
-        let snapMotion = motion * travel
-        body.GlobalPosition <- body.GlobalPosition + snapMotion
+        let snapMotion =
+            body.CastMotion(motion, margin = arg.SafeMargin, maxResult = arg.MaxCollision)
+            |> fst
         arg.LastSnapMotion <- snapMotion
         arg.SnapMotions <- []
 
     [<FScript("moon_physics_server_2d")>]
-    type MoonPhysicsServer2D(node : Node) =
+    type MoonPhysicsServer2DScript(node : Node) =
         
         let update delta =
-            bodies
+            bodies.Flush()
+            
+            bodies.Iter()
             |> Seq.filter (fun (body, _) -> body.CanProcess())
             |> Seq.iter (fun (body, arg) ->
+                MoonPhysics2D.updateBodyCollisionMask body
                 PhysicsServer2D.BodySetTransform(body.GetRid(), body.GlobalTransform)
                 arg.LastPushMotion <- Vector2.Zero
                 arg.LastSnapMotion <- Vector2.Zero
             )
             
-            blocks
+            blocks.Flush()
+            
+            blocks.Iter()
             |> Seq.filter (fun (b, _) -> b.CanProcess()) 
             |> Seq.map (fun (b, arg) ->
                 arg.LastPushed <- lazy [||]

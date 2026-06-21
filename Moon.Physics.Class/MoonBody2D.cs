@@ -11,7 +11,7 @@ public partial class MoonBody2D : ParentComponent
     /// x, y, range(degrees)
     /// </summary>
     [Export]
-    public Vector3[] Snaps { get ;set; } = [new(0f, 1f, 45f)];
+    public Vector3[] Snaps { get ;set; } = [];
     
     [Export(PropertyHint.Range, "0,128,0.001,suffix:px")]
     public float SafeMargin { get ;set; } = 0.08f;

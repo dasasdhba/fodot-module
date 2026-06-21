@@ -159,7 +159,17 @@ type PhysicsQueryShapeCastResult2D =
         member this.Collider = this.Collider
         member this.Rid = this.Rid
         member this.Shape = this.Shape
+    
+    member this.ScaleFraction ratio=
+        {
+            this with
+                SafeFraction = this.SafeFraction * ratio
+                UnsafeFraction = this.UnsafeFraction * ratio
+        }
         
+    member this.ChangeStep (originStep, newStep) =
+        this.ScaleFraction (originStep / newStep)
+    
     static member From (result : PhysicsShapeCastResult2D) =
         {
             SafeFraction = result.GetClosestSafe()
@@ -200,7 +210,17 @@ type PhysicsQueryShapeCastResult3D =
         member this.Collider = this.Collider
         member this.Rid = this.Rid
         member this.Shape = this.Shape
+    
+    member this.ScaleFraction ratio=
+        {
+            this with
+                SafeFraction = this.SafeFraction * ratio
+                UnsafeFraction = this.UnsafeFraction * ratio
+        }
         
+    member this.ChangeStep (originStep, newStep) =
+        this.ScaleFraction (originStep / newStep)
+    
     static member From (result : PhysicsShapeCastResult3D) =
         {
             SafeFraction = result.GetClosestSafe()

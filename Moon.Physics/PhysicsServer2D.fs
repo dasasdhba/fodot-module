@@ -90,19 +90,26 @@ module private MoonPhysicsServer2D =
         let current = block.GetGlobalTransform ()
         let ct = Transform2D(arg.ConstAngularVelocity * delta, arg.ConstLinearVelocity * delta)
         let shift = ct * current
-        let rotationChanged =
-            not (Mathf.IsEqualApprox(shift.Rotation, origin.Rotation))
         
         if shift = origin then Seq.empty else
         
-        let platform =
+        let platformArg =
             block
             |> Compo.tryFind<MoonPlatform2D>
-
+            |> Option.map _.Direction
+        
         let platformDir =
-            platform
-            |> Option.map (fun p ->
-                p.Direction
+            platformArg
+            |> Option.map (fun d ->
+                d
+                |> origin.BasisXform
+                |> _.Normalized()
+            )
+            
+        let platformDirNext =
+            platformArg
+            |> Option.map (fun d ->
+                d
                 |> shift.BasisXform
                 |> _.Normalized()
             )
@@ -112,8 +119,6 @@ module private MoonPhysicsServer2D =
         let originQuery = query.Build ()
         block.GlobalTransform <- shift
         let currentQuery = query.Build ()
-        
-        // first check overlapped bodies and ignore them later
         
         let getOverlappedInside margin (q : PhysicsShapeQuerier2D) =
             q.QueryInside (margin = margin, maxResult = arg.MaxCollision)
@@ -134,45 +139,23 @@ module private MoonPhysicsServer2D =
                 | :? CollisionObject2D as col ->
                     col
                     |> Compo.tryFind<MoonBody2D>
-                    |> Option.map (fun b ->
-                        (col, b, r.Position, r.Normal), r.Rid
-                    )
+                    |> Option.map (fun b -> (col, b, r.Position), r.Rid)
                 | _ -> None
             )
-            |> Seq.filter (fun ((col, _, _, _), _) -> col.CanProcess())
+            |> Seq.filter (fun ((col, _, _), _) -> col.CanProcess())
         
-        let originInsideMargin =
-            platform
-            |> Option.map (fun p -> -(max p.Margin MoonPhysics2D.binaryEps))
-            |> Option.defaultValue -MoonPhysics2D.binaryEps
-
+        // for platform, it's necessary to skip
+        // bodies that already inside
+        
         let originExclude =
-            originQuery
-            |> getOverlappedInside originInsideMargin
-            |> Seq.map snd
-            |> List.ofSeq
-
-        let originBlocking =
-            match platform, rotationChanged with
-            | Some p, true ->
-                let dir =
-                    p.Direction
-                    |> origin.BasisXform
-                    |> _.Normalized()
+            match platformDir with
+            | Some _ ->
                 originQuery
-                |> getOverlapped MoonPhysics2D.blockSnapMargin
-                |> Seq.choose (fun ((_, _, _, normal), bodyRid) ->
-                    if originExclude |> List.contains bodyRid ||
-                       dir.Dot normal >= 0f then
-                        None
-                    else
-                        Some bodyRid
-                )
-                |> Seq.distinct
-                |> Array.ofSeq
-            | _ ->
-                [||]
-
+                |> getOverlappedInside -MoonPhysics2D.blockSnapMargin
+                |> Seq.map snd
+                |> List.ofSeq
+            | _ -> []
+        
         originQuery
         |> PhysicsQuery.appendExclude originExclude
         
@@ -185,7 +168,7 @@ module private MoonPhysicsServer2D =
             originQuery
             |> getOverlapped MoonPhysics2D.blockSnapMargin
             |> Seq.map fst
-            |> Seq.choose (fun (col, b, contact, _) ->
+            |> Seq.choose (fun (col, b, contact) ->
                 (col, b)
                 |> bodyCheckSnap (rid, arg)
                 |> Option.filter (fun v ->
@@ -200,194 +183,225 @@ module private MoonPhysicsServer2D =
         
         // push and snap
         
+        let pushThrough
+            (body : CollisionObject2D) (brg :MoonBody2D) (bodyId : Rid)
+            (q: PhysicsQueryShape2D) (guess: Vector2) (normal: Vector2) =
+            
+            PhysicsServer2D.BodySetTransform(rid, shift)
+            let qr = q.Build ()
+            
+            // we use an expanded margin in recovery and snap stage
+            
+            let margin = brg.SafeMargin + MoonPhysics2D.blockRecoveryMargin
+            
+            // first, travel though guess from transform change
+            
+            let guessInside =
+                qr.QueryInside (
+                    offset = guess,
+                    margin = margin,
+                    maxResult = brg.MaxCollision
+                )
+                |> PhysicsQueryResult.existsAndExclude qr (fun r -> r.Rid = rid)
+            
+            // then snap on it as possible
+            
+            let len = max 1f (guess.Length() + MoonPhysics2D.blockPushTolerance)
+            let push = normal * len
+            
+            // if we are already inside, try push out
+            
+            let recovery() =
+                
+                // we ignore everything else
+                
+                let ignored =
+                    qr.QueryCollide (push, offset = guess, margin = margin, maxResult = brg.MaxCollision, hitFromInside = true)
+                    |> Seq.filter (fun r -> r.Rid <> rid)
+                    |> Seq.map _.Rid
+                    |> List.ofSeq
+            
+                qr |> PhysicsQuery.appendExclude ignored
+                
+                let travel, normal =
+                    qr.PushOut (
+                        push,
+                        offset = guess,
+                        margin = margin,
+                        maxResult = brg.MaxCollision
+                    )
+                    |> Option.map (fun r -> r.SafeFraction, r.Normal)
+                    |> Option.defaultValue (0f, normal)
+                
+                (push * travel), normal
+            
+            // otherwise, try cast back on it
+            
+            let castBack() =
+                
+                let travel, normal =
+                    qr.Cast (
+                        -push,
+                        offset = guess,
+                        margin = margin,
+                        maxResult = brg.MaxCollision
+                    )
+                    |> Seq.tryFind (fun r -> r.Rid = rid)
+                    |> Option.map (fun r -> r.SafeFraction, r.Normal)
+                    |> Option.defaultWith (fun _ ->
+                        Logger.push "cast back failed"
+                        (1f, normal)
+                    )
+                
+                (-push) * travel, normal
+            
+            let snap, newNormal =
+                if guessInside then recovery () else castBack ()
+            
+            let normal =
+                platformDirNext
+                |> Option.defaultWith (fun _ ->
+                    if newNormal.Dot normal > 0f then
+                        newNormal
+                    else
+                        normal
+                )
+            
+            // next, cancel all sliding motion through normal
+            // for now we use original margin
+            
+            let motion = guess + snap
+            let pushMotion = normal * (motion.Dot normal)
+            let snapMotion = motion - pushMotion
+            
+            // do another recovery if necessary
+            // as normal can sometimes be inaccurate
+            
+            let inside =
+                qr.QueryInside (
+                    offset = pushMotion,
+                    margin = margin,
+                    maxResult = brg.MaxCollision
+                )
+                |> Seq.exists (fun r -> r.Rid = rid)
+            
+            let pushMotion =
+                if inside |> not then pushMotion else
+                
+                qr.PushOut (
+                    pushMotion * 2f,
+                    margin = margin,
+                    maxResult = brg.MaxCollision
+                )
+                |> Option.map (fun r ->
+                    pushMotion * 2f * r.SafeFraction
+                )
+                |> Option.defaultWith (fun _ ->
+                    Logger.pushWarn $"MoonPhysicsServer2D: push failed with block = {block}, body = {body}, normal = {normal}, guess = {guess}, motion = {pushMotion}"
+                    pushMotion
+                )
+            
+            // recover the block as we don't need it anymore
+            
+            PhysicsServer2D.BodySetTransform(rid, origin)
+            
+            // now do real cast
+            // ignore everything already inside, including the block
+            
+            qr |> PhysicsQuery.setExclude [bodyId]
+            
+            let insides =
+                qr.QueryInside (
+                    margin = brg.SafeMargin,
+                    maxResult = brg.MaxCollision
+                )
+                |> Seq.map _.Rid
+                |> List.ofSeq
+            
+            // and ignore obstacles that can travel through
+            
+            let ignores =
+                qr.QueryCollide (
+                    pushMotion,
+                    margin = brg.SafeMargin,
+                    maxResult = brg.MaxCollision
+                )
+                |> Seq.filter PhysicsQueryResult.allowTravelWhenCrash
+                |> Seq.map _.Rid
+                |> List.ofSeq
+            
+            qr |> PhysicsQuery.addExclude rid
+            qr |> PhysicsQuery.appendExclude insides
+            qr |> PhysicsQuery.appendExclude ignores
+            
+            let pushMotion, collide =
+                body.CastMotionBy(qr, pushMotion, margin = brg.SafeMargin, maxResult = brg.MaxCollision)
+            
+            PhysicsServer2D.BodySetTransform(bodyId, body.GlobalTransform)
+            brg.LastPushMotion <- brg.LastPushMotion + pushMotion
+            brg.EmitSignalPushed(block, pushMotion)
+            if arg.CrashBodies && collide.IsSome then
+                // this must be a crash
+                brg.EmitSignalCrashed ()
+            
+            Some snapMotion
+        
         let currentAf = shift.AffineInverse()
         
-        // Materialize every final-transform contact before the push loop.
-        // The loop temporarily moves the platform while searching first
-        // contact, so leaving this sequence lazy corrupts later rest_info
-        // results with an arbitrary intermediate platform transform.
-        let currentOverlapped =
-            currentQuery
-            |> getOverlapped query.Margin
-            |> Array.ofSeq
-
         let currentPushed =
-            currentOverlapped
-            |> Seq.choose (fun ((col, b, contact, finalNormal), cid) ->
-                // Sample the platform transform at the contact area so
-                // rotation contributes the appropriate tangential motion.
+            currentQuery
+            |> getOverlapped arg.SafeMargin 
+            |> Seq.choose (fun ((col, b, contact), cid) ->
+                // guess travel by last frame info
+                
                 let local = currentAf * contact
                 let prev = origin * local
-                let motion = prev - contact
+                let diff = prev - contact
                 
-                // ignore push for platform
-                let canPush =
-                    match platformDir with
-                    | Some dir ->
-                        dir.Dot motion > 0f ||
-                        (originBlocking |> Array.contains cid)
-                    | _ -> true
+                if diff = Vector2.Zero then None else
                 
-                if canPush |> not then None else
-
                 let q = MoonPhysics2D.getBodyQuery col
                 let qr = q.Build ()
-
-                let pickNormalAt (t : float32) =
-                    let transform = shift.InterpolateWith(origin, t)
-                    PhysicsServer2D.BodySetTransform(rid, transform)
-                    qr.Query (maxResult = b.MaxCollision)
-                    |> PhysicsQueryResult.tryPickAndExclude qr (fun r ->
-                        if r.Rid = rid then
-                            Some r.Normal
-                        else
-                            None
-                    )
+                qr.Cast (motion = diff, maxResult = b.MaxCollision)
                 
-                // binarySearchAndPick expands past 1 when pick(1) succeeds.
-                // First contact is only meaningful between shift and origin,
-                // so do not extrapolate. For one-way platforms, a body that
-                // reaches this point was not deeply overlapped enough for
-                // originExclude; treat that shallow residual contact as a
-                // contact beginning at the origin transform.
-                let contactSearch =
-                    if rotationChanged |> not then
-                        // Without rotation, the final normal is sufficient
-                        // for translation and scaling. The origin transform
-                        // gives the full surface motion.
-                        Some ((1f, 1f), Some finalNormal)
+                |> PhysicsQueryResult.tryPickAndExclude qr (fun r ->
+                    if r.Rid = rid then
+                        Some r.Normal
                     else
-                        match pickNormalAt 1f, platform with
-                        | Some normal, Some _ ->
-                            Some ((1f, 1f), Some normal)
-                        | Some _, None ->
-                            None
-                        | None, _ ->
-                            Some (MoonPhysics2D.binarySearchAndPick pickNormalAt)
-
-                let resolvedContact =
-                    contactSearch
-                    |> Option.bind (fun search ->
-                        search
-                        |> snd
-                        |> Option.map (fun normal -> search, normal)
-                    )
-
-                if platform |> Option.isSome &&
-                   resolvedContact |> Option.isNone &&
-                   (contactSearch |> Option.exists (snd >> Option.isNone)) then
-                    Logger.pushWarn
-                        $"MoonPhysicsServer2D: physics platform skipped as no contact normal was found, block={rid}, body={cid}, contact={contact}"
-
-                resolvedContact
-                |> Option.bind (fun (contactSearch, v) ->
-                    
-                    // push through normal
-                    
-                    PhysicsServer2D.BodySetTransform(rid, shift)
-
-                    // A valid push cannot be farther than the contact surface
-                    // advanced along its normal since first contact. Without
-                    // this bound, a bad normal can search through the whole
-                    // block and find the opposite side as the first exit.
-                    let (_, contactOutside), _ = contactSearch
-                    let contactTransform =
-                        shift.InterpolateWith(origin, contactOutside)
-                    let firstContact = contactTransform * local
-                    let surfaceMotion = contact - firstContact
-                    let overlapped (dir: Vector2) (push: float32) =
-                        qr.QueryInside (offset = push * dir, maxResult = b.MaxCollision, margin = 1e-3f)
-                        |> PhysicsQueryResult.existsAndExclude qr (fun r ->
-                            r.Rid = rid
-                        )
-
-                    let maxPush =
-                        surfaceMotion.Length() +
-                        MoonPhysics2D.blockPushTolerance
-                    let tryDirection (dir: Vector2) =
-                        if dir.Dot surfaceMotion <= 1e-3f ||
-                           overlapped dir maxPush then
-                            None
-                        else
-                            let _, push =
-                                MoonPhysics2D.binarySearch (fun t ->
-                                    overlapped dir (t * maxPush)
-                                )
-                            Some (dir, push * maxPush)
-
-                    // rest_info can occasionally return the opposite member
-                    // of the contact pair around corners/rotation. Preserve
-                    // the normal as the primary direction and only try its
-                    // inverse when the primary direction cannot separate
-                    // within this contact point's finite displacement.
-                    let push =
-                        tryDirection v
-                        |> Option.orElseWith (fun _ -> tryDirection -v)
-                        |> Option.orElseWith (fun _ ->
-                            tryDirection finalNormal
-                        )
-                        |> Option.orElseWith (fun _ ->
-                            tryDirection -finalNormal
-                        )
-
-                    match push with
-                    | None when
-                        Mathf.Abs(v.Dot surfaceMotion) <= MoonPhysics2D.binaryEps &&
-                        Mathf.Abs(finalNormal.Dot surfaceMotion) <= MoonPhysics2D.binaryEps ->
-                        // A tangential face does not push the body. This is
-                        // common at the seam between adjacent moving blocks.
                         None
-                    | None ->
-                        Logger.pushWarn
-                            $"MoonPhysicsServer2D: physics push rejected: rid={rid}, contactNormal={v}, finalNormal={finalNormal}, surfaceMotion={surfaceMotion}, maxPush={maxPush}"
-                        None
-                    | Some (pushDir, push) ->
-                        let travel = pushDir * push
-
-                        let qr = q.Build ()
-                        qr |> PhysicsQuery.addExclude rid
-                        
-                        let inside =
-                            qr.QueryInside (maxResult = b.MaxCollision, margin = b.SafeMargin)
-                            |> Seq.map _.Rid
-                            |> List.ofSeq
-
-                        let skipped =
-                            qr.QueryCollide (motion = travel, margin = b.SafeMargin, maxResult = b.MaxCollision)
-                            |> Seq.filter PhysicsQueryResult.allowTravelWhenCrash
-                            |> Seq.map _.Rid
-                            |> List.ofSeq
-                        
-                        qr |> PhysicsQuery.appendExclude inside
-                        qr |> PhysicsQuery.appendExclude skipped
-
-                        let pushMotion, result =
-                            col.CastMotionBy(qr, travel, margin = b.SafeMargin, maxResult = b.MaxCollision)
-
-                        PhysicsServer2D.BodySetTransform(cid, col.GlobalTransform)
-                        b.LastPushMotion <- b.LastPushMotion + pushMotion
-                        b.EmitSignalPushed(block, pushMotion)
-
-                        // report crash
-
-                        if arg.CrashBodies && (result |> Option.isSome) then
-                            b.EmitSignalCrashed ()
-
-                        PhysicsServer2D.BodySetTransform(rid, origin)
-
-                        b
-                        |> bodyGetSnap pushDir
-                        |> Option.bind (fun s ->
-                            let motion =
-                                motion - pushDir * motion.Dot(pushDir)
-                            if motion = Vector2.Zero then
-                                None
-                            else
-                                (col, b, s, motion) |> Ok |> Some
-                        )
-                        |> Option.orElseWith (fun _ ->
-                            col |> Result.Error |> Some
-                        )
+                )
+                
+                // fallback as -diff when failed or almost opposite
+                
+                |> Option.map (fun v ->
+                    if v.Dot diff >= 0f then
+                        (-diff).Normalized ()
+                    else
+                        v 
+                )
+                
+                |> Option.defaultWith (fun _ -> (-diff).Normalized())
+                
+                |> fun v ->
+                    // a platform can only push on it's one way direction
+                    
+                    match platformDir with
+                    | Some dir when dir.Dot v < 0f -> Some (-dir)
+                    | Some _ -> None
+                    | _ -> Some v
+                
+                |> Option.bind (fun v ->
+                    pushThrough col b cid q -diff v
+                    |> Option.filter (fun m -> m <> Vector2.Zero)
+                    |> Option.map (fun m -> v, m)
+                )
+                
+                |> Option.map (fun (v, motion) ->
+                    b
+                    |> bodyGetSnap v
+                    |> Option.map (fun s -> col, b, s, motion)
+                    |> Option.map Ok
+                    |> Option.defaultWith (fun _ -> Result.Error col)
                 )
             )
             |> List.ofSeq

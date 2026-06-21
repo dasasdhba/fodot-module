@@ -285,8 +285,38 @@ module private MoonPhysicsServer3D =
                         MoonPhysics3D.blockPushTolerance
 
                     let tryDirection (direction : Vector3) =
-                        if direction.Dot(surfaceMotion) <= MoonPhysics3D.binaryEps ||
-                           overlapped direction maxPush then
+                        let expectedPush = direction.Dot(surfaceMotion)
+                        if expectedPush <= MoonPhysics3D.binaryEps then
+                            None
+                        elif not rotationChanged &&
+                             not (overlapped direction (expectedPush + MoonPhysics3D.binaryEps)) then
+                            let maxExpected =
+                                expectedPush + MoonPhysics3D.binaryEps
+                            // Start from the separated position and cast back
+                            // toward the body origin. The first hit gives the
+                            // minimum outward travel in one query.
+                            let castPush =
+                                qr.Cast(
+                                    -direction * maxExpected,
+                                    offset = direction * maxExpected,
+                                    maxResult = bodyArg.MaxCollision,
+                                    margin = MoonPhysics3D.binaryEps
+                                )
+                                |> Seq.tryFind (fun r -> r.Rid = rid)
+                                |> Option.map (fun r ->
+                                    let push =
+                                        maxExpected * (1f - r.SafeFraction)
+                                    direction, push
+                                )
+                            castPush
+                            |> Option.orElseWith (fun _ ->
+                                let _, push =
+                                    MoonPhysics3D.binarySearch (fun t ->
+                                        overlapped direction (t * maxExpected)
+                                    )
+                                Some (direction, push * maxExpected)
+                            )
+                        elif overlapped direction maxPush then
                             None
                         else
                             let _, push =

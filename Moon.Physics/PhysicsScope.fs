@@ -2,7 +2,6 @@ namespace Moon.Physics
 
 open Fodot
 open Godot
-open Moon.Utils
 
 module MoonPhysics2D =
     
@@ -66,15 +65,9 @@ module MoonPhysics3D =
     
     let blockSnapMargin = 0.04f
     let bodyMaxRecovery = 0.2f
-    let blockPushTolerance = 0.04f
-    let binaryMaxIter = 16
-    let binaryEps = 1e-3f
-    
-    let binarySearch check =
-        Math.binarySearch binaryMaxIter binaryEps check
-    
-    let binarySearchAndPick pick =
-        Math.binarySearchAndPick binaryMaxIter binaryEps pick
+    let blockRecoveryMargin = 0.004f
+    let bodyRecoveryScale = 2f
+    let blockPushTolerance = 0.32f
 
     let private bodyQueries =
         WeakMeta<PhysicsQueryShape3D>()

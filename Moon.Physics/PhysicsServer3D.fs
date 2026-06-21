@@ -7,6 +7,7 @@ open Fodot.Module.PhysicsServer
 open Godot
 open Moon
 open Moon.Library
+open Moon.Physics.PhysicsCollide
 open Moon.Physics.PhysicsMotion
 
 module private MoonPhysicsServer3D =
@@ -306,7 +307,7 @@ module private MoonPhysicsServer3D =
                         qr |> PhysicsQuery.addExclude rid
 
                         let skipped =
-                            qr.QueryInside(margin = bodyArg.SafeMargin, maxResult = bodyArg.MaxCollision)
+                            qr.QueryCollide (motion = travel, margin = bodyArg.SafeMargin, maxResult = bodyArg.MaxCollision)
                             |> Seq.filter PhysicsQueryResult.allowTravelWhenCrash
                             |> Seq.map _.Rid
                             |> List.ofSeq

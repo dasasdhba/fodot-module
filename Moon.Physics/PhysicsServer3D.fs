@@ -302,23 +302,33 @@ module private MoonPhysicsServer3D =
                     | Some (pushDirection, pushDistance) ->
                         let travel = pushDirection * pushDistance
 
-                        col.GlobalPosition <- col.GlobalPosition + travel
-                        PhysicsServer3D.BodySetTransform(bodyRid, col.GlobalTransform)
-                        bodyArg.LastPushMotion <-
-                            bodyArg.LastPushMotion + travel
-                        bodyArg.EmitSignalPushed(block, travel)
+                        let qr = bodyQuery.Build()
+                        qr |> PhysicsQuery.addExclude rid
 
-                        if arg.CrashBodies then
-                            let crashQuery = bodyQuery.Build()
-                            crashQuery.QueryInside(maxResult = bodyArg.MaxCollision)
-                            |> Seq.tryFind (fun r ->
-                                r
-                                |> PhysicsQueryResult.allowTravelWhenCrash
-                                |> not
+                        let skipped =
+                            qr.QueryInside(margin = bodyArg.SafeMargin, maxResult = bodyArg.MaxCollision)
+                            |> Seq.filter PhysicsQueryResult.allowTravelWhenCrash
+                            |> Seq.map _.Rid
+                            |> List.ofSeq
+
+                        qr |> PhysicsQuery.appendExclude skipped
+
+                        let pushMotion, result =
+                            col.CastMotionBy(
+                                qr,
+                                travel,
+                                margin = bodyArg.SafeMargin,
+                                maxResult = bodyArg.MaxCollision
                             )
-                            |> Option.iter (fun _ ->
-                                bodyArg.EmitSignalCrashed()
-                            )
+
+                        PhysicsServer3D.BodySetTransform(bodyRid, col.GlobalTransform)
+                        bodyArg.LastPushMotion <- bodyArg.LastPushMotion + pushMotion
+                        bodyArg.EmitSignalPushed(block, pushMotion)
+
+                        // report crash
+                        
+                        if arg.CrashBodies && (result |> Option.isSome) then
+                            bodyArg.EmitSignalCrashed()
 
                         PhysicsServer3D.BodySetTransform(rid, origin)
 
@@ -326,8 +336,7 @@ module private MoonPhysicsServer3D =
                         |> bodyGetSnap pushDirection
                         |> Option.bind (fun snap ->
                             let snapMotion =
-                                motion -
-                                pushDirection * motion.Dot(pushDirection)
+                                motion - pushDirection * motion.Dot(pushDirection)
                             if snapMotion = Vector3.Zero then
                                 None
                             else
@@ -414,6 +423,7 @@ module private MoonPhysicsServer3D =
             )
             |> fst
 
+        PhysicsServer3D.BodySetTransform(body.GetRid(), body.GlobalTransform)
         arg.LastSnapMotion <- snapMotion
         arg.SnapMotions <- []
 

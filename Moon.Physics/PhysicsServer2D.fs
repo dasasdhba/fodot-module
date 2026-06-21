@@ -328,22 +328,28 @@ module private MoonPhysicsServer2D =
                     | Some (pushDir, push) ->
                         let travel = pushDir * push
 
-                        col.GlobalPosition <- col.GlobalPosition + travel
+                        let qr = q.Build ()
+                        qr |> PhysicsQuery.addExclude rid
+
+                        let skipped =
+                            qr.QueryInside (margin = b.SafeMargin, maxResult = b.MaxCollision)
+                            |> Seq.filter PhysicsQueryResult.allowTravelWhenCrash
+                            |> Seq.map _.Rid
+                            |> List.ofSeq
+
+                        qr |> PhysicsQuery.appendExclude skipped
+
+                        let pushMotion, result =
+                            col.CastMotionBy(qr, travel, margin = b.SafeMargin, maxResult = b.MaxCollision)
+
                         PhysicsServer2D.BodySetTransform(cid, col.GlobalTransform)
-                        b.LastPushMotion <- b.LastPushMotion + travel
-                        b.EmitSignalPushed(block, travel)
+                        b.LastPushMotion <- b.LastPushMotion + pushMotion
+                        b.EmitSignalPushed(block, pushMotion)
 
                         // report crash
 
-                        if arg.CrashBodies then
-                            let qr = q.Build ()
-                            qr.QueryInside (maxResult = b.MaxCollision)
-                            |> Seq.tryFind (fun r ->
-                                r |> PhysicsQueryResult.allowTravelWhenCrash |> not
-                            )
-                            |> Option.iter (fun _ ->
-                                b.EmitSignalCrashed ()
-                            )
+                        if arg.CrashBodies && (result |> Option.isSome) then
+                            b.EmitSignalCrashed ()
 
                         PhysicsServer2D.BodySetTransform(rid, origin)
 
@@ -444,6 +450,8 @@ module private MoonPhysicsServer2D =
         let snapMotion =
             body.CastMotion(motion, margin = arg.SafeMargin, maxResult = arg.MaxCollision)
             |> fst
+
+        PhysicsServer2D.BodySetTransform(body.GetRid(), body.GlobalTransform)
         arg.LastSnapMotion <- snapMotion
         arg.SnapMotions <- []
 

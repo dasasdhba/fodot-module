@@ -2,6 +2,7 @@ module Moon.Physics.PhysicsMotion
 
 open Fodot.Injection
 open Godot
+open Fodot.Module.PhysicsServer
 open Moon.Physics.MoonPhysics
 open Moon.Physics.PhysicsCollide
 
@@ -40,6 +41,7 @@ type CollisionObject2D with
             |> Option.defaultValue 1f
         let motion = motion * travel
         this.GlobalPosition <- this.GlobalPosition + motion
+        PhysicsServer2D.BodySetTransform(this.GetRid(), this.GlobalTransform)
         motion, result
         
 type CollisionObject3D with
@@ -61,4 +63,5 @@ type CollisionObject3D with
             |> Option.defaultValue 1f
         let motion = motion * travel
         this.GlobalPosition <- this.GlobalPosition + motion
+        PhysicsServer3D.BodySetTransform(this.GetRid(), this.GlobalTransform)
         motion, result

@@ -17,6 +17,7 @@
         <Compile Include="PhysicsCollide.fs" />
         <Compile Include="PhysicsMotion.fs" />
         <Compile Include="PhysicsServer2D.fs" />
+        <Compile Include="PhysicsServer3D.fs" />
     </ItemGroup>
 
     <ItemGroup>

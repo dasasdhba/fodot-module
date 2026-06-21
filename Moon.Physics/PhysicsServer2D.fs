@@ -57,9 +57,13 @@ module private MoonPhysicsServer2D =
         |> Seq.tryMinBy snd
         |> Option.map fst
     
-    let bodyCheckSnap (block : Rid, brg : MoonBlock2D) (body : CollisionObject2D, arg : MoonBody2D) =
+    let bodyCheckSnap
+        (block : Rid, brg : MoonBlock2D)
+        (body : CollisionObject2D, arg : MoonBody2D) =
+        
         let query = MoonPhysics2D.getBodyQuery body
         let q = query.Build ()
+        
         arg.Snaps
         |> Seq.filter (fun v ->
             brg.InvalidSnapNormals
@@ -76,7 +80,10 @@ module private MoonPhysicsServer2D =
             |> PhysicsQueryResult.existsAndExclude q (fun r -> r.Rid = block)
         )
     
-    let updateBlock (delta: float32) (block : CollisionObject2D, arg : MoonBlock2D) =
+    let updateBlock
+        (delta: float32)
+        (block : CollisionObject2D, arg : MoonBlock2D) =
+        
         let rid = block.GetRid()
         let origin = PhysicsServer2D.BodyGetTransform(rid)
         let current = block.GetGlobalTransform ()
@@ -133,8 +140,8 @@ module private MoonPhysicsServer2D =
         
         let originInsideMargin =
             platform
-            |> Option.map (fun p -> -(max p.Margin 1e-3f))
-            |> Option.defaultValue -1e-3f
+            |> Option.map (fun p -> -(max p.Margin MoonPhysics2D.binaryEps))
+            |> Option.defaultValue -MoonPhysics2D.binaryEps
 
         let originExclude =
             originQuery
@@ -421,15 +428,13 @@ module private MoonPhysicsServer2D =
     
     let updateBody (body : CollisionObject2D, arg : MoonBody2D) =
         let rec getMotion (motions : Vector2 list) =
-            if motions |> List.isEmpty then Vector2.Zero else
-            
-            let motion = motions |> List.head
-            let para, remain =
-                motions
-                |> List.partition (fun v -> v.ParallelTo motion)
-                
-            let motion = para |> List.sum
-            motion + getMotion remain
+            match motions with
+            | [] -> Vector2.Zero
+            | motion :: _ ->
+                let parallax, remaining =
+                    motions
+                    |> List.partition (fun v -> v.ParallelTo motion)
+                (parallax |> List.sum) + getMotion remaining
         
         let motion =
             arg.SnapMotions

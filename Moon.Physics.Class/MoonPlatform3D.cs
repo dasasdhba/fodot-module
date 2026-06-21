@@ -3,7 +3,7 @@ using Godot;
 
 namespace Moon.Physics;
 
-[GlobalClass, ChildOf("CollisionObject2D")]
+[GlobalClass, ChildOf("CollisionObject3D")]
 public partial class MoonPlatform3D : ParentComponent
 {
     [Export] 

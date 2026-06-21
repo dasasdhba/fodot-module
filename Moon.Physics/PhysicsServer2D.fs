@@ -120,8 +120,8 @@ module private MoonPhysicsServer2D =
         block.GlobalTransform <- shift
         let currentQuery = query.Build ()
         
-        let getOverlappedInside margin (q : PhysicsShapeQuerier2D) =
-            q.QueryInside (margin = margin, maxResult = arg.MaxCollision)
+        let getOverlappedInside (q : PhysicsShapeQuerier2D) =
+            q.QueryInside (maxResult = arg.MaxCollision)
             |> PhysicsQueryResult.chooseAndExclude q (fun r ->
                 match r.Collider with
                 | :? CollisionObject2D as col ->
@@ -151,7 +151,7 @@ module private MoonPhysicsServer2D =
             match platformDir with
             | Some _ ->
                 originQuery
-                |> getOverlappedInside -MoonPhysics2D.blockSnapMargin
+                |> getOverlappedInside
                 |> Seq.map snd
                 |> List.ofSeq
             | _ -> []
@@ -248,10 +248,7 @@ module private MoonPhysicsServer2D =
                     )
                     |> Seq.tryFind (fun r -> r.Rid = rid)
                     |> Option.map (fun r -> r.SafeFraction, r.Normal)
-                    |> Option.defaultWith (fun _ ->
-                        Logger.push "cast back failed"
-                        (1f, normal)
-                    )
+                    |> Option.defaultValue (1f, normal)
                 
                 (-push) * travel, normal
             
@@ -289,17 +286,14 @@ module private MoonPhysicsServer2D =
                 if inside |> not then pushMotion else
                 
                 qr.PushOut (
-                    pushMotion * 2f,
+                    pushMotion * MoonPhysics2D.bodyRecoveryScale,
                     margin = margin,
                     maxResult = brg.MaxCollision
                 )
                 |> Option.map (fun r ->
-                    pushMotion * 2f * r.SafeFraction
+                    pushMotion * MoonPhysics2D.bodyRecoveryScale * r.SafeFraction
                 )
-                |> Option.defaultWith (fun _ ->
-                    Logger.pushWarn $"MoonPhysicsServer2D: push failed with block = {block}, body = {body}, normal = {normal}, guess = {guess}, motion = {pushMotion}"
-                    pushMotion
-                )
+                |> Option.defaultValue pushMotion
             
             // recover the block as we don't need it anymore
             
@@ -362,7 +356,7 @@ module private MoonPhysicsServer2D =
                 
                 let q = MoonPhysics2D.getBodyQuery col
                 let qr = q.Build ()
-                qr.Cast (motion = diff, maxResult = b.MaxCollision)
+                qr.Cast (motion = diff, maxResult = b.MaxCollision, margin = b.SafeMargin)
                 
                 |> PhysicsQueryResult.tryPickAndExclude qr (fun r ->
                     if r.Rid = rid then

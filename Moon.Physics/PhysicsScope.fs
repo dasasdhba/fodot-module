@@ -8,16 +8,9 @@ module MoonPhysics2D =
     
     let blockSnapMargin = 1f
     let bodyMaxRecovery = 4f
-    let blockRecoveryMargin = 0.02f
+    let blockRecoveryMargin = 0.1f
+    let bodyRecoveryScale = 2f
     let blockPushTolerance = 8f
-    let binaryMaxIter = 16
-    let binaryEps = 1e-3f
-    
-    let binarySearch check =
-        Math.binarySearch binaryMaxIter binaryEps check
-    
-    let binarySearchAndPick pick =
-        Math.binarySearchAndPick binaryMaxIter binaryEps pick
 
     let private bodyQueries =
         WeakMeta<PhysicsQueryShape2D>()

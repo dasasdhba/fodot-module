@@ -232,13 +232,19 @@ module private MoonPhysicsServer3D =
                     )
 
                 let contactSearch =
-                    match pickNormalAt 1f, platform with
-                    | Some normal, Some _ ->
-                        Some ((1f, 1f), Some normal)
-                    | Some _, None ->
-                        None
-                    | None, _ ->
-                        Some (MoonPhysics3D.binarySearchAndPick pickNormalAt)
+                    if rotationChanged |> not then
+                        // Without rotation, the final normal is sufficient
+                        // for translation and scaling. The origin transform
+                        // gives the full surface motion.
+                        Some ((1f, 1f), Some finalNormal)
+                    else
+                        match pickNormalAt 1f, platform with
+                        | Some normal, Some _ ->
+                            Some ((1f, 1f), Some normal)
+                        | Some _, None ->
+                            None
+                        | None, _ ->
+                            Some (MoonPhysics3D.binarySearchAndPick pickNormalAt)
 
                 let resolvedContact =
                     contactSearch
@@ -302,6 +308,12 @@ module private MoonPhysicsServer3D =
                         )
 
                     match push with
+                    | None when
+                        Mathf.Abs(contactNormal.Dot surfaceMotion) <= MoonPhysics3D.binaryEps &&
+                        Mathf.Abs(finalNormal.Dot surfaceMotion) <= MoonPhysics3D.binaryEps ->
+                        // A tangential face does not push the body. This is
+                        // common at the seam between adjacent moving blocks.
+                        None
                     | None ->
                         Logger.pushWarn
                             $"MoonPhysicsServer3D: push rejected: rid={rid}, contactNormal={contactNormal}, finalNormal={finalNormal}, surfaceMotion={surfaceMotion}, maxPush={maxPush}"

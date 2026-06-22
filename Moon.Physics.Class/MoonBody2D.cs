@@ -13,8 +13,13 @@ public partial class MoonBody2D : ParentComponent
     [Export]
     public Vector3[] Snaps { get ;set; } = [];
     
+    /// <summary>
+    /// The safe margin used in the recovery stage of block pushing.
+    /// Increase this for better stability, or omit it if
+    /// you never need to deal with rotated blocks.
+    /// </summary>
     [Export(PropertyHint.Range, "0,128,0.001,suffix:px")]
-    public float SafeMargin { get ;set; } = 0.08f;
+    public float SafeMargin { get ;set; } = 0.1f;
     
     [Export]
     public int MaxCollision { get ;set; } = 32;

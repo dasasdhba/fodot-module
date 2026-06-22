@@ -121,7 +121,7 @@ module private MoonPhysicsServer2D =
         let currentQuery = query.Build ()
         
         let getOverlappedInside (q : PhysicsShapeQuerier2D) =
-            q.QueryInside (maxResult = arg.MaxCollision)
+            q.QueryInside (margin = -MoonPhysics2D.platformInsideMargin, maxResult = arg.MaxCollision)
             |> PhysicsQueryResult.chooseAndExclude q (fun r ->
                 match r.Collider with
                 | :? CollisionObject2D as col ->
@@ -190,16 +190,15 @@ module private MoonPhysicsServer2D =
             PhysicsServer2D.BodySetTransform(rid, shift)
             let qr = q.Build ()
             
-            // we use an expanded margin in recovery and snap stage
-            
-            let margin = brg.SafeMargin + MoonPhysics2D.blockRecoveryMargin
+            // we use a safe margin in recovery and snap stage
+            // as an inaccurate normal can fail the recovery
             
             // first, travel though guess from transform change
             
             let guessInside =
                 qr.QueryInside (
                     offset = guess,
-                    margin = margin,
+                    margin = brg.SafeMargin,
                     maxResult = brg.MaxCollision
                 )
                 |> PhysicsQueryResult.existsAndExclude qr (fun r -> r.Rid = rid)
@@ -216,7 +215,7 @@ module private MoonPhysicsServer2D =
                 // we ignore everything else
                 
                 let ignored =
-                    qr.QueryCollide (push, offset = guess, margin = margin, maxResult = brg.MaxCollision, hitFromInside = true)
+                    qr.QueryCollide (push, offset = guess, margin = brg.SafeMargin, maxResult = brg.MaxCollision, hitFromInside = true)
                     |> Seq.filter (fun r -> r.Rid <> rid)
                     |> Seq.map _.Rid
                     |> List.ofSeq
@@ -227,7 +226,7 @@ module private MoonPhysicsServer2D =
                     qr.PushOut (
                         push,
                         offset = guess,
-                        margin = margin,
+                        margin = brg.SafeMargin,
                         maxResult = brg.MaxCollision
                     )
                     |> Option.map (fun r -> r.SafeFraction, r.Normal)
@@ -243,7 +242,7 @@ module private MoonPhysicsServer2D =
                     qr.Cast (
                         -push,
                         offset = guess,
-                        margin = margin,
+                        margin = brg.SafeMargin,
                         maxResult = brg.MaxCollision
                     )
                     |> Seq.tryFind (fun r -> r.Rid = rid)
@@ -265,19 +264,18 @@ module private MoonPhysicsServer2D =
                 )
             
             // next, cancel all sliding motion through normal
-            // for now we use original margin
+            // from now margin can be omitted
             
             let motion = guess + snap
             let pushMotion = normal * (motion.Dot normal)
             let snapMotion = motion - pushMotion
             
-            // do another recovery if necessary
-            // as normal can sometimes be inaccurate
+            // however normal can still be inaccurate
+            // we need another recovery if necessary
             
             let inside =
                 qr.QueryInside (
                     offset = pushMotion,
-                    margin = margin,
                     maxResult = brg.MaxCollision
                 )
                 |> Seq.exists (fun r -> r.Rid = rid)
@@ -287,7 +285,6 @@ module private MoonPhysicsServer2D =
                 
                 qr.PushOut (
                     pushMotion * MoonPhysics2D.bodyRecoveryScale,
-                    margin = margin,
                     maxResult = brg.MaxCollision
                 )
                 |> Option.map (fun r ->
@@ -302,11 +299,10 @@ module private MoonPhysicsServer2D =
             // now do real cast
             // ignore everything already inside, including the block
             
-            qr |> PhysicsQuery.setExclude [bodyId]
+            qr |> PhysicsQuery.setExclude [bodyId; rid]
             
             let insides =
                 qr.QueryInside (
-                    margin = brg.SafeMargin,
                     maxResult = brg.MaxCollision
                 )
                 |> Seq.map _.Rid
@@ -317,19 +313,17 @@ module private MoonPhysicsServer2D =
             let ignores =
                 qr.QueryCollide (
                     pushMotion,
-                    margin = brg.SafeMargin,
                     maxResult = brg.MaxCollision
                 )
                 |> Seq.filter PhysicsQueryResult.allowTravelWhenCrash
                 |> Seq.map _.Rid
                 |> List.ofSeq
             
-            qr |> PhysicsQuery.addExclude rid
             qr |> PhysicsQuery.appendExclude insides
             qr |> PhysicsQuery.appendExclude ignores
             
             let pushMotion, collide =
-                body.CastMotionBy(qr, pushMotion, margin = brg.SafeMargin, maxResult = brg.MaxCollision)
+                body.CastMotionBy(qr, pushMotion, maxResult = brg.MaxCollision)
             
             PhysicsServer2D.BodySetTransform(bodyId, body.GlobalTransform)
             brg.LastPushMotion <- brg.LastPushMotion + pushMotion
@@ -344,7 +338,7 @@ module private MoonPhysicsServer2D =
         
         let currentPushed =
             currentQuery
-            |> getOverlapped arg.SafeMargin 
+            |> getOverlapped query.Margin 
             |> Seq.choose (fun ((col, b, contact), cid) ->
                 // guess travel by last frame info
                 
@@ -478,7 +472,7 @@ module private MoonPhysicsServer2D =
             |> getMotion
             
         let snapMotion =
-            body.CastMotion(motion, margin = arg.SafeMargin, maxResult = arg.MaxCollision)
+            body.CastMotion(motion, maxResult = arg.MaxCollision)
             |> fst
 
         PhysicsServer2D.BodySetTransform(body.GetRid(), body.GlobalTransform)

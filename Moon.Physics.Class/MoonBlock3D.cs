@@ -19,9 +19,6 @@ public partial class MoonBlock3D : ParentComponent
     [Export]
     public Vector3[] InvalidSnapNormals { get; set; } = [];
 
-    [Export(PropertyHint.Range, "0,10,0.0001,suffix:m")]
-    public float SafeMargin { get; set; } = 0.0016f;
-
     [Export]
     public int MaxCollision { get; set; } = 32;
 

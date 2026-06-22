@@ -2,7 +2,6 @@ namespace Moon.Script
 
 open System
 open Fodot
-open Fodot.Injection
 open Godot
 open Moon
 open Moon.Physics
@@ -28,15 +27,10 @@ type TestRandomPhysics(col : CollisionObject2D) =
     
     let speed = Mathe.RandfRange(100f, 200f)
     let angle = Mathe.RandfRange(-Single.Pi, Single.Pi)
-    let margin =
-        col
-        |> Compo.tryFind<MoonBody2D>
-        |> Option.map _.SafeMargin
-        |> Option.defaultValue 0.08f
 
     do
         col |> Engine.addPhysicsDelta32Process (fun delta ->
             let motion = speed * delta * Vector2.Right.Rotated(angle)
-            col.CastMotion(motion, margin = margin) |> ignore
+            col.CastMotion(motion) |> ignore
             ()
         ) |> ignore

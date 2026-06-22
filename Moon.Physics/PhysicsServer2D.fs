@@ -16,9 +16,12 @@ open Moon.Physics.PhysicsMotion
 module private MoonPhysicsServer2D =
     
     let bodies =
-        FlushPool<CollisionObject2D * MoonBody2D>(fun (col, _) -> col :> Node)
+        FlushPool<CollisionObject2D * MoonBody2D>
+            (fun (col, _) -> col :> Node)
+    
     let blocks =
-        FlushPool<CollisionObject2D * MoonBlock2D>(fun (col, _) -> col :> Node)
+        FlushPool<CollisionObject2D * (MoonBlock2D * Lazy<MoonPlatform2D option>)>
+            (fun (col, _) -> col :> Node)
     
     [<FScript(typeof<MoonBody2D>)>]
     type MoonBody2DScript(arg : MoonBody2D) =
@@ -36,7 +39,8 @@ module private MoonPhysicsServer2D =
             arg
             |> Node.tryGetParent<CollisionObject2D>
             |> Option.iter (fun p ->
-                let data = p, arg
+                let platform = lazy (p |> Compo.tryFind<MoonPlatform2D>)
+                let data = p, (arg, platform)
                 blocks.Track data
             )
     
@@ -83,36 +87,27 @@ module private MoonPhysicsServer2D =
     
     let updateBlock
         (delta: float32)
-        (block : CollisionObject2D, arg : MoonBlock2D) =
+        (block : CollisionObject2D, data : MoonBlock2D * Lazy<MoonPlatform2D option>) =
         
         let rid = block.GetRid()
         let origin = PhysicsServer2D.BodyGetTransform(rid)
         let current = block.GetGlobalTransform ()
+        let arg, platform = data
         let ct = Transform2D(arg.ConstAngularVelocity * delta, arg.ConstLinearVelocity * delta)
         let shift = ct * current
         
         if shift = origin then Seq.empty else
         
-        let platformArg =
-            block
-            |> Compo.tryFind<MoonPlatform2D>
-            |> Option.map _.Direction
+        let getPlatformDir (transform: Transform2D) =
+            platform.Value
+            |> Option.map (fun p ->
+                p.Direction
+                |> transform.BasisXform
+                |> _.Normalized()
+            )
         
-        let platformDir =
-            platformArg
-            |> Option.map (fun d ->
-                d
-                |> origin.BasisXform
-                |> _.Normalized()
-            )
-            
-        let platformDirNext =
-            platformArg
-            |> Option.map (fun d ->
-                d
-                |> shift.BasisXform
-                |> _.Normalized()
-            )
+        let platformDir = getPlatformDir origin
+        let platformDirNext = getPlatformDir shift
         
         let query = getBlockQuery block
         block.GlobalTransform <- origin
@@ -120,8 +115,8 @@ module private MoonPhysicsServer2D =
         block.GlobalTransform <- shift
         let currentQuery = query.Build ()
         
-        let getOverlappedInside (q : PhysicsShapeQuerier2D) =
-            q.QueryInside (margin = -MoonPhysics2D.platformInsideMargin, maxResult = arg.MaxCollision)
+        let getOverlappedInside margin (q : PhysicsShapeQuerier2D) =
+            q.QueryInside (margin = margin, maxResult = arg.MaxCollision)
             |> PhysicsQueryResult.chooseAndExclude q (fun r ->
                 match r.Collider with
                 | :? CollisionObject2D as col ->
@@ -148,10 +143,10 @@ module private MoonPhysicsServer2D =
         // bodies that already inside
         
         let originExclude =
-            match platformDir with
-            | Some _ ->
+            match platform.Value with
+            | Some p when p.Margin > 0f ->
                 originQuery
-                |> getOverlappedInside
+                |> getOverlappedInside -p.Margin
                 |> Seq.map snd
                 |> List.ofSeq
             | _ -> []
@@ -498,10 +493,11 @@ module private MoonPhysicsServer2D =
             
             blocks.Iter()
             |> Seq.filter (fun (b, _) -> b.CanProcess()) 
-            |> Seq.map (fun (b, arg) ->
+            |> Seq.map (fun (b, data) ->
+                let arg = data |> fst
                 arg.LastPushed <- lazy [||]
                 arg.LastSnapped <- lazy [||]
-                (b, arg) |> updateBlock delta
+                (b, data) |> updateBlock delta
             )
             |> Seq.concat
             |> Array.ofSeq

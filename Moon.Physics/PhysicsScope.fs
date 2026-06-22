@@ -6,7 +6,6 @@ open Godot
 module MoonPhysics2D =
     
     let blockSnapMargin = 1f
-    let platformInsideMargin = 0.1f
     let bodyMaxRecovery = 4f
     let bodyRecoveryScale = 2f
     let blockPushTolerance = 8f
@@ -64,7 +63,6 @@ module MoonPhysics2D =
 module MoonPhysics3D =
     
     let blockSnapMargin = 0.04f
-    let platformInsideMargin = 0.004f
     let bodyMaxRecovery = 0.2f
     let bodyRecoveryScale = 2f
     let blockPushTolerance = 0.32f

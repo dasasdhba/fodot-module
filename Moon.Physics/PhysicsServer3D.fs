@@ -16,9 +16,12 @@ open Moon.Physics.PhysicsMotion
 module private MoonPhysicsServer3D =
 
     let bodies =
-        FlushPool<CollisionObject3D * MoonBody3D>(fun (col, _) -> col :> Node)
+        FlushPool<CollisionObject3D * MoonBody3D>
+            (fun (col, _) -> col :> Node)
+
     let blocks =
-        FlushPool<CollisionObject3D * MoonBlock3D>(fun (col, _) -> col :> Node)
+        FlushPool<CollisionObject3D * (MoonBlock3D * Lazy<MoonPlatform3D option>)>
+            (fun (col, _) -> col :> Node)
 
     [<FScript(typeof<MoonBody3D>)>]
     type MoonBody3DScript(arg : MoonBody3D) =
@@ -36,7 +39,8 @@ module private MoonPhysicsServer3D =
             arg
             |> Node.tryGetParent<CollisionObject3D>
             |> Option.iter (fun p ->
-                let data = p, arg
+                let platform = lazy (p |> Compo.tryFind<MoonPlatform3D>)
+                let data = p, (arg, platform)
                 blocks.Track data
             )
 
@@ -82,11 +86,12 @@ module private MoonPhysicsServer3D =
 
     let updateBlock
         (delta: float32)
-        (block : CollisionObject3D, arg : MoonBlock3D) =
+        (block : CollisionObject3D, data : MoonBlock3D * Lazy<MoonPlatform3D option>) =
 
         let rid = block.GetRid()
         let origin = PhysicsServer3D.BodyGetTransform(rid)
         let current = block.GlobalTransform
+        let arg, platform = data
         let ct =
             Transform3D(
                 Basis.FromEuler(arg.ConstAngularVelocity * delta),
@@ -96,22 +101,14 @@ module private MoonPhysicsServer3D =
 
         if shift = origin then Seq.empty else
 
-        let platformArg =
-            block
-            |> Compo.tryFind<MoonPlatform3D>
-            |> Option.map _.Direction
-
-        let platformDir =
-            platformArg
-            |> Option.map (fun d ->
-                (origin.Basis * d).Normalized()
+        let getPlatformDir (transform: Transform3D) =
+            platform.Value
+            |> Option.map (fun p ->
+                (transform.Basis * p.Direction).Normalized()
             )
 
-        let platformDirNext =
-            platformArg
-            |> Option.map (fun d ->
-                (shift.Basis * d).Normalized()
-            )
+        let platformDir = getPlatformDir origin
+        let platformDirNext = getPlatformDir shift
 
         let query = getBlockQuery block
         block.GlobalTransform <- origin
@@ -119,8 +116,8 @@ module private MoonPhysicsServer3D =
         block.GlobalTransform <- shift
         let currentQuery = query.Build ()
 
-        let getOverlappedInside (q : PhysicsShapeQuerier3D) =
-            q.QueryInside (margin = -MoonPhysics3D.platformInsideMargin, maxResult = arg.MaxCollision)
+        let getOverlappedInside margin (q : PhysicsShapeQuerier3D) =
+            q.QueryInside (margin = margin, maxResult = arg.MaxCollision)
             |> PhysicsQueryResult.chooseAndExclude q (fun r ->
                 match r.Collider with
                 | :? CollisionObject3D as col ->
@@ -147,10 +144,10 @@ module private MoonPhysicsServer3D =
         // bodies that already inside
 
         let originExclude =
-            match platformDir with
-            | Some _ ->
+            match platform.Value with
+            | Some p when p.Margin > 0f ->
                 originQuery
-                |> getOverlappedInside
+                |> getOverlappedInside -p.Margin
                 |> Seq.map snd
                 |> List.ofSeq
             | _ -> []
@@ -497,10 +494,11 @@ module private MoonPhysicsServer3D =
 
             blocks.Iter()
             |> Seq.filter (fun (b, _) -> b.CanProcess())
-            |> Seq.map (fun (b, arg) ->
+            |> Seq.map (fun (b, data) ->
+                let arg = data |> fst
                 arg.LastPushed <- lazy [||]
                 arg.LastSnapped <- lazy [||]
-                (b, arg) |> updateBlock delta
+                (b, data) |> updateBlock delta
             )
             |> Seq.concat
             |> Array.ofSeq

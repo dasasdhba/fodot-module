@@ -50,25 +50,34 @@ public partial class RoundRect : NodeSize2D
     
     private int _RoundPoint = 16;
 
-    public RoundRect() : base()
+    public override void _EnterTree()
     {
-        Ready += QueueRedraw;
-        SignalSizeChanged += QueueRedraw;
+        base._EnterTree();
+        
+        QueueRedraw();
+        SizeChanged += QueueRedraw;
     }
-    
+
+    public override void _ExitTree()
+    {
+        base._ExitTree();
+        
+        SizeChanged -= QueueRedraw;
+    }
+
 #if DEBUG
     
     public void OnBeforeSerialize()
     {
-        Ready -= QueueRedraw;
-        SignalSizeChanged -= QueueRedraw;
+        SizeChanged -= QueueRedraw;
     }
 
     public void OnAfterDeserialize()
     {
         QueueRedraw();
+        SizeChanged += QueueRedraw;
     }
-    
+
 #endif
 
     private IEnumerable<Vector2> GetRoundedPoints(Vector2 origin, Vector2 radius, float from, float to)

@@ -33,23 +33,32 @@ public partial class DebugFill : NodeSize2D
         DrawRect(new (new(0f, 0f), Size), DebugColor);
     }
 
-    public DebugFill() : base()
+    public override void _EnterTree()
     {
+        base._EnterTree();
         if (!Engine.IsEditorHint()) return;
         
-        TreeEntered += QueueRedraw;
-        SignalSizeChanged += QueueRedraw;
+        QueueRedraw();
+        SizeChanged += QueueRedraw;
     }
 
-    public virtual void OnBeforeSerialize()
+    public override void _ExitTree()
     {
-        TreeEntered -= QueueRedraw;
-        SignalSizeChanged -= QueueRedraw;
+        base._ExitTree();
+        if (!Engine.IsEditorHint()) return;
+        
+        SizeChanged -= QueueRedraw;
+    }
+    
+    public void OnBeforeSerialize()
+    {
+        SizeChanged -= QueueRedraw;
     }
 
     public void OnAfterDeserialize()
     {
         QueueRedraw();
+        SizeChanged += QueueRedraw;
     }
 
 #endif

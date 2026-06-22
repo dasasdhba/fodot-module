@@ -56,23 +56,32 @@ public partial class TextureFill : NodeSize2D
         DrawTextureRect(Texture, new(Vector2.Zero, size), true);
     }
 
-    public TextureFill() : base()
+    public override void _EnterTree()
     {
-        TreeEntered += QueueRedraw;
-        SignalSizeChanged += QueueRedraw;
+        base._EnterTree();
+        
+        QueueRedraw();
+        SizeChanged += QueueRedraw;
     }
-    
-#if DEBUG
 
+    public override void _ExitTree()
+    {
+        base._ExitTree();
+        
+        SizeChanged -= QueueRedraw;
+    }
+
+#if DEBUG
+    
     public void OnBeforeSerialize()
     {
-        TreeEntered -= QueueRedraw;
-        SignalSizeChanged -= QueueRedraw;
+        SizeChanged -= QueueRedraw;
     }
 
     public void OnAfterDeserialize()
     {
         QueueRedraw();
+        SizeChanged += QueueRedraw;
     }
 
 #endif

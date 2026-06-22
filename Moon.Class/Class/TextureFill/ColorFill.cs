@@ -27,23 +27,32 @@ public partial class ColorFill : NodeSize2D
         DrawRect(new (new(0f, 0f), Size), Color);
     }
 
-    public ColorFill() : base()
+    public override void _EnterTree()
     {
-        TreeEntered += QueueRedraw;
-        SignalSizeChanged += QueueRedraw;
+        base._EnterTree();
+        
+        QueueRedraw();
+        SizeChanged += QueueRedraw;
     }
-    
+
+    public override void _ExitTree()
+    {
+        base._ExitTree();
+        
+        SizeChanged -= QueueRedraw;
+    }
+
 #if DEBUG
     
     public void OnBeforeSerialize()
     {
-        TreeEntered -= QueueRedraw;
-        SignalSizeChanged -= QueueRedraw;
+        SizeChanged -= QueueRedraw;
     }
 
     public void OnAfterDeserialize()
     {
         QueueRedraw();
+        SizeChanged += QueueRedraw;
     }
 
 #endif

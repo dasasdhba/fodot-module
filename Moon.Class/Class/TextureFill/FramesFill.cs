@@ -79,9 +79,6 @@ public partial class FramesFill : NodeSize2D
 
     public FramesFill() : base()
     {
-        TreeEntered += QueueRedraw;
-        SignalSizeChanged += QueueRedraw;
-        
     #if DEBUG
         if (Engine.IsEditorHint()) return;
     #endif    
@@ -184,6 +181,21 @@ public partial class FramesFill : NodeSize2D
         if (FlipV) size.Y *= -1f;
         this.DrawTextureRectTiled(texture, new(Vector2.Zero, size));
     }
+    
+    public override void _EnterTree()
+    {
+        base._EnterTree();
+        
+        QueueRedraw();
+        SizeChanged += QueueRedraw;
+    }
+
+    public override void _ExitTree()
+    {
+        base._ExitTree();
+        
+        SizeChanged -= QueueRedraw;
+    }
 
 #if DEBUG
     public override void _PhysicsProcess(double delta)
@@ -222,13 +234,13 @@ public partial class FramesFill : NodeSize2D
     
     public void OnBeforeSerialize()
     {
-        TreeEntered -= QueueRedraw;
-        SignalSizeChanged -= QueueRedraw;
+        SizeChanged -= QueueRedraw;
     }
 
     public void OnAfterDeserialize()
     {
         QueueRedraw();
+        SizeChanged += QueueRedraw;
     }
     
 #endif   

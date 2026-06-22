@@ -78,23 +78,32 @@ public partial class GradientFill : NodeSize2D
         false, null, vertical);
     }
 
-    public GradientFill() : base()
+    public override void _EnterTree()
     {
-        TreeEntered += QueueRedraw;
-        SignalSizeChanged += QueueRedraw;
+        base._EnterTree();
+        
+        QueueRedraw();
+        SizeChanged += QueueRedraw;
     }
-    
+
+    public override void _ExitTree()
+    {
+        base._ExitTree();
+        
+        SizeChanged -= QueueRedraw;
+    }
+
 #if DEBUG
     
     public void OnBeforeSerialize()
     {
-        TreeEntered -= QueueRedraw;
-        SignalSizeChanged -= QueueRedraw;
+        SizeChanged -= QueueRedraw;
     }
 
     public void OnAfterDeserialize()
     {
         QueueRedraw();
+        SizeChanged += QueueRedraw;
     }
 
 #endif

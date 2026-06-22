@@ -22,25 +22,34 @@ public partial class RoundDisk : NodeSize2D
     }
     private Color _Color = Colors.Black;
     
-    public RoundDisk() : base()
+    public override void _EnterTree()
     {
-        Ready += QueueRedraw;
-        SignalSizeChanged += QueueRedraw;
+        base._EnterTree();
+        
+        QueueRedraw();
+        SizeChanged += QueueRedraw;
     }
-    
+
+    public override void _ExitTree()
+    {
+        base._ExitTree();
+        
+        SizeChanged -= QueueRedraw;
+    }
+
 #if DEBUG
     
     public void OnBeforeSerialize()
     {
-        Ready -= QueueRedraw;
-        SignalSizeChanged -= QueueRedraw;
+        SizeChanged -= QueueRedraw;
     }
 
     public void OnAfterDeserialize()
     {
         QueueRedraw();
+        SizeChanged += QueueRedraw;
     }
-    
+
 #endif
 
     public override void _Draw()

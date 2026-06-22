@@ -17,4 +17,4 @@ type ResourceProvider(obj : Node) =
     member val Lib = _back_prop_value_lib
 
     static member private _bind_map = WeakMeta<ResourceProvider>()
-    static member From o = ResourceProvider._bind_map |> WeakMeta.getOrAdd o (lazy ResourceProvider o)
+    static member From o = ResourceProvider._bind_map |> WeakMeta.getOrAdd o (fun () -> ResourceProvider o)

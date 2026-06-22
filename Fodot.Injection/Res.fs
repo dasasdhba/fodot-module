@@ -15,11 +15,11 @@ module private ResourceStore =
     let findWith map scope predictor node =
         node |> findAllWith map scope predictor |> List.head
     
-    let findOrAddWith map scope predictor (value : Lazy<Resource * 'a>) (node : Node) =
-        map |> MetaDict.findOrAdd (scope node) predictor value
+    let findOrAddWith map scope predictor (valueFunc : unit -> Resource * 'a) (node : Node) =
+        map |> MetaDict.findOrAdd (scope node) predictor valueFunc
     
-    let getOrAddWith map scope key predictor (value : Lazy<Resource * 'a>) (node : Node) =
-        map |> MetaDict.getOrAdd (scope node) key predictor value
+    let getOrAddWith map scope key predictor (valueFunc : unit -> Resource * 'a) (node : Node) =
+        map |> MetaDict.getOrAdd (scope node) key predictor valueFunc
     
     let predictor<'a when 'a :> Resource> (res: Resource) =
         match res with
@@ -35,8 +35,11 @@ module private ResourceStore =
     let find<'a when 'a :> Resource> map scope node =
         node |> findWith map scope predictor<'a>
 
-    let findOrAdd<'a when 'a :> Resource> map scope (value : Lazy<'a>) (node : Node) =
-        node |> findOrAddWith map scope predictor<'a> (lazy (value.Value, value.Value))
+    let findOrAdd<'a when 'a :> Resource> map scope (valueFunc : unit -> 'a) (node : Node) =
+        node |> findOrAddWith map scope predictor<'a> (fun () ->
+            let value = valueFunc ()
+            value, value
+        )
 
     let tryGet<'a when 'a :> Resource> map scope key node =
         map
@@ -48,8 +51,11 @@ module private ResourceStore =
         |> tryGet<'a> map scope key
         |> Option.defaultWith (fun _ -> failwith $"ResourceProvider: Key {key} not found")
 
-    let getOrAdd<'a when 'a :> Resource> map scope key (value : Lazy<'a>) (node : Node) =
-        node |> getOrAddWith map scope key predictor<'a> (lazy (value.Value, value.Value))
+    let getOrAdd<'a when 'a :> Resource> map scope key (valueFunc : unit -> 'a) (node : Node) =
+        node |> getOrAddWith map scope key predictor<'a> (fun () ->
+            let value = valueFunc ()
+            value, value
+        )
 
 module OwnerRes =
 
@@ -65,11 +71,11 @@ module OwnerRes =
     let findWith predictor node =
         node |> ResourceStore.findWith map scope predictor
     
-    let findOrAddWith predictor (value : Lazy<Resource * 'a>)   (node : Node) =
-        node |> ResourceStore.findOrAddWith map scope predictor value
+    let findOrAddWith predictor (valueFunc : unit -> Resource * 'a)   (node : Node) =
+        node |> ResourceStore.findOrAddWith map scope predictor valueFunc
     
-    let getOrAddWith key predictor (value : Lazy<Resource * 'a>)  (node : Node) =
-        node |> ResourceStore.getOrAddWith map scope key predictor value
+    let getOrAddWith key predictor (valueFunc : unit -> Resource * 'a)  (node : Node) =
+        node |> ResourceStore.getOrAddWith map scope key predictor valueFunc
     
     let findAll<'a when 'a :> Resource> node =
         node |> ResourceStore.findAll<'a> map scope
@@ -80,8 +86,8 @@ module OwnerRes =
     let find<'a when 'a :> Resource> node =
         node |> ResourceStore.find<'a> map scope
 
-    let findOrAdd<'a when 'a :> Resource> (value : Lazy<'a>)  (node : Node)=
-        node |> ResourceStore.findOrAdd<'a> map scope value
+    let findOrAdd<'a when 'a :> Resource> (valueFunc : unit -> 'a)  (node : Node)=
+        node |> ResourceStore.findOrAdd<'a> map scope valueFunc
 
     let tryGet<'a when 'a :> Resource> key node =
         node |> ResourceStore.tryGet<'a> map scope key
@@ -89,8 +95,8 @@ module OwnerRes =
     let get<'a when 'a :> Resource> key node =
         node |> ResourceStore.get<'a> map scope key
 
-    let getOrAdd<'a when 'a :> Resource> key (value : Lazy<'a>)  (node : Node) =
-        node |> ResourceStore.getOrAdd<'a> map scope key value
+    let getOrAdd<'a when 'a :> Resource> key (valueFunc : unit -> 'a)  (node : Node) =
+        node |> ResourceStore.getOrAdd<'a> map scope key valueFunc
         
 module Res =
 
@@ -106,11 +112,11 @@ module Res =
     let findWith predictor node =
         node |> ResourceStore.findWith map scope predictor
     
-    let findOrAddWith predictor (value : Lazy<Resource * 'a>)   (node : Node) =
-        node |> ResourceStore.findOrAddWith map scope predictor value
+    let findOrAddWith predictor (valueFunc : unit -> Resource * 'a)   (node : Node) =
+        node |> ResourceStore.findOrAddWith map scope predictor valueFunc
     
-    let getOrAddWith key predictor (value : Lazy<Resource * 'a>)  (node : Node) =
-        node |> ResourceStore.getOrAddWith map scope key predictor value
+    let getOrAddWith key predictor (valueFunc : unit -> Resource * 'a)  (node : Node) =
+        node |> ResourceStore.getOrAddWith map scope key predictor valueFunc
 
     let findAll<'a when 'a :> Resource> node =
         node |> ResourceStore.findAll<'a> map scope
@@ -121,8 +127,8 @@ module Res =
     let find<'a when 'a :> Resource> node =
         node |> ResourceStore.find<'a> map scope
 
-    let findOrAdd<'a when 'a :> Resource> (value : Lazy<'a>)  (node : Node)=
-        node |> ResourceStore.findOrAdd<'a> map scope value
+    let findOrAdd<'a when 'a :> Resource> (valueFunc : unit -> 'a)  (node : Node)=
+        node |> ResourceStore.findOrAdd<'a> map scope valueFunc
 
     let tryGet<'a when 'a :> Resource> key node =
         node |> ResourceStore.tryGet<'a> map scope key
@@ -130,8 +136,8 @@ module Res =
     let get<'a when 'a :> Resource> key node =
         node |> ResourceStore.get<'a> map scope key
 
-    let getOrAdd<'a when 'a :> Resource> key (value : Lazy<'a>)  (node : Node) =
-        node |> ResourceStore.getOrAdd<'a> map scope key value
+    let getOrAdd<'a when 'a :> Resource> key (valueFunc : unit -> 'a)  (node : Node) =
+        node |> ResourceStore.getOrAdd<'a> map scope key valueFunc
 
 [<FScript("resource_provider")>]
 type private ResourceProvider(node : Node) =

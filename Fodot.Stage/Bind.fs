@@ -17,4 +17,4 @@ type CutsceneProvider(obj : Node) =
     member val ReuseInIfOutIsNull = _back_prop_value_reuse_in_if_out_is_null
 
     static member private _bind_map = WeakMeta<CutsceneProvider>()
-    static member From o = CutsceneProvider._bind_map |> WeakMeta.getOrAdd o (lazy CutsceneProvider o)
+    static member From o = CutsceneProvider._bind_map |> WeakMeta.getOrAdd o (fun () -> CutsceneProvider o)

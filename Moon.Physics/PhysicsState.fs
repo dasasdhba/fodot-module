@@ -20,7 +20,7 @@ type PhysicsState2D(node : Node) =
     
     static let map = WeakMeta<PhysicsState2D>()
     static member Get(node : Node) =
-        map |> WeakMeta.getOrAdd node (lazy PhysicsState2D(node))
+        map |> WeakMeta.getOrAdd node (fun () -> PhysicsState2D(node))
     
     member this.SpaceState = state
     
@@ -40,6 +40,6 @@ type PhysicsState3D(node : Node) =
     
     static let map = WeakMeta<PhysicsState3D>()
     static member Get(node : Node) =
-        map |> WeakMeta.getOrAdd node (lazy PhysicsState3D(node))
+        map |> WeakMeta.getOrAdd node (fun () -> PhysicsState3D(node))
     
     member this.SpaceState = state

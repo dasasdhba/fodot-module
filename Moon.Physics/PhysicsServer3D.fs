@@ -45,9 +45,9 @@ module private MoonPhysicsServer3D =
 
     let getBlockQuery (block : CollisionObject3D) =
         let query =
-            blockQueries |> WeakMeta.getOrAdd block (lazy (
+            blockQueries |> WeakMeta.getOrAdd block (fun () ->
                 PhysicsQueryShape3D block
-            ))
+            )
         query |> PhysicsQuery.setCollisionMask block.CollisionMask
         query
 

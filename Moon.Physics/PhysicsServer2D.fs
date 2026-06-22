@@ -45,9 +45,9 @@ module private MoonPhysicsServer2D =
         
     let getBlockQuery (block : CollisionObject2D) =
         let query =
-            blockQueries |> WeakMeta.getOrAdd block (lazy (
+            blockQueries |> WeakMeta.getOrAdd block (fun () ->
                 PhysicsQueryShape2D block
-            ))
+            )
         query |> PhysicsQuery.setCollisionMask block.CollisionMask
         query
     

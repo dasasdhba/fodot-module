@@ -9,7 +9,7 @@ public partial class Shake2D : Node2D
     [Export]
     public bool Disabled { get; set; }
     
-    [Export(PropertyHint.None, "suffix:s")]
+    [Export(PropertyHint.Range, "0.001,1,or_greater,suffix:s")]
     public double Frequency { get ;set; } = 0.02d;
     
     [Export(PropertyHint.None, "suffix:px")]

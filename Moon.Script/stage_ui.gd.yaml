@@ -1,0 +1,8 @@
+extends: Control
+class_name: StageUI
+fscripts: [ "stage_ui" ]
+
+property:
+  target_node:
+    type: String
+    value: ""

@@ -1,5 +1,5 @@
 extends: Node
-fscript: [ "cutscene_provider" ]
+fscripts: [ "cutscene_provider" ]
 
 property:
   CutsceneProvider:

@@ -3,7 +3,7 @@ namespace Moon.Script.Bind
 open Fodot
 open Godot
 
-type StageSyncUi(obj : Control) =
+type StageUi(obj : Control) =
 
     let _back_prop_target_node = GDProp<string>.From("target_node") obj
     let _back_prop_value_target_node = _back_prop_target_node.Get()
@@ -24,17 +24,6 @@ type StageSyncUi(obj : Control) =
     member val SyncScale = _back_prop_value_sync_scale
     member val SyncVisibility = _back_prop_value_sync_visibility
     member val PhysicsProcess = _back_prop_value_physics_process
-
-    static member private _bind_map = WeakMeta<StageSyncUi>()
-    static member From o = StageSyncUi._bind_map |> WeakMeta.getOrAdd o (fun () -> StageSyncUi o)
-
-
-type StageUi(obj : Control) =
-
-    let _back_prop_target_node = GDProp<string>.From("target_node") obj
-    let _back_prop_value_target_node = _back_prop_target_node.Get()
-
-    member val TargetNode = _back_prop_value_target_node
 
     static member private _bind_map = WeakMeta<StageUi>()
     static member From o = StageUi._bind_map |> WeakMeta.getOrAdd o (fun () -> StageUi o)

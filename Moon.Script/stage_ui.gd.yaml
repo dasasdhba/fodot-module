@@ -6,3 +6,24 @@ property:
   target_node:
     type: String
     value: ""
+
+  offset:
+    type: Vector2
+    value: Vector2.ZERO
+    hint_string: "suffix:px"
+
+  sync_rotation:
+    type: bool
+    value: false
+
+  sync_scale:
+    type: bool
+    value: false
+
+  sync_visibility:
+    type: bool
+    value: true
+
+  physics_process:
+    type: bool
+    value: true

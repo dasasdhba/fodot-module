@@ -27,16 +27,13 @@ module private StageUI =
 [<FScript("stage_ui")>]
 type private StageUIScript(node : Control) =
     let bind = Bind.StageUi.From node
-
-    do
-        node |> Node.whenReady (fun () ->
-            node |> StageUI.reparentToStage bind.TargetNode
+    let parent = node |> Node.tryGetParent<Node>
+    let tracking =
+        parent
+        |> Option.bind (function
+            | :? CanvasItem as item -> Some item
+            | _ -> None
         )
-
-[<FScript("stage_sync_ui")>]
-type private StageSyncUIScript(node : Control) =
-    let bind = Bind.StageSyncUi.From node
-    let tracking = node |> Node.tryGetParent<CanvasItem>
 
     let getViewportContainer (viewport : Viewport) =
         viewport |> Node.tryGetParent<SubViewportContainer>
@@ -55,17 +52,15 @@ type private StageSyncUIScript(node : Control) =
         let viewport = target.GetViewport()
         let targetTransform = target.GetGlobalTransformWithCanvas()
 
-        if isNull viewport then
-            targetTransform
-        else
-            viewport
-            |> getViewportContainer
-            |> Option.map (fun container ->
-                let scale = container |> getViewportScale viewport
-                let scaleTransform = Transform2D(0f, scale, 0f, Vector2.Zero)
-                container.GetGlobalTransform() * scaleTransform * targetTransform
-            )
-            |> Option.defaultValue targetTransform
+        viewport
+        |> Option.ofObj
+        |> Option.bind getViewportContainer
+        |> Option.map (fun container ->
+            let scale = container |> getViewportScale viewport
+            let scaleTransform = Transform2D(0f, scale, 0f, Vector2.Zero)
+            container.GetGlobalTransform() * scaleTransform * targetTransform
+        )
+        |> Option.defaultValue targetTransform
 
     let applyTransform (target : CanvasItem) =
         let transform = target |> getStageTransform
@@ -86,16 +81,16 @@ type private StageSyncUIScript(node : Control) =
         |> Option.filter _.IsInsideTree()
         |> Option.iter applyTransform
 
-        if bind.SyncVisibility && tracking |> Option.filter GodotObject.IsInstanceValid |> Option.isNone then
-            node.Hide()
-
     do
+        parent
+        |> Option.iter (fun parent -> parent |> Node.bindNode node)
+
         node |> Node.whenReady (fun () ->
             node |> StageUI.reparentToStage bind.TargetNode
-            update ()
+            tracking |> Option.iter (fun _ -> update ())
         )
 
-        if bind.PhysicsProcess then
-            node |> Engine.addPhysicsProcess update |> ignore
-        else
-            node |> Engine.addIdleProcess update |> ignore
+        tracking
+        |> Option.iter (fun _ ->
+            node |> Engine.addProcess bind.PhysicsProcess update |> ignore
+        )

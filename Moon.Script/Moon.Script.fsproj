@@ -16,14 +16,11 @@
         <Compile Include="DeferredFollower2D.fs" />
         <Compile Include="StageUI.fs" />
         <Compile Include="View2D.fs" />
-        <Compile Include="TestScript.fs" />
-        <Compile Include="TestPhysics.fs" />
-        <Compile Include="TestProcess.fs" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\library\Moon.Utils\Moon.Utils.fsproj" />
       <ProjectReference Include="..\Moon.Class\Moon.Class.csproj" />
-      <ProjectReference Include="..\Moon.Physics\Moon.Physics.fsproj" />
     </ItemGroup>
 
 </Project>

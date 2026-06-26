@@ -4,7 +4,7 @@
         <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">$(AndroidFrameworkVersion)</TargetFramework>
         <EnableDynamicLoading>true</EnableDynamicLoading>
         <RootNamespace>Moon</RootNamespace>
-        <EnableFodotChildOfGenerator>true</EnableFodotChildOfGenerator>
+        <EnableGodotWarningGenerator>true</EnableGodotWarningGenerator>
         <NoWarn>$(NoWarn);CS0618</NoWarn>
     </PropertyGroup>
     <ItemGroup>

@@ -1,4 +1,5 @@
 using Godot;
+using Godot.Warning;
 
 namespace Moon.Component;
 
@@ -11,11 +12,11 @@ public interface IPersistantUI
 [GlobalClass]
 public partial class StagePersistantUI : Marker2D
 {
-    [Export]
-    public string Key { get; set; } = "";
+    [Export, NotNullString]
+    public partial string Key { get; set; }
 
-    [Export]
-    public PackedScene UiScene { get; set; }
+    [Export, NotNull]
+    public partial PackedScene UiScene { get; set; }
 
     public Control UiNode { get; set; }
 

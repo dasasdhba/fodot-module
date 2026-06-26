@@ -30,6 +30,9 @@ public partial class StagePersistantUI : Marker2D
     public bool PhysicsProcess { get; set; } = true;
     
     [ExportGroup("Sync", "Sync")]
+    [Export(PropertyHint.GroupEnable)]
+    public bool Sync { get ;set; } = false;
+    
     [Export]
     public bool SyncRotation { get; set; } = false;
 

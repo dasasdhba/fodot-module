@@ -20,35 +20,8 @@ module private StageUI =
         let root = stage |> getTargetRoot path
         node |> Node.reparentKeep root
 
-    let getViewportContainer (viewport : Viewport) =
-        viewport |> Node.tryGetParent<SubViewportContainer>
-
-    let getViewportScale (viewport : Viewport) (container : SubViewportContainer) =
-        if container.Stretch |> not then
-            Vector2.One
-        else
-            let size = viewport.GetVisibleRect().Size
-            if size.X = 0f || size.Y = 0f then
-                Vector2.One
-            else
-                container.Size / size
-
-    let getStageTransform (target : CanvasItem) =
-        let viewport = target.GetViewport()
-        let targetTransform = target.GetGlobalTransformWithCanvas()
-
-        viewport
-        |> Option.ofObj
-        |> Option.bind getViewportContainer
-        |> Option.map (fun container ->
-            let scale = container |> getViewportScale viewport
-            let scaleTransform = Transform2D(0f, scale, 0f, Vector2.Zero)
-            container.GetGlobalTransform() * scaleTransform * targetTransform
-        )
-        |> Option.defaultValue targetTransform
-
     let applyTransform (node : Control) offset syncRotation syncScale syncVisibility (target : CanvasItem) =
-        let transform = target |> getStageTransform
+        let transform = target |> CanvasItem.getStageTransform
         node |> CanvasItem.setGlobalPosition (transform.Origin + offset)
 
         if syncRotation then
@@ -67,9 +40,9 @@ type private StageUIScript(node : Control) =
     let tracking =
         parent |> Option.bind tryUnbox<CanvasItem>
 
-    let update () =
-        tracking
-        |> Option.filter GodotObject.IsInstanceValid
+    let update (target : CanvasItem) =
+        target
+        |> GodotObject.validate
         |> Option.filter _.IsInsideTree()
         |> Option.iter (StageUI.applyTransform node bind.Offset bind.SyncRotation bind.SyncScale bind.SyncVisibility)
 
@@ -79,11 +52,12 @@ type private StageUIScript(node : Control) =
 
         node |> Node.whenReady (fun () ->
             node |> StageUI.reparentToStage bind.TargetNode
-            tracking |> Option.iter (fun _ -> update ())
+            tracking |> Option.iter update
         )
 
         tracking
-        |> Option.iter (fun _ ->
+        |> Option.iter (fun t ->
+            let update () = update t
             node |> Engine.addProcess bind.PhysicsProcess update |> ignore
         )
 
@@ -135,6 +109,12 @@ type private StagePersistantUIScript(marker : StagePersistantUI) =
     
     let update () =
         update ctrl.Value
+        
+    let init () =
+        if marker.Sync then
+            update ()
+        else
+            ctrl.Value.GlobalPosition <- marker.GlobalPosition
     
     let enter () =
         interf.Value |> Option.iter _.OnReturn()
@@ -145,8 +125,9 @@ type private StagePersistantUIScript(marker : StagePersistantUI) =
     
     do
         marker |> Node.whenReady (fun _ ->
-            update ()
+            init ()
             marker.add_TreeEntered enter
         )
         marker.add_TreeExited exit
-        marker |> Engine.addProcess marker.PhysicsProcess update |> ignore
+        if marker.Sync then
+            marker |> Engine.addProcess marker.PhysicsProcess update |> ignore

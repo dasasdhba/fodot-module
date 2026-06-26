@@ -2,6 +2,12 @@ using Godot;
 
 namespace Moon.Component;
 
+public interface IPersistantUI
+{
+    public void OnReturn();
+    public void OnExit();
+}
+
 [GlobalClass]
 public partial class StagePersistantUI : Marker2D
 {
@@ -20,6 +26,10 @@ public partial class StagePersistantUI : Marker2D
     public Vector2 Offset { get; set; } = Vector2.Zero;
 
     [Export]
+    public bool PhysicsProcess { get; set; } = true;
+    
+    [ExportGroup("Sync", "Sync")]
+    [Export]
     public bool SyncRotation { get; set; } = false;
 
     [Export]
@@ -27,7 +37,4 @@ public partial class StagePersistantUI : Marker2D
 
     [Export]
     public bool SyncVisibility { get; set; } = true;
-
-    [Export]
-    public bool PhysicsProcess { get; set; } = true;
 }

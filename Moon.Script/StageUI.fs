@@ -1,6 +1,7 @@
 namespace Moon.Script
 
 open Fodot
+open Fodot.Extend
 open Fodot.Module
 open Fodot.Stage
 open Godot
@@ -8,19 +9,16 @@ open Moon.Component
 open Moon.Module
 
 module private StageUI =
+    
     let getTargetRoot (path : string) (stage : Stage) =
         stage.Root
         |> Node.tryGetNode<Node> (new NodePath(path))
         |> Option.defaultValue stage.Root
 
     let reparentToStage (path : string) (node : Control) =
-        node
-        |> Node.tryGetStage
-        |> Option.iter (fun stage ->
-            let root = stage |> getTargetRoot path
-            if node.GetParent() <> root then
-                node |> Node.reparentKeep root
-        )
+        let stage = node |> Node.getStage
+        let root = stage |> getTargetRoot path
+        node |> Node.reparentKeep root
 
     let getViewportContainer (viewport : Viewport) =
         viewport |> Node.tryGetParent<SubViewportContainer>
@@ -62,48 +60,12 @@ module private StageUI =
         if syncVisibility then
             node.Visible <- target.IsVisibleInTree()
 
-    let hide (node : Control) =
-        if GodotObject.IsInstanceValid node then
-            node.Hide()
-
-    let tryGetPersistantNode (key : string) (root : Node) =
-        root
-        |> Node.tryGetNode<Control> (new NodePath (key))
-
-    let tryCreatePersistantNode (owner : StagePersistantUI) =
-        owner.UiScene
-        |> Option.ofObj
-        |> Option.map PackedScene.instantiateTo<Control>
-        
-    let tryGetOrCreatePersistantNode (owner : StagePersistantUI) =
-        owner
-        |> Node.tryGetStage
-        |> Option.bind (fun stage ->
-            let root = stage |> getTargetRoot owner.TargetNode
-
-            root
-            |> tryGetPersistantNode owner.Key
-            |> Option.orElseWith (fun _ ->
-                owner
-                |> tryCreatePersistantNode
-                |> Option.map (fun control ->
-                    control.Name <- owner.Key
-                    root |> Node.addChild control
-                    control
-                )
-            )
-        )
-
 [<FScript("stage_ui")>]
 type private StageUIScript(node : Control) =
     let bind = Bind.StageUi.From node
     let parent = node |> Node.tryGetParent<Node>
     let tracking =
-        parent
-        |> Option.bind (function
-            | :? CanvasItem as item -> Some item
-            | _ -> None
-        )
+        parent |> Option.bind tryUnbox<CanvasItem>
 
     let update () =
         tracking
@@ -127,42 +89,64 @@ type private StageUIScript(node : Control) =
 
 [<FScript(typeof<StagePersistantUI>)>]
 type private StagePersistantUIScript(marker : StagePersistantUI) =
-    let mutable ui : Control option = None
-
-    let ensureUi () =
-        ui
-        |> Option.filter GodotObject.IsInstanceValid
-        |> Option.orElseWith (fun () ->
-            marker.UiNode
-            |> Option.ofObj
-            |> Option.filter GodotObject.IsInstanceValid
-            |> Option.map (fun node ->
-                ui <- Some node
-                node
+    let getUi () =
+        let stage = marker |> Node.getStage
+        let root = stage |> StageUI.getTargetRoot marker.TargetNode
+        
+        let ctrl, enter =
+            root
+            |> Node.tryGetNode<Control> (new NodePath(marker.Key))
+            |> Option.map (fun p -> p, true)
+            |> Option.defaultWith (fun _ ->
+                let p = marker.UiScene |> PackedScene.instantiateTo<Control>
+                p.Name <- marker.Key
+                root |> Node.addChild p
+                p, false
             )
-        )
-        |> Option.orElseWith (fun () ->
-            ui <- marker |> StageUI.tryGetOrCreatePersistantNode
-            marker.UiNode <- ui |> Option.toObj
-            ui
-        )
+        
+        let interf =
+            ctrl |> tryUnbox<IPersistantUI>
+        
+        if enter then
+            interf |> Option.iter _.OnReturn()
+        
+        ctrl, interf
 
-    let update () =
-        match ensureUi () with
-        | Some node when
-            GodotObject.IsInstanceValid marker &&
-            marker.IsInsideTree() ->
-            marker
+    let update (ui : Control) =
+        marker
+        |> GodotObject.validate
+        |> Option.filter _.IsInsideTree()
+        |> Option.map (fun m ->
+            m
             |> StageUI.applyTransform
-                node
-                marker.Offset
-                marker.SyncRotation
-                marker.SyncScale
-                marker.SyncVisibility
-        | Some node -> node |> StageUI.hide
-        | None -> ()
-
+                ui
+                m.Offset
+                m.SyncRotation
+                m.SyncScale
+                m.SyncVisibility
+        )
+        |> Option.defaultWith (fun _ ->
+            ui.Hide()
+        )
+    
+    let ui = lazy (getUi ())
+    let ctrl = lazy (ui.Value |> fst)
+    let interf = lazy (ui.Value |> snd)
+    
+    let update () =
+        update ctrl.Value
+    
+    let enter () =
+        interf.Value |> Option.iter _.OnReturn()
+    
+    let exit () =
+        ctrl.Value.Hide()
+        interf.Value |> Option.iter _.OnExit()
+    
     do
-        marker |> Node.whenReady update
-        marker.add_TreeExited (fun () -> ui |> Option.iter StageUI.hide)
+        marker |> Node.whenReady (fun _ ->
+            update ()
+            marker.add_TreeEntered enter
+        )
+        marker.add_TreeExited exit
         marker |> Engine.addProcess marker.PhysicsProcess update |> ignore

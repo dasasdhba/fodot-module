@@ -12,6 +12,14 @@ property:
     value: Vector2.ZERO
     hint_string: "suffix:px"
 
+  physics_process:
+    type: bool
+    value: true
+
+  Sync:
+    type: export_group
+    value: sync
+
   sync_rotation:
     type: bool
     value: false
@@ -21,9 +29,5 @@ property:
     value: false
 
   sync_visibility:
-    type: bool
-    value: true
-
-  physics_process:
     type: bool
     value: true

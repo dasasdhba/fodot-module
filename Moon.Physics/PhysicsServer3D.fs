@@ -6,7 +6,6 @@ open Fodot.Injection
 open Fodot.Module.PhysicsServer
 open Godot
 open Moon
-open Moon.Library
 open Moon.Physics.PhysicsCollide
 open Moon.Physics.PhysicsMotion
 
@@ -16,12 +15,10 @@ open Moon.Physics.PhysicsMotion
 module private MoonPhysicsServer3D =
 
     let bodies =
-        FlushPool<CollisionObject3D * MoonBody3D>
-            (fun (col, _) -> col :> Node)
+        SortedFlushPhysicsNodes<CollisionObject3D, MoonBody3D>()
 
     let blocks =
-        FlushPool<CollisionObject3D * (MoonBlock3D * Lazy<MoonPlatform3D option>)>
-            (fun (col, _) -> col :> Node)
+        SortedFlushPhysicsNodes<CollisionObject3D, MoonBlock3D * Lazy<MoonPlatform3D option>>()
 
     [<FScript(typeof<MoonBody3D>)>]
     type MoonBody3DScript(arg : MoonBody3D) =
@@ -482,7 +479,8 @@ module private MoonPhysicsServer3D =
             bodies.Flush()
 
             bodies.Iter()
-            |> Seq.filter (fun (body, _) -> body.CanProcess())
+            |> Seq.filter (_.Key >> _.CanProcess())
+            |> Seq.map _.Deconstruct()
             |> Seq.iter (fun (body, arg) ->
                 MoonPhysics3D.updateBodyCollisionMask body
                 PhysicsServer3D.BodySetTransform(body.GetRid(), body.GlobalTransform)
@@ -493,7 +491,8 @@ module private MoonPhysicsServer3D =
             blocks.Flush()
 
             blocks.Iter()
-            |> Seq.filter (fun (b, _) -> b.CanProcess())
+            |> Seq.filter (_.Key >> _.CanProcess())
+            |> Seq.map _.Deconstruct()
             |> Seq.map (fun (b, data) ->
                 let arg = data |> fst
                 arg.LastPushed <- lazy [||]

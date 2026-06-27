@@ -93,7 +93,6 @@ type Stage(node : Control) =
           if scene.IsNodeReady() |> not then
                do! scene.ToSignalReady ()
          
-          Engine.treeUpdateCache ()
           this.Status <- Ready
           sceneReady.Trigger ()
           Logger.push $"Stage {this.Root.GetPath()} is now at {this.CurrentScenePath}"

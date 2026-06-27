@@ -1,6 +1,6 @@
 ﻿using System;
+using Fodot.CSharp;
 using Godot;
-using Microsoft.FSharp.Core;
 using Moon.View;
 
 namespace Moon;
@@ -13,8 +13,7 @@ public static class View2DExtension
 
     public static View2D GetView2D(this Node node)
     {
-        var result = View2D.tryGet(node);
-        return OptionModule.IsSome(result) ? result.Value : null;
+        return View2D.tryGet(node).AsObj();
     }
 
     /// <summary>

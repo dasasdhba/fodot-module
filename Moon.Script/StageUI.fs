@@ -21,14 +21,14 @@ module private StageUI =
         node |> Node.reparentKeep root
 
     let applyTransform (node : Control) offset syncRotation syncScale syncVisibility (target : CanvasItem) =
-        let transform = target |> CanvasItem.getStageTransform
+        let transform = target |> CanvasItem.getGlobalTransformWithViewport
         node |> CanvasItem.setGlobalPosition (transform.Origin + offset)
 
         if syncRotation then
-            node |> CanvasItem.setRotation transform.Rotation
+            node |> CanvasItem.setGlobalRotation transform.Rotation
 
         if syncScale then
-            node |> CanvasItem.setScale transform.Scale
+            node |> CanvasItem.setGlobalScale transform.Scale
 
         if syncVisibility then
             node.Visible <- target.IsVisibleInTree()

@@ -12,6 +12,7 @@ type private NodeToggleScript(node : NodeToggle) =
     
     do
         toggle.Value <- node.EditorValue
+        toggle.Paused <- node.EditorPaused
         toggle.FullyOn.Add node.EmitSignalFullyOn
         toggle.FullyOff.Add node.EmitSignalFullyOff
         toggle.Bind node.OnValueUpdated

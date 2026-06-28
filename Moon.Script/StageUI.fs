@@ -20,7 +20,7 @@ module private StageUI =
         let root = stage |> getTargetRoot path
         node |> Node.reparentKeep root
 
-    let applyTransform (node : Control) offset syncRotation syncScale syncVisibility (target : CanvasItem) =
+    let applyTransform2D (node : Control) offset syncRotation syncScale syncVisibility (target : CanvasItem) =
         let transform = target |> CanvasItem.getGlobalTransformWithViewport
         node |> CanvasItem.setGlobalPosition (transform.Origin + offset)
 
@@ -33,32 +33,53 @@ module private StageUI =
         if syncVisibility then
             node.Visible <- target.IsVisibleInTree()
 
-[<FScript("stage_ui")>]
-type private StageUIScript(node : Control) =
-    let bind = Bind.StageUi.From node
-    let parent = node |> Node.tryGetParent<Node>
-    let tracking =
-        parent |> Option.bind tryUnbox<CanvasItem>
+    let applyTransform3D (node : Control) offset syncVisibility (target : Node3D) =
+        let pos = target |> Node3D.getGlobalPositionWithViewport
+        node |> CanvasItem.setGlobalPosition (pos + offset)
 
-    let update (target : CanvasItem) =
+        if syncVisibility then
+            node.Visible <- target.IsVisibleInTree() && not (target |> Node3D.isBehindCamera)
+
+[<FScript(typeof<StageUI>)>]
+type private StageUIScript(node : StageUI) =
+    let parent = node |> Node.tryGetParent<Node>
+    let tracking2D =
+        parent |> Option.bind tryUnbox<CanvasItem>
+    let tracking3D =
+        parent |> Option.bind tryUnbox<Node3D>
+    
+    let update2D (target : CanvasItem) =
         target
         |> GodotObject.validate
         |> Option.filter _.IsInsideTree()
-        |> Option.iter (StageUI.applyTransform node bind.Offset bind.SyncRotation bind.SyncScale bind.SyncVisibility)
+        |> Option.iter (StageUI.applyTransform2D node node.Offset node.SyncRotation node.SyncScale node.SyncVisibility)
+
+    let update3D (target : Node3D) =
+        target
+        |> GodotObject.validate
+        |> Option.filter _.IsInsideTree()
+        |> Option.iter (StageUI.applyTransform3D node node.Offset node.SyncVisibility)
 
     do
         parent
         |> Option.iter (fun parent -> parent |> Node.bindNode node)
 
         node |> Node.whenReady (fun () ->
-            node |> StageUI.reparentToStage bind.TargetNode
-            tracking |> Option.iter update
+            node |> StageUI.reparentToStage node.TargetNode
+            tracking2D |> Option.iter update2D
+            tracking3D |> Option.iter update3D
         )
 
-        tracking
+        tracking2D
         |> Option.iter (fun t ->
-            let update () = update t
-            node |> Engine.addProcess bind.PhysicsProcess update |> ignore
+            let update () = update2D t
+            node |> Engine.addProcess node.PhysicsProcess update |> ignore
+        )
+
+        tracking3D
+        |> Option.iter (fun t ->
+            let update () = update3D t
+            node |> Engine.addProcess node.PhysicsProcess update |> ignore
         )
 
 [<FScript(typeof<StagePersistantUI>)>]
@@ -92,7 +113,7 @@ type private StagePersistantUIScript(marker : StagePersistantUI) =
         |> Option.filter _.IsInsideTree()
         |> Option.map (fun m ->
             m
-            |> StageUI.applyTransform
+            |> StageUI.applyTransform2D
                 ui
                 m.Offset
                 m.SyncRotation

@@ -7,7 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Bind.fs" />
         <Compile Include="NodeToggle.fs" />
         <Compile Include="MarkerFlipSync.fs" />
         <Compile Include="Rotator.fs" />

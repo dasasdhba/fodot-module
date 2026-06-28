@@ -17,6 +17,9 @@ public abstract partial class NodeToggle : Node
     public double EditorTime { get; set; } = 0.2d;
     
     [Export]
+    public bool EditorPaused { get; set; } = false;
+    
+    [Export]
     public bool EditorPhysics { get; set; } = true;
 
     [Signal]
@@ -43,6 +46,12 @@ public abstract partial class NodeToggle : Node
     {
         get => Toggle?.Time ?? 0d;
         set => Toggle?.Time = value;
+    }
+
+    public bool Paused
+    {
+        get => Toggle?.Paused ?? false;
+        set => Toggle?.Paused = value;
     }
     
     public bool IsFullyOn() => Toggle.IsFullyOn();

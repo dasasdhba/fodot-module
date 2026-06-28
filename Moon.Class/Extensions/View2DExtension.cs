@@ -15,6 +15,16 @@ public static class View2DExtension
     {
         return View2D.tryGet(node).AsObj();
     }
+    
+    public static Rect2 GetCanvasRect(this Node node)
+    {
+        var viewport = node.GetViewport();
+        var canvas = viewport.CanvasTransform;
+        var topLeft = -canvas.Origin / canvas.Scale;
+        var size = viewport.GetVisibleRect().Size / canvas.Scale;
+                    
+        return new(topLeft, size);
+    }
 
     /// <summary>
     /// Return the current view rect.
@@ -22,22 +32,7 @@ public static class View2DExtension
     public static Rect2 GetViewRect(this Node node)
     {
         var view = node.GetView2D();
-    
-        if (view is not null)
-        {
-            return view.CurrentRect;
-        }
-
-        if (node is CanvasItem item)
-        {
-            var canvas = item.GetCanvasTransform();
-            var topLeft = -canvas.Origin / canvas.Scale;
-            var size = item.GetViewportRect().Size / canvas.Scale;
-                    
-            return new(topLeft, size);
-        }
-
-        return default;
+        return view?.CurrentRect ?? node.GetCanvasRect();
     }
 
     /// <summary>

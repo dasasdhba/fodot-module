@@ -2,10 +2,17 @@ shader_type canvas_item;
 
 // make sure filter = linear
 
+uniform vec2 zoom = vec2(1.0);
+uniform vec2 zoom_pivot = vec2(0.5);
+
 varying vec4 modulate;
 
 void vertex() {
-	modulate = COLOR;
+    modulate = COLOR;
+}
+
+vec2 apply_zoom(vec2 uv) {
+    return (uv - zoom_pivot) / zoom + zoom_pivot;
 }
 
 vec4 sharp_bilinear(sampler2D tex, vec2 uv, vec2 texel_size) {
@@ -28,5 +35,12 @@ vec4 sharp_bilinear(sampler2D tex, vec2 uv, vec2 texel_size) {
 }
 
 void fragment() {
-    COLOR = sharp_bilinear(TEXTURE, UV, TEXTURE_PIXEL_SIZE) * modulate;
+    vec2 zoomed_uv = apply_zoom(UV);
+
+    if (any(lessThan(zoomed_uv, vec2(0.0))) ||
+        any(greaterThan(zoomed_uv, vec2(1.0)))) {
+        COLOR = vec4(0.0);
+    } else {
+        COLOR = sharp_bilinear(TEXTURE, zoomed_uv, TEXTURE_PIXEL_SIZE) * modulate;
+    }
 }

@@ -69,7 +69,7 @@ type View2D(view : Viewport) =
         
         // calc center pos
         
-        let pos =
+        let center =
             transformers
             |> Seq.fold (fun p t ->
                 let o = t.Translation p
@@ -77,16 +77,18 @@ type View2D(view : Viewport) =
                 o + t.Transform.AffineInverse() * d
             ) pos
         
-        let pos = transform * pos
+        let trans = transform * center
         let size = view.GetVisibleRect().Size
-        let origin = -pos + size / 2f
+        let origin = -trans + size / 2f
         let transform = transform |> Transform2D.withOrigin origin
         
         view.CanvasTransform <- transform
         Engine.callGroup cameraCall cameraMoved (transform, size / 2f, -origin)
         
-        let topLeft = -origin / zoom
+        // calc real rect
+        
         let size = size / zoom
+        let topLeft = center - size / 2f
         Rect2(topLeft, size)
     
     let getLimit (region: Rect2) (zoom : Vector2) (pos :Vector2) =

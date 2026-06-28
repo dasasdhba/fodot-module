@@ -16,7 +16,7 @@ type private SpriteDirScript(d : SpriteDir) =
     let recorder = mov |> Option.map Recorder2D.get
     
     let setFlip value =
-        let result = if d.Flip then value |> not else value
+        let result = value <> d.Flip
         spr |> Option.iter (fun s -> s |> Flip.setH result)
         rot |> Option.iter (fun r -> r.Flip <- result)
         

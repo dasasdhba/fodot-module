@@ -6,8 +6,12 @@ namespace Moon.Class;
 [GlobalClass]
 public partial class View2DTracker : Marker2D
 {
-    [Export]
+    [ExportGroup("AutoCurrent")]
+    [Export(PropertyHint.GroupEnable)]
     public bool AutoCurrent { get ;set; }
+    
+    [Export]
+    public bool ForceUpdate { get ;set; } = true;
 
     public bool IsCurrent()
     {
@@ -25,7 +29,11 @@ public partial class View2DTracker : Marker2D
     {
         Ready += () =>
         {
-            if (AutoCurrent) MakeCurrent();
+            if (AutoCurrent)
+            {
+                MakeCurrent();
+                if (ForceUpdate) this.GetView2D()?.ForceUpdate();
+            }
         };
     }
 }

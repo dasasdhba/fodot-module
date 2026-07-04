@@ -34,6 +34,8 @@ public partial class CanvasItemCaster : Node
 	}
 	
 	private CanvasItem _root;
+	
+	public Node GetRoot() => _root;
 
 	public void Cast()
 	{

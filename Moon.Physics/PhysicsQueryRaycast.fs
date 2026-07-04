@@ -20,25 +20,27 @@ type PhysicsQueryRaycast2D(node : CanvasItem, param : PhysicsQueryBasicParameter
         |> Option.map (fun dss ->
             let maxResult = defaultArg maxResult this.MaxResult
             let hitFromInside = defaultArg hitFromInside this.HitFromInside
-        
-            let query = new PhysicsRayQueryParameters2D()
-            query |> (this :> IPhysicsQuery).Param.Attach
-            query.From <- from
-            query.To <- to'
-            query.HitFromInside <- hitFromInside
             
-            () |> Seq.unfold (fun _ ->
-                dss.IntersectRay query
-                |> Option.ofObj
-                |> Option.map (fun r ->
-                    let res = PhysicsQueryRayResult2D.From r
-                    query.Exclude <-
-                        let ex = query.Exclude
-                        ex.Add res.Rid
-                        ex
-                    res, ()
+            seq {
+                let query = new PhysicsRayQueryParameters2D()
+                query |> (this :> IPhysicsQuery).Param.Attach
+                query.From <- from
+                query.To <- to'
+                query.HitFromInside <- hitFromInside
+                
+                yield! () |> Seq.unfold (fun _ ->
+                    dss.IntersectRay query
+                    |> Option.ofObj
+                    |> Option.map (fun r ->
+                        let res = PhysicsQueryRayResult2D.From r
+                        query.Exclude <-
+                            let ex = query.Exclude
+                            ex.Add res.Rid
+                            ex
+                        res, ()
+                    )
                 )
-            )
+            }
             |> Seq.truncate maxResult
         )
         |> Option.defaultValue Seq.empty
@@ -68,26 +70,28 @@ type PhysicsQueryRaycast3D(node : Node3D, param : PhysicsQueryBasicParameters) =
             let maxResult = defaultArg maxResult this.MaxResult
             let hitFromInside = defaultArg hitFromInside this.HitFromInside
             let hitBackFaces = defaultArg hitBackFaces this.HitBackFaces
-        
-            let query = new PhysicsRayQueryParameters3D()
-            query |> (this :> IPhysicsQuery).Param.Attach
-            query.From <- from
-            query.To <- to'
-            query.HitFromInside <- hitFromInside
-            query.HitBackFaces <- hitBackFaces
             
-            () |> Seq.unfold (fun _ ->
-                dss.IntersectRay query
-                |> Option.ofObj
-                |> Option.map (fun r ->
-                    let res = PhysicsQueryRayResult3D.From r
-                    query.Exclude <-
-                        let ex = query.Exclude
-                        ex.Add res.Rid
-                        ex
-                    res, ()
+            seq {
+                let query = new PhysicsRayQueryParameters3D()
+                query |> (this :> IPhysicsQuery).Param.Attach
+                query.From <- from
+                query.To <- to'
+                query.HitFromInside <- hitFromInside
+                query.HitBackFaces <- hitBackFaces
+                
+                yield! () |> Seq.unfold (fun _ ->
+                    dss.IntersectRay query
+                    |> Option.ofObj
+                    |> Option.map (fun r ->
+                        let res = PhysicsQueryRayResult3D.From r
+                        query.Exclude <-
+                            let ex = query.Exclude
+                            ex.Add res.Rid
+                            ex
+                        res, ()
+                    )
                 )
-            )
+            }
             |> Seq.truncate maxResult
         )
         |> Option.defaultValue Seq.empty

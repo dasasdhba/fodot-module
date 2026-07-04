@@ -1,13 +1,15 @@
 using System;
 using Godot;
-using Godot.Warning;
 
 namespace Moon.Component;
 
-[GlobalClass, ChildOf("Sprite2D, AnimatedSprite2D")]
+[GlobalClass]
 public partial class MarkerFlipSync : Marker2D
 {
     public enum MarkerFlipSyncProcessCallback { Idle, Physics }
+    
+    [Export(PropertyHint.NodePathValidTypes, "Sprite2D,AnimatedSprite2D")]
+    public NodePath Target { get ;set; } = "..";
     
     [Export]
     public MarkerFlipSyncProcessCallback ProcessCallback { get; set; } 

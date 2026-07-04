@@ -384,26 +384,17 @@ module private MoonPhysicsServer2D =
                     |> Option.defaultWith (fun _ -> Result.Error col)
                 )
             )
-            |> List.ofSeq
-        
-        // update block's transform is necessary for snap
-        
-        block.GlobalTransform <- current
-        PhysicsServer2D.BodySetTransform(rid, current)
         
         // record snap and push
         
         let pushSnapped, pushOnly =
             currentPushed
-            |> List.partition Result.isOk
-            
-        let pushSnapped =
-            pushSnapped
-            |> List.choose (function Ok x -> Some x | _ -> None)
+            |> Seq.partitionResult
         
-        let pushOnly =
-            pushOnly
-            |> List.choose (function Error e -> Some e | _ -> None)
+        // update block's transform is necessary for snap
+        
+        block.GlobalTransform <- current
+        PhysicsServer2D.BodySetTransform(rid, current)
         
         // accumulate snap speed
         
@@ -443,7 +434,7 @@ module private MoonPhysicsServer2D =
         
         let snapped = snapped |> Array.ofSeq
         
-        arg.LastPushed <- lazy (pushOnly |> Array.ofList)
+        arg.LastPushed <- lazy (pushOnly |> Array.ofSeq)
         arg.LastSnapped <- lazy (snapped |> Array.map fst)
         
         snapped

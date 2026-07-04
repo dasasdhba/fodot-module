@@ -53,8 +53,7 @@ type PhysicsShapeQuerier2D with
         this.Cast(motion, ?offset = offset, ?maxResult = maxResult, ?margin = margin, ?hitFromInside = hitFromInside)
         |> Seq.filter (fun r ->
             match r |> PhysicsQueryResult.getOneWayParameters2D with
-            | Some (d, _) when d.Dot motion <= 0f ->
-                false
+            | Some (d, _) when d.Dot motion <= 0f -> false
             | _ -> true
         )
     
@@ -91,11 +90,14 @@ type PhysicsShapeQuerier2D with
         
         // check for initial overlap
         
-        let solids, platforms =
+        let platforms, solids =
             this.Query(?offset = offset, ?maxResult = maxResult, ?margin = margin)
-            |> Seq.map (fun r -> r, r |> PhysicsQueryResult.getOneWayParameters2D)
-            |> Array.ofSeq
-            |> Array.partition (fun (_, o) -> o |> Option.isNone)
+            |> Seq.map (fun r ->
+                match r |> PhysicsQueryResult.getOneWayParameters2D with
+                | Some o -> Ok (r, o)
+                | _ -> Result.Error r
+            )
+            |> Seq.partitionResult
         
         let travelSolid (rep : PhysicsQueryShapeResult2D) : PhysicsQueryCollisionResult2D =
             let maxDepth = defaultArg maxDepth MoonPhysics2D.bodyMaxRecovery
@@ -134,12 +136,10 @@ type PhysicsShapeQuerier2D with
             let len = motion.Length()
             
             platforms
-            |> Seq.choose (fun (_, o) ->
-                o
-                |> Option.bind (function
-                    | v, m when m > 0f && v.Dot dir >= 0f -> Some m
-                    | _ -> None
-                )
+            |> Seq.map snd
+            |> Seq.choose (function
+                | v, m when m > 0f && v.Dot dir >= 0f -> Some m
+                | _ -> None
             )
             |> Seq.choose (fun m ->
                 this.PushOut(-dir * m, offset = offset, ?maxResult = maxResult, ?margin = margin)
@@ -150,22 +150,17 @@ type PhysicsShapeQuerier2D with
             )
             |> Seq.tryMinBy _.Result.SafeFraction
         
-        if solids |> Array.isEmpty |> not then
-            solids
-            |> Array.head
-            |> fst
+        if solids.Count > 0 then
+            solids[0]
             |> travelSolid
             |> Some
 
-        elif platforms |> Array.isEmpty |> not then
+        elif platforms.Count > 0 then
             travelPlatform()
 
         else
-            
-        // now do normal casting
-        
-        cast motion offset
-        |> Option.map PhysicsQueryCollisionResult2D.From
+            cast motion offset
+            |> Option.map PhysicsQueryCollisionResult2D.From
 
 type PhysicsShapeQuerier3D with
 
@@ -216,11 +211,14 @@ type PhysicsShapeQuerier3D with
         
         // check for initial overlap
         
-        let solids, platforms =
+        let platforms, solids =
             this.Query(?offset = offset, ?maxResult = maxResult, ?margin = margin)
-            |> Seq.map (fun r -> r, r |> PhysicsQueryResult.getOneWayParameters3D)
-            |> Array.ofSeq
-            |> Array.partition (fun (_, o) -> o |> Option.isNone)
+            |> Seq.map (fun r ->
+                match r |> PhysicsQueryResult.getOneWayParameters3D with
+                | Some o -> Ok (r, o)
+                | _ -> Result.Error r
+            )
+            |> Seq.partitionResult
         
         let travelSolid (rep : PhysicsQueryShapeResult3D) : PhysicsQueryCollisionResult3D =
             let maxDepth = defaultArg maxDepth MoonPhysics3D.bodyMaxRecovery
@@ -259,12 +257,10 @@ type PhysicsShapeQuerier3D with
             let len = motion.Length()
             
             platforms
-            |> Seq.choose (fun (_, o) ->
-                o
-                |> Option.bind (function
-                    | v, m when m > 0f && v.Dot dir >= 0f -> Some m
-                    | _ -> None
-                )
+            |> Seq.map snd
+            |> Seq.choose (function
+                | v, m when m > 0f && v.Dot dir >= 0f -> Some m
+                | _ -> None
             )
             |> Seq.choose (fun m ->
                 this.PushOut(-dir * m, offset = offset, ?maxResult = maxResult, ?margin = margin)
@@ -275,19 +271,14 @@ type PhysicsShapeQuerier3D with
             )
             |> Seq.tryMinBy _.Result.SafeFraction
         
-        if solids |> Array.isEmpty |> not then
-            solids
-            |> Array.head
-            |> fst
+        if solids.Count > 0 then
+            solids[0]
             |> travelSolid
             |> Some
 
-        elif platforms |> Array.isEmpty |> not then
+        elif platforms.Count > 0 then
             travelPlatform()
             
         else
-            
-        // now do normal casting
-        
-        cast motion offset
-        |> Option.map PhysicsQueryCollisionResult3D.From
+            cast motion offset
+            |> Option.map PhysicsQueryCollisionResult3D.From

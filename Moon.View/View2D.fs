@@ -238,8 +238,8 @@ type View2D(view : Viewport) =
             changingTime <- time
             changingTimer <- 0.0
             changingFunc <- func
-            changingPosition <- position
-            changingZoom <- zoom
+            changingPosition <- currentPosition
+            changingZoom <- currentZoom
             changingStarted.Trigger()
     
     let mutable queuedTransformers : ProcessOption<View2DTransformer> list = []

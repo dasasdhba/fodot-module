@@ -18,6 +18,7 @@
         <Compile Include="PhysicsMotion.fs" />
         <Compile Include="PhysicsServer2D.fs" />
         <Compile Include="PhysicsServer3D.fs" />
+        <Compile Include="CSharp.fs" />
     </ItemGroup>
 
     <ItemGroup>

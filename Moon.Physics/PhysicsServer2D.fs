@@ -248,6 +248,7 @@ module private MoonPhysicsServer2D =
             
             let normal =
                 platformDirNext
+                |> Option.map (fun d -> -d)
                 |> Option.defaultWith (fun _ ->
                     if newNormal.Dot normal > 0f then
                         newNormal
@@ -324,7 +325,7 @@ module private MoonPhysicsServer2D =
                 // this must be a crash
                 brg.EmitSignalCrashed ()
             
-            Some snapMotion
+            snapMotion
         
         let currentAf = shift.AffineInverse()
         
@@ -370,16 +371,12 @@ module private MoonPhysicsServer2D =
                     | Some _ -> None
                     | _ -> Some v
                 
-                |> Option.bind (fun v ->
-                    pushThrough col b cid q -diff v
-                    |> Option.filter (fun m -> m <> Vector2.Zero)
-                    |> Option.map (fun m -> v, m)
-                )
-                
-                |> Option.map (fun (v, motion) ->
+                |> Option.map (fun v ->
+                    let m = pushThrough col b cid q -diff v
+                    
                     b
                     |> bodyGetSnap v
-                    |> Option.map (fun s -> col, b, s, motion)
+                    |> Option.map (fun s -> col, b, s, m)
                     |> Option.map Ok
                     |> Option.defaultWith (fun _ -> Result.Error col)
                 )
@@ -412,7 +409,8 @@ module private MoonPhysicsServer2D =
             yield!
                 pushSnapped
                 |> Seq.choose (fun (col, b, s, motion) ->
-
+                    if motion = Vector2.Zero then None else
+                    
                     b.EmitSignalSnapped(block, s)
                     b.SnapMotions <- motion :: b.SnapMotions
 
@@ -422,10 +420,12 @@ module private MoonPhysicsServer2D =
             yield!
                 remain
                 |> Seq.choose (fun (col, b, s, contact) ->
-                    b.EmitSignalSnapped(block, s)
                     let local = currentAf * contact
                     let prev = origin * local
                     let motion = contact - prev
+                    if motion = Vector2.Zero then None else
+                    
+                    b.EmitSignalSnapped(block, s)
                     b.SnapMotions <- motion :: b.SnapMotions
 
                     Some (col, b)

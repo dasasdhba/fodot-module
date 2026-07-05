@@ -129,7 +129,7 @@ type PhysicsShapeQuerier2D with
             )
         
         let travelPlatform () =
-            if motion = Vector2.Zero then None else
+            if motion = Vector2.Zero || platforms.Count = 0 then None else
             
             let offset = defaultArg offset Vector2.Zero
             let dir = motion.Normalized()
@@ -155,12 +155,12 @@ type PhysicsShapeQuerier2D with
             |> travelSolid
             |> Some
 
-        elif platforms.Count > 0 then
-            travelPlatform()
-
         else
-            cast motion offset
-            |> Option.map PhysicsQueryCollisionResult2D.From
+            travelPlatform()
+            |> Option.orElseWith (fun _ ->
+                cast motion offset
+                |> Option.map PhysicsQueryCollisionResult2D.From
+            )
 
 type PhysicsShapeQuerier3D with
 
@@ -250,7 +250,7 @@ type PhysicsShapeQuerier3D with
             )
         
         let travelPlatform () =
-            if motion = Vector3.Zero then None else
+            if motion = Vector3.Zero || platforms.Count = 0 then None else
             
             let offset = defaultArg offset Vector3.Zero
             let dir = motion.Normalized()
@@ -276,9 +276,9 @@ type PhysicsShapeQuerier3D with
             |> travelSolid
             |> Some
 
-        elif platforms.Count > 0 then
-            travelPlatform()
-            
         else
-            cast motion offset
-            |> Option.map PhysicsQueryCollisionResult3D.From
+            travelPlatform()
+            |> Option.orElseWith (fun _ ->
+                cast motion offset
+                |> Option.map PhysicsQueryCollisionResult3D.From
+            )

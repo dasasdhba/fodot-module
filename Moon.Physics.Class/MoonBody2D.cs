@@ -1,5 +1,6 @@
 using Fodot.Injection;
 using Godot;
+using Godot.Collections;
 using Godot.Warning;
 using Microsoft.FSharp.Collections;
 
@@ -12,7 +13,7 @@ public partial class MoonBody2D : ParentComponent
     /// x, y, range(degrees)
     /// </summary>
     [Export]
-    public Vector3[] Snaps { get ;set; } = [];
+    public Array<Vector3> Snaps { get ;set; } = [];
     
     /// <summary>
     /// The safe margin used in the recovery stage of block pushing.

@@ -22,7 +22,8 @@ public partial class View2DTracker : Marker2D
 
     public void MakeCurrent()
     {
-        this.GetView2D()?.TrackingItem = FSharpOption<CanvasItem>.Some(this);
+        var view = this.GetView2D();
+        if (view != null) view.TrackingItem = FSharpOption<CanvasItem>.Some(this);
     }
 
     public View2DTracker() : base()

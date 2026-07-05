@@ -35,7 +35,7 @@ public partial class MoonBody3D : ParentComponent
     [Signal]
     public delegate void SnappedEventHandler(CollisionObject3D col, Vector3 dir);
 
-    public FSharpList<Vector3> SnapMotions { get; set; } = [];
+    public FSharpList<Vector3> SnapMotions { get; set; } = FSharpList<Vector3>.Empty;
     public Vector3 LastSnapMotion { get; set; }
     public Vector3 LastPushMotion { get; set; }
 }

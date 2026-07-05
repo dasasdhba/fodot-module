@@ -33,25 +33,37 @@ public abstract partial class NodeToggle : Node
     public bool Flag
     {
         get => Toggle?.Flag ?? false;
-        set => Toggle?.Flag = value;
+        set
+        {
+            if (Toggle != null) Toggle.Flag = value;
+        }
     }
     
     public double Value
     {
         get => Toggle?.Value ?? 0d;
-        set => Toggle?.Value = value;
+        set
+        {
+            if (Toggle != null) Toggle.Value = value;
+        }
     }
 
     public double Time
     {
         get => Toggle?.Time ?? 0d;
-        set => Toggle?.Time = value;
+        set
+        {
+            if (Toggle != null) Toggle.Time = value;
+        }
     }
 
     public bool Paused
     {
         get => Toggle?.Paused ?? false;
-        set => Toggle?.Paused = value;
+        set
+        {
+            if (Toggle != null) Toggle.Paused = value;
+        }
     }
     
     public bool IsFullyOn() => Toggle.IsFullyOn();

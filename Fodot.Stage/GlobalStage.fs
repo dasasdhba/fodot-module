@@ -1,5 +1,6 @@
 module Fodot.Stage.GlobalStage
 
+open Fodot.Async
 open Godot
 open Fodot
 open Godot.Editor
@@ -34,5 +35,5 @@ type private GlobalStage (node : Control) =
 
         let stage = node |> FScript.attach<Stage>
         let cutscene = node |> Node.getCutsceneConfig entryCutscene
-        stage.QueueChange(first, cutscene) |> ignore
+        stage.QueueChange(first, cutscene) |> Task.forget
     )

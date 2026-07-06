@@ -1,6 +1,7 @@
 namespace Fodot.Stage
 
 open System.Threading.Tasks
+open FSharp.Threading
 open Fodot
 open Godot
 
@@ -157,7 +158,7 @@ type Stage(node : Control) =
      
      member this.LoadScene (path : string) =
           let path = this.CurrentScenePath |> Stage.asRelativePath path
-          Task.Run (fun () ->
+          Task.run (fun () ->
                GD.loadAs<PackedScene> path |> PackedScene.instantiate
           )
      

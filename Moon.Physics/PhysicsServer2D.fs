@@ -1,6 +1,6 @@
 namespace Moon.Physics
 
-open FSharp.Extend
+open FSharp.Generic
 open Fodot
 open Fodot.Injection
 open Fodot.Module.PhysicsServer

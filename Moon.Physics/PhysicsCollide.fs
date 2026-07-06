@@ -1,6 +1,6 @@
 module Moon.Physics.PhysicsCollide
 
-open FSharp.Extend
+open FSharp.Generic
 open Godot
 
 type PhysicsQueryRaycast2D with

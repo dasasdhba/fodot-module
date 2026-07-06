@@ -1,6 +1,6 @@
 namespace Moon.Physics
 
-open FSharp.Extend
+open FSharp.Generic
 open Fodot.Module
 open Godot
 

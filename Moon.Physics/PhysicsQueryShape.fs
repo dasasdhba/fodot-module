@@ -55,7 +55,7 @@ type PhysicsQueryShape2D(node : CollisionObject2D, param : PhysicsQueryBasicPara
     
     member val private Col = node
     member val State = state
-    member val Margin = -1e-5f with get, set
+    member val Margin = -1e-2f with get, set
     member val HitFromInside = false with get, set
     member val MaxResult = 32 with get, set
 
@@ -223,7 +223,7 @@ type PhysicsQueryShape3D(node : CollisionObject3D, param : PhysicsQueryBasicPara
     
     member val private Col = node
     member val State = state
-    member val Margin = -1e-5f with get, set
+    member val Margin = -0.1f with get, set
     member val HitFromInside = false with get, set
     member val MaxResult = 32 with get, set
 

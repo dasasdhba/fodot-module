@@ -233,6 +233,8 @@ type View2D(view : Viewport) =
             isChanging <- false
             if time < 0.0 then
                 forceUpdate ()
+            changingStarted.Trigger()
+            changingFinished.Trigger()
         else
             isChanging <- true
             changingTime <- time

@@ -4,7 +4,9 @@ open System
 open System.Runtime.CompilerServices
 open System.Runtime.InteropServices
 open System.Threading.Tasks
+open FSharp.Threading
 open Fodot.Stage
+open Godot
 
 let private opt value =
     if obj.ReferenceEquals(value, null) then None else Some value
@@ -13,9 +15,7 @@ let private middleTask (task : Func<Task>) =
     task
     |> opt
     |> Option.map (fun work -> fun () ->
-        work.Invoke()
-        |> Async.AwaitTask
-        |> Async.StartAsTask
+        work.Invoke() |> Task.asUnit
     )
 
 [<Extension>]
@@ -38,6 +38,16 @@ let FadeInOut
         [<Optional; DefaultParameterValue(null)>] middle : Func<Task>
     ) : Task =
     stage.FadeInOut(cutscene, ?middleTask = middleTask middle) :> Task
+
+[<Extension>]
+let QueueChangeBy
+    (
+        stage : Stage,
+        loader: Func<Task<Node>>,
+        [<Optional; DefaultParameterValue(null)>] cutscene : CutsceneConfig,
+        [<Optional; DefaultParameterValue(null)>] middle : Func<Task>
+    ) : Task =
+    stage.QueueChangeBy(loader.Invoke, ?cutscene = opt cutscene, ?middleTask = middleTask middle) :> Task
 
 [<Extension>]
 let QueueChange

@@ -166,14 +166,14 @@ type Stage(node : Control) =
      
      member this.IsQueueReady() =
           this.Status = Ready || this.Status = Pending
-          
-     member this.QueueChange (path : string, ?cutscene : CutsceneConfig, ?middleTask: unit -> Task<unit>) = task {
+     
+     member this.QueueChangeBy (loader : unit -> Task<Node>, ?cutscene : CutsceneConfig, ?middleTask: unit -> Task<unit>) = task {
           if this.IsQueueReady() |> not then
-               Logger.pushWarn $"Stage {this.Root.GetPath()} has been queued for changing scene before, changing task to {path} will be cancelled."
+               Logger.pushWarn $"Stage {this.Root.GetPath()} has been queued for changing scene before, changing task will be cancelled."
                ()
           else
                this.Status <- Loading
-               let loading = this.LoadScene path
+               let loading = loader ()
                let changing () = task {
                     let! scene = loading
                     do! this.ChangeScene(scene, ?middleTask = middleTask)
@@ -181,6 +181,10 @@ type Stage(node : Control) =
                let cutscene = defaultArg cutscene CutsceneConfig.None
                do! this.FadeInOut(cutscene, changing)
      }
+     
+     member this.QueueChange (path : string, ?cutscene : CutsceneConfig, ?middleTask: unit -> Task<unit>) =
+          let loader () = this.LoadScene path
+          this.QueueChangeBy(loader, ?cutscene = cutscene, ?middleTask = middleTask)
      
      member this.QueueReload (?cutscene, ?middleTask) =
           this.QueueChange("", ?cutscene = cutscene, ?middleTask = middleTask)

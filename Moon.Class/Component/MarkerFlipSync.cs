@@ -8,7 +8,7 @@ public partial class MarkerFlipSync : Marker2D
 {
     public enum MarkerFlipSyncProcessCallback { Idle, Physics }
     
-    [Export(PropertyHint.NodePathValidTypes, "Sprite2D,AnimatedSprite2D")]
+    [Export(PropertyHint.NodePathValidTypes)]
     public NodePath Target { get ;set; } = "..";
     
     [Export]

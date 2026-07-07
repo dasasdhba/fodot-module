@@ -497,5 +497,5 @@ module private MoonPhysicsServer2D =
         do
             // Moving bodies must finish their own physics movement before
             // blocks inspect origin overlap and apply push/snap motion.
-            node.ProcessPhysicsPriority <- 1000000
+            node.ProcessPhysicsPriority <- 1000
             node |> Engine.addPhysicsDelta32Process update |> ignore

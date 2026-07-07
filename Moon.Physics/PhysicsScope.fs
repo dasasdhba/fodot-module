@@ -18,12 +18,16 @@ module MoonPhysics2D =
     
     let getBodyQuery (body : CollisionObject2D) =
         bodyQueries |> WeakMeta.getOrAdd body (fun () ->
-            PhysicsQueryShape2D body
+            let query = PhysicsQueryShape2D body
+            query |> PhysicsQuery.setCollisionMask body.CollisionMask
+            query
         )
         
     let getBodyRaycast (body : CollisionObject2D) =
         bodyRays |> WeakMeta.getOrAdd body (fun () ->
-            PhysicsQueryRaycast2D body
+            let query = PhysicsQueryRaycast2D body
+            query |> PhysicsQuery.setCollisionMask body.CollisionMask
+            query
         )
     
     let updateBodyCollisionMask (body : CollisionObject2D) =
@@ -75,12 +79,16 @@ module MoonPhysics3D =
     
     let getBodyQuery (body : CollisionObject3D) =
         bodyQueries |> WeakMeta.getOrAdd body (fun () ->
-            PhysicsQueryShape3D body
+            let query = PhysicsQueryShape3D body
+            query |> PhysicsQuery.setCollisionMask body.CollisionMask
+            query
         )
         
     let getBodyRaycast (body : CollisionObject3D) =
         bodyRays |> WeakMeta.getOrAdd body (fun () ->
-            PhysicsQueryRaycast3D body
+            let query = PhysicsQueryRaycast3D body
+            query |> PhysicsQuery.setCollisionMask body.CollisionMask
+            query
         )
     
     let updateBodyCollisionMask (body : CollisionObject3D) =

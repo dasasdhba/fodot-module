@@ -36,7 +36,7 @@ public partial class DebugFill : NodeSize2D
     public override void _EnterTree()
     {
         base._EnterTree();
-        if (!Engine.IsEditorHint()) return;
+        if (!Engine.IsEditorHint() && !ShowInGame) return;
         
         QueueRedraw();
         SizeChanged += QueueRedraw;

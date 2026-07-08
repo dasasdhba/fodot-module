@@ -15,10 +15,10 @@ open Moon.Physics.PhysicsMotion
 module private MoonPhysicsServer3D =
 
     let bodies =
-        SortedFlushPhysicsNodes<CollisionObject3D, MoonBody3D>()
-
+        SortedFlushPhysicsPool<CollisionObject3D * MoonBody3D>(fun d -> d |> fst :> Node)
+    
     let blocks =
-        SortedFlushPhysicsNodes<CollisionObject3D, MoonBlock3D * Lazy<MoonPlatform3D option>>()
+        SortedFlushPhysicsPool<CollisionObject3D * (MoonBlock3D * Lazy<MoonPlatform3D option>)>(fun d -> d |> fst :> Node)
 
     [<FScript(typeof<MoonBody3D>)>]
     type MoonBody3DScript(arg : MoonBody3D) =
@@ -470,8 +470,7 @@ module private MoonPhysicsServer3D =
             bodies.Flush()
 
             bodies.Iter()
-            |> Seq.filter (_.Key >> _.CanProcess())
-            |> Seq.map _.Deconstruct()
+            |> Seq.filter (fst >> _.CanProcess())
             |> Seq.iter (fun (body, arg) ->
                 MoonPhysics3D.updateBodyCollisionMask body
                 PhysicsServer3D.BodySetTransform(body.GetRid(), body.GlobalTransform)
@@ -482,8 +481,7 @@ module private MoonPhysicsServer3D =
             blocks.Flush()
 
             blocks.Iter()
-            |> Seq.filter (_.Key >> _.CanProcess())
-            |> Seq.map _.Deconstruct()
+            |> Seq.filter (fst >> _.CanProcess())
             |> Seq.map (fun (b, data) ->
                 let arg = data |> fst
                 arg.LastPushed <- lazy [||]

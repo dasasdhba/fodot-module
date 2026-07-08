@@ -5,6 +5,8 @@ open Godot
 
 type ResourceProvider(obj : Node) =
 
+    static let _bind_map = WeakMeta<ResourceProvider>()
+
     let _back_prop_mode = GDProp<int64>.From("mode") obj
     let _back_prop_value_mode = _back_prop_mode.Get()
     let _back_prop_readonly = GDProp<bool>.From("readonly") obj
@@ -16,5 +18,4 @@ type ResourceProvider(obj : Node) =
     member val Readonly = _back_prop_value_readonly
     member val Lib = _back_prop_value_lib
 
-    static member private _bind_map = WeakMeta<ResourceProvider>()
-    static member From o = ResourceProvider._bind_map |> WeakMeta.getOrAdd o (fun () -> ResourceProvider o)
+    static member From o = _bind_map |> WeakMeta.getOrAdd o (fun () -> ResourceProvider o)

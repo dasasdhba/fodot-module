@@ -120,7 +120,12 @@ module PhysicsQueryResultExt =
     let FilterAndExclude<'a when 'a :> IPhysicsQueryResult> (results : IEnumerable<'a>) (query : IPhysicsQuery) (pattern : Func<'a, bool>) =
         results
         |> PhysicsQueryResult.filterAndExclude query pattern.Invoke
-
+    
+    [<Extension>]
+    let ChooseAndExclude<'a, 'b when 'a :> IPhysicsQueryResult> (results : IEnumerable<'a>) (query : IPhysicsQuery) (pattern : Func<'a, 'b option>) =
+        results
+        |> PhysicsQueryResult.chooseAndExclude<'a, 'b> query pattern.Invoke
+    
     [<Extension>]
     let ExistsAndExclude<'a when 'a :> IPhysicsQueryResult> (results : IEnumerable<'a>) (query : IPhysicsQuery) (pattern : Func<'a, bool>) =
         results
@@ -203,8 +208,8 @@ module PhysicsShapeQuerier2DQueriesExt =
         query.Query(?offset = PhysicsExtStore.optVector2 offset, ?maxResult = PhysicsExtStore.optInt maxResult, ?margin = PhysicsExtStore.optSingle margin)
 
     [<Extension>]
-    let QueryOverlap (query : PhysicsShapeQuerier2D) ([<Optional; DefaultParameterValue(null)>] offset : Nullable<Vector2>) ([<Optional; DefaultParameterValue(null)>] maxResult : Nullable<int>) ([<Optional; DefaultParameterValue(null)>] margin : Nullable<float32>) =
-        query.QueryOverlap(?offset = PhysicsExtStore.optVector2 offset, ?maxResult = PhysicsExtStore.optInt maxResult, ?margin = PhysicsExtStore.optSingle margin)
+    let QuerySolid (query : PhysicsShapeQuerier2D) ([<Optional; DefaultParameterValue(null)>] offset : Nullable<Vector2>) ([<Optional; DefaultParameterValue(null)>] maxResult : Nullable<int>) ([<Optional; DefaultParameterValue(null)>] margin : Nullable<float32>) =
+        query.QuerySolid(?offset = PhysicsExtStore.optVector2 offset, ?maxResult = PhysicsExtStore.optInt maxResult, ?margin = PhysicsExtStore.optSingle margin)
 
     [<Extension>]
     let QueryCollide (query : PhysicsShapeQuerier2D) (motion : Vector2) ([<Optional; DefaultParameterValue(null)>] offset : Nullable<Vector2>) ([<Optional; DefaultParameterValue(null)>] maxResult : Nullable<int>) ([<Optional; DefaultParameterValue(null)>] margin : Nullable<float32>) ([<Optional; DefaultParameterValue(null)>] hitFromInside : Nullable<bool>) =
@@ -233,8 +238,8 @@ module PhysicsShapeQuerier3DQueriesExt =
         query.Query(?offset = PhysicsExtStore.optVector3 offset, ?maxResult = PhysicsExtStore.optInt maxResult, ?margin = PhysicsExtStore.optSingle margin)
 
     [<Extension>]
-    let QueryOverlap (query : PhysicsShapeQuerier3D) ([<Optional; DefaultParameterValue(null)>] offset : Nullable<Vector3>) ([<Optional; DefaultParameterValue(null)>] maxResult : Nullable<int>) ([<Optional; DefaultParameterValue(null)>] margin : Nullable<float32>) =
-        query.QueryOverlap(?offset = PhysicsExtStore.optVector3 offset, ?maxResult = PhysicsExtStore.optInt maxResult, ?margin = PhysicsExtStore.optSingle margin)
+    let QuerySolid (query : PhysicsShapeQuerier3D) ([<Optional; DefaultParameterValue(null)>] offset : Nullable<Vector3>) ([<Optional; DefaultParameterValue(null)>] maxResult : Nullable<int>) ([<Optional; DefaultParameterValue(null)>] margin : Nullable<float32>) =
+        query.QuerySolid(?offset = PhysicsExtStore.optVector3 offset, ?maxResult = PhysicsExtStore.optInt maxResult, ?margin = PhysicsExtStore.optSingle margin)
 
     [<Extension>]
     let QueryCollide (query : PhysicsShapeQuerier3D) (motion : Vector3) ([<Optional; DefaultParameterValue(null)>] offset : Nullable<Vector3>) ([<Optional; DefaultParameterValue(null)>] maxResult : Nullable<int>) ([<Optional; DefaultParameterValue(null)>] margin : Nullable<float32>) ([<Optional; DefaultParameterValue(null)>] hitFromInside : Nullable<bool>) =

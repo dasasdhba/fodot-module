@@ -43,7 +43,7 @@ type PhysicsQueryRaycast3D with
 
 type PhysicsShapeQuerier2D with
 
-    member this.QueryOverlap (?offset : Vector2, ?maxResult : int, ?margin : float32) =
+    member this.QuerySolid (?offset : Vector2, ?maxResult : int, ?margin : float32) =
         this.QueryInside(?offset = offset, ?maxResult = maxResult, ?margin = margin)
         |> Seq.filter (fun r ->
             r |> PhysicsQueryResult.getOneWayParameters2D |> Option.isNone
@@ -67,7 +67,7 @@ type PhysicsShapeQuerier2D with
             |> Option.defaultValue 1f
         let offset = offset + motion * outTravel
         if
-            this.QueryOverlap(offset, ?maxResult = maxResult, ?margin = margin)
+            this.QuerySolid(offset, ?maxResult = maxResult, ?margin = margin)
             |> Seq.isEmpty |> not
         then
             None
@@ -164,7 +164,7 @@ type PhysicsShapeQuerier2D with
 
 type PhysicsShapeQuerier3D with
 
-    member this.QueryOverlap (?offset : Vector3, ?maxResult : int, ?margin : float32) =
+    member this.QuerySolid (?offset : Vector3, ?maxResult : int, ?margin : float32) =
         this.QueryInside(?offset = offset, ?maxResult = maxResult, ?margin = margin)
         |> Seq.filter (fun r ->
             r |> PhysicsQueryResult.getOneWayParameters3D |> Option.isNone
@@ -188,7 +188,7 @@ type PhysicsShapeQuerier3D with
             |> Option.defaultValue 1f
         let offset = offset + motion * outTravel
         if
-            this.QueryOverlap(offset, ?maxResult = maxResult, ?margin = margin)
+            this.QuerySolid(offset, ?maxResult = maxResult, ?margin = margin)
             |> Seq.isEmpty |> not
         then
             None

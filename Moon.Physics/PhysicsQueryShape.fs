@@ -198,9 +198,9 @@ type PhysicsShapeQuerier2D(parent : PhysicsQueryShape2D, shapes: (Shape2D * Tran
                 yield!
                     ()
                     |> Seq.unfold insideUnfold
+                    |> Seq.truncate maxResult
                     |> Seq.filter (fun r -> inside |> Array.exists (fun x -> x = r.Rid))
             }
-            |> Seq.truncate maxResult
         )
         |> Option.defaultValue Seq.empty
         
@@ -366,9 +366,9 @@ type PhysicsShapeQuerier3D(parent : PhysicsQueryShape3D, shapes: (Shape3D * Tran
                 yield!
                     ()
                     |> Seq.unfold insideUnfold
+                    |> Seq.truncate maxResult
                     |> Seq.filter (fun r -> inside |> Array.exists (fun x -> x = r.Rid))
             }
-            |> Seq.truncate maxResult
         )
         |> Option.defaultValue Seq.empty
     

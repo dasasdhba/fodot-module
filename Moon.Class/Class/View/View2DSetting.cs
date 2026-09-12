@@ -1,4 +1,3 @@
-using System;
 using Godot;
 using Godot.Collections;
 
@@ -9,9 +8,9 @@ public partial class View2DSetting : Node
 {
     [Export]
     public bool AutoSetup { get; set; } = false;
-    
+
     [Export]
-    public bool ForceUpdate { get ;set; } = false;
+    public bool ForceUpdate { get; set; } = false;
 
     [Export]
     public bool RegionOverride
@@ -37,9 +36,9 @@ public partial class View2DSetting : Node
         }
     }
     private NodePath _RegionRect;
-    
+
     [Export(PropertyHint.None, "suffix:px")]
-    public Rect2 Region { get ;set; } = new(Vector2.Zero, new(512f, 288f));
+    public Rect2 Region { get; set; } = new(Vector2.Zero, new(512f, 288f));
 
     [Export]
     public bool RegionSmoothed
@@ -70,7 +69,7 @@ public partial class View2DSetting : Node
     private bool _FollowOverride = false;
 
     [Export]
-    public CanvasItem FollowNode { get ;set; }
+    public CanvasItem FollowNode { get; set; }
 
     [ExportGroup("Transform")]
     [Export]
@@ -86,7 +85,7 @@ public partial class View2DSetting : Node
     private bool _MarginOverride = false;
 
     [Export(PropertyHint.None, "suffix:px")]
-    public Rect2 Margin { get ;set; } = new(Vector2.Zero, Vector2.Zero);
+    public Rect2 Margin { get; set; } = new(Vector2.Zero, Vector2.Zero);
 
     [Export]
     public bool ZoomOverride
@@ -101,10 +100,10 @@ public partial class View2DSetting : Node
     private bool _ZoomOverride = false;
 
     [Export(PropertyHint.Link)]
-    public Vector2 Zoom { get ;set; } = Vector2.One;
+    public Vector2 Zoom { get; set; } = Vector2.One;
 
     [Export]
-    public float MinZoom { get ;set; } = 1f;
+    public float MinZoom { get; set; } = 1f;
 
     [Export]
     public bool RotationOverride
@@ -119,7 +118,7 @@ public partial class View2DSetting : Node
     private bool _RotationOverride = false;
 
     [Export(PropertyHint.Range, "-360,360,0.1,radians_as_degrees")]
-    public float Rotation { get ;set; } = 0f;
+    public float Rotation { get; set; } = 0f;
 
     [ExportGroup("Smooth", "Smooth")]
     [Export]
@@ -135,10 +134,10 @@ public partial class View2DSetting : Node
     private bool _SmoothRateOverride = false;
 
     [Export]
-    public bool SmoothEnabled { get ;set; } = true;
+    public bool SmoothEnabled { get; set; } = true;
 
     [Export]
-    public double SmoothRate { get ;set; } = 20d;
+    public double SmoothRate { get; set; } = 20d;
 
     [Export]
     public bool SmoothZoomRateOverride
@@ -153,10 +152,10 @@ public partial class View2DSetting : Node
     private bool _SmoothZoomRateOverride = false;
 
     [Export]
-    public bool SmoothZoomEnabled { get ;set; } = true;
+    public bool SmoothZoomEnabled { get; set; } = true;
 
     [Export]
-    public double SmoothZoomRate { get ;set; } = 10d;
+    public double SmoothZoomRate { get; set; } = 10d;
 
     [Export]
     public bool SmoothRotRateOverride
@@ -171,11 +170,11 @@ public partial class View2DSetting : Node
     private bool _SmoothRotRateOverride = false;
 
     [Export]
-    public bool SmoothRotEnabled { get ;set; } = true;
+    public bool SmoothRotEnabled { get; set; } = true;
 
     [Export]
-    public double SmoothRotRate { get ;set; } = 10d;
-    
+    public double SmoothRotRate { get; set; } = 10d;
+
 #if DEBUG
     public override void _ValidateProperty(Dictionary property)
     {
@@ -204,11 +203,7 @@ public partial class View2DSetting : Node
         }
     }
 #endif
-    
-    public event System.Action Applied; 
-    
-    public void Apply()
-    {
-        Applied?.Invoke();
-    }
+
+    [GDMember]
+    public partial void Apply();
 }

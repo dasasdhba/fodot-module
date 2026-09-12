@@ -1,4 +1,3 @@
-using Moon;
 using Godot;
 using Godot.Collections;
 using Godot.Warning;
@@ -14,7 +13,7 @@ public partial class MoonBody3D : ParentComponent
     /// </summary>
     [Export]
     public Array<Vector4> Snaps { get; set; } = [];
-    
+
     /// <summary>
     /// The safe margin used in the recovery stage of block pushing.
     /// Increase this for better stability, or omit it if

@@ -1,5 +1,4 @@
 using Godot;
-using Moon;
 
 namespace Moon;
 
@@ -7,7 +6,7 @@ namespace Moon;
 public partial class NodeDestroyer : Node
 {
     [Export]
-    public NodePath Target { get ;set; } = "..";
+    public NodePath Target { get; set; } = "..";
 
     public void Destroy()
     {

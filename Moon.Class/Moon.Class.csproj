@@ -1,16 +1,17 @@
-﻿<Project Sdk="Godot.NET.Sdk">
+<Project Sdk="Godot.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
         <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">$(AndroidFrameworkVersion)</TargetFramework>
         <EnableDynamicLoading>true</EnableDynamicLoading>
         <RootNamespace>Moon</RootNamespace>
         <EnableGodotWarningGenerator>true</EnableGodotWarningGenerator>
+        <EnableGDMemberCSharp>true</EnableGDMemberCSharp>
         <NoWarn>$(NoWarn);CS0618</NoWarn>
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\library\Moon.CSharp\Moon.CSharp.csproj" />
-      <ProjectReference Include="..\..\library\Moon.Game\Moon.Game.fsproj" />
-      <ProjectReference Include="..\Moon.Injection.Class\Moon.Injection.Class.csproj" />
-      <ProjectReference Include="..\Moon.View\Moon.View.fsproj" />
+        <ProjectReference Include="..\..\library\Moon.CSharp\Moon.CSharp.csproj" />
+        <ProjectReference Include="..\..\library\Moon.Game\Moon.Game.fsproj" />
+        <ProjectReference Include="..\Moon.Injection.Class\Moon.Injection.Class.csproj" />
+        <ProjectReference Include="..\Moon.View\Moon.View.fsproj" />
     </ItemGroup>
 </Project>

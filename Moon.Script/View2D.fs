@@ -74,6 +74,8 @@ type private View2DSettingScript(setting : View2DSetting) =
         |> View2D.tryGet
         |> Option.iter apply
 
-    do setting.add_Applied applyView
     do if setting.AutoSetup then
         setting |> Node.whenReady applyView
+
+    [<GDMember>]
+    member this.Apply() = applyView()

@@ -27,7 +27,7 @@ public abstract partial class NodeToggle : Node
     [Signal]
     public delegate void FullyOffEventHandler();
 
-    public Moon.SmoothToggle Toggle { get; set; }
+    public SmoothToggle Toggle { get; set; }
 
     public bool Flag
     {

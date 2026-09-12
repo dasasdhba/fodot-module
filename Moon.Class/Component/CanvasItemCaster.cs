@@ -43,8 +43,8 @@ public partial class CanvasItemCaster : Node
         }
 
         var node = ItemLoader.Get();
-        Moon.CanvasItemModule.setPosition(
-        Moon.CanvasItemModule.getPosition(_root) + Offset, node);
+        CanvasItemModule.setPosition(
+        CanvasItemModule.getPosition(_root) + Offset, node);
         EmitSignalCasted(node);
         _root.AddSiblingSafely(node);
     }

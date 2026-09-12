@@ -18,7 +18,6 @@ type private MarkerFlipSyncScript (marker : MarkerFlipSync) =
         )
 
     do
-        marker.add_Updated update
 
         marker |> Node.whenReady (fun () ->
             marker.Origin <- marker.Position
@@ -26,3 +25,6 @@ type private MarkerFlipSyncScript (marker : MarkerFlipSync) =
         )
 
         marker |> Engine.addProcess physics update |> ignore
+
+    [<GDMember>]
+    member this.Update() = update()

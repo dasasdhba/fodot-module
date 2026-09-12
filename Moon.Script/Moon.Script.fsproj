@@ -4,6 +4,7 @@
         <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
         <GenerateDocumentationFile>$(DocumentationFileFlag)</GenerateDocumentationFile>
         <RootNamespace>Moon</RootNamespace>
+        <EnableGDMemberFSharp>true</EnableGDMemberFSharp>
     </PropertyGroup>
 
     <ItemGroup>

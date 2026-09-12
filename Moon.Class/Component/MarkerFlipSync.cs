@@ -1,4 +1,3 @@
-using System;
 using Godot;
 
 namespace Moon;
@@ -7,18 +6,18 @@ namespace Moon;
 public partial class MarkerFlipSync : Marker2D
 {
     public enum MarkerFlipSyncProcessCallback { Idle, Physics }
-    
+
     [Export]
-    public NodePath Target { get ;set; } = "..";
-    
+    public NodePath Target { get; set; } = "..";
+
     [Export]
-    public MarkerFlipSyncProcessCallback ProcessCallback { get; set; } 
+    public MarkerFlipSyncProcessCallback ProcessCallback { get; set; }
         = MarkerFlipSyncProcessCallback.Physics;
-    
+
     public bool FlipH { get; set; } = false;
     public bool FlipV { get; set; } = false;
     public Vector2 Origin { get; set; }
-    
-    public event System.Action Updated;
-    public void Update() => Updated?.Invoke();
+
+    [GDMember]
+    public partial void Update();
 }

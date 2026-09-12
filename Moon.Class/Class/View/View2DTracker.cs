@@ -1,7 +1,7 @@
 using Godot;
 using Microsoft.FSharp.Core;
 
-namespace Moon.Class;
+namespace Moon;
 
 [GlobalClass]
 public partial class View2DTracker : Marker2D

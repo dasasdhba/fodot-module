@@ -1,8 +1,7 @@
-module Fodot.Stage.GlobalStage
+module Moon.GlobalStage
 
-open Fodot.Async
+open Moon
 open Godot
-open Fodot
 open Godot.Editor
 
 // this one works fine for single stage game
@@ -16,21 +15,21 @@ let getInstance () =
     |> Option.ofObj
     |> Option.bind (fun c -> c |> FScript.tryGet<Stage>)
     |> Option.defaultWith (fun _ -> failwith "GlobalStage singleton is not created yet.")
-    
+
 [<FScript("global_stage")>]
 type private GlobalStage (node : Control) =
     do if Singleton.attach node &instance then
         Logger.push "GlobalStage loaded."
-    
+
     static let entryCutscene = new NodePath "%EntryCutscene"
-        
+
     do node.add_Ready (fun _ ->
         let first =
 #if DEBUG
-            let file = FileAccess.Open(FodotEditor.DebugScenePath, FileAccess.ModeFlags.Read)
+            let file = FileAccess.Open(MoonEditor.DebugScenePath, FileAccess.ModeFlags.Read)
             using file _.GetLine()
 #else
-            FodotEditor.ProjectMainScene
+            MoonEditor.ProjectMainScene
 #endif
 
         let stage = node |> FScript.attach<Stage>

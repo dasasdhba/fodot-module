@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Immutable;
 using System.Text;
-using Fodot.CSharp;
 using Godot;
 using Godot.Collections;
 
-namespace Moon.Class;
+namespace Moon;
 
 // cannot draw atlas texture tiled
 // we have to draw separately
@@ -24,9 +23,9 @@ public partial class FramesFill : NodeSize2D
         set
         {
             _frames = value;
-        #if DEBUG
+#if DEBUG
             NotifyPropertyListChanged();
-        #endif
+#endif
             Animation = _frames.GetAnimationNames()[0];
             Reset();
             QueueRedraw();
@@ -46,12 +45,12 @@ public partial class FramesFill : NodeSize2D
         }
     }
     private StringName _animation = "Default";
-    
+
     [Export]
-    public float SpeedScale { get ;set; } = 1f;
-    
+    public float SpeedScale { get; set; } = 1f;
+
     [Export]
-    public bool Paused { get ;set; }
+    public bool Paused { get; set; }
 
     [Export]
     public bool FlipH
@@ -79,13 +78,13 @@ public partial class FramesFill : NodeSize2D
 
     public FramesFill() : base()
     {
-    #if DEBUG
+#if DEBUG
         if (Engine.IsEditorHint()) return;
-    #endif    
-        
+#endif
+
         Ready += () => this.AddPhysicsProcess(Animate);
     }
-    
+
     private int Frame;
     private float Progress;
 
@@ -100,7 +99,7 @@ public partial class FramesFill : NodeSize2D
         if (Paused) return;
         if (Frames == null) return;
         if (!Frames.HasAnimation(Animation)) return;
-        
+
         var fc = Frames.GetFrameCount(Animation);
         var lastFrame = fc - 1;
         var animSpeed = Frames.GetAnimationSpeed(Animation) * SpeedScale;
@@ -116,17 +115,17 @@ public partial class FramesFill : NodeSize2D
             {
                 return; // Do nothing.
             }
-            
+
             if (speed > 0f)
             {
                 // Forwards.
-                if (Progress >= 1f) 
+                if (Progress >= 1f)
                 {
-                    if (Frame >= lastFrame) 
+                    if (Frame >= lastFrame)
                     {
                         Frame = 0;
-                    } 
-                    else 
+                    }
+                    else
                     {
                         Frame++;
                     }
@@ -136,17 +135,17 @@ public partial class FramesFill : NodeSize2D
                 var toProcess = Math.Min((1f - Progress) / absSpeed, delta);
                 Progress += (float)(toProcess * absSpeed);
                 delta -= toProcess;
-            } 
-            else 
+            }
+            else
             {
                 // Backwards.
-                if (Progress <= 0f) 
+                if (Progress <= 0f)
                 {
-                    if (Frame <= 0) 
+                    if (Frame <= 0)
                     {
                         Frame = lastFrame;
-                    } 
-                    else 
+                    }
+                    else
                     {
                         Frame--;
                     }
@@ -159,12 +158,12 @@ public partial class FramesFill : NodeSize2D
             }
 
             i++;
-            if (i > fc) 
+            if (i > fc)
             {
                 break; // Prevents freezing if to_process is each time much less than remaining.
             }
         }
-        
+
         if (Frame != last) QueueRedraw();
     }
 
@@ -172,20 +171,20 @@ public partial class FramesFill : NodeSize2D
     {
         if (Frames == null) return;
         if (!Frames.HasAnimation(Animation)) return;
-        
+
         var texture = Frames.GetFrameTexture(Animation, Frame);
-        if (texture == null ) return;
-        
+        if (texture == null) return;
+
         var size = Size;
         if (FlipH) size.X *= -1f;
         if (FlipV) size.Y *= -1f;
         this.DrawTextureRectTiled(texture, new(Vector2.Zero, size));
     }
-    
+
     public override void _EnterTree()
     {
         base._EnterTree();
-        
+
         QueueRedraw();
         SizeChanged += QueueRedraw;
     }
@@ -193,7 +192,7 @@ public partial class FramesFill : NodeSize2D
     public override void _ExitTree()
     {
         base._ExitTree();
-        
+
         SizeChanged -= QueueRedraw;
     }
 
@@ -231,7 +230,7 @@ public partial class FramesFill : NodeSize2D
             }
         }
     }
-    
+
     public void OnBeforeSerialize()
     {
         SizeChanged -= QueueRedraw;
@@ -242,6 +241,6 @@ public partial class FramesFill : NodeSize2D
         QueueRedraw();
         SizeChanged += QueueRedraw;
     }
-    
-#endif   
+
+#endif
 }

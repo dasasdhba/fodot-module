@@ -1,9 +1,4 @@
-namespace Moon.Script
-
-open Fodot
-open Moon.Class
-open Moon.Module
-open Moon.View
+namespace Moon
 
 [<FScript(typeof<View2DHost>)>]
 type private View2DHostScript(host : View2DHost) =
@@ -28,7 +23,7 @@ type private View2DHostScript(host : View2DHost) =
                 if host.SmoothRotEnabled then Some host.SmoothRotRate else None
             v.TrackingItem <-
                 host.FollowItem |> Option.ofObj
-            
+
             v.ForceUpdate ()
         )
     )
@@ -45,13 +40,13 @@ type private View2DSettingScript(setting : View2DSetting) =
             let time =
                 if setting.RegionSmoothed then setting.RegionSmoothTime else 0.0
             v.ChangeRegion(region, time)
-            
+
         if setting.FollowOverride then
             v.TrackingItem <- setting.FollowNode |> Option.ofObj
-            
+
         if setting.MarginOverride then
             v.Margin <- setting.Margin
-            
+
         if setting.ZoomOverride then
             v.Zoom <- setting.Zoom
             v.MinZoom <- setting.MinZoom
@@ -70,15 +65,15 @@ type private View2DSettingScript(setting : View2DSetting) =
         if setting.SmoothRotRateOverride then
             v.SmoothRotationRate <-
                 if setting.SmoothRotEnabled then Some setting.SmoothRotRate else None
-            
+
         if setting.ForceUpdate then
             v.ForceUpdate ()
-    
+
     let applyView () =
         setting
         |> View2D.tryGet
         |> Option.iter apply
-    
+
     do setting.add_Applied applyView
     do if setting.AutoSetup then
         setting |> Node.whenReady applyView

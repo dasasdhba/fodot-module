@@ -1,8 +1,8 @@
-using Fodot.Injection;
+using Moon;
 using Godot;
 using Godot.Warning;
 
-namespace Moon.Physics;
+namespace Moon;
 
 [GlobalClass, ChildOf("CollisionObject3D")]
 public partial class MoonPlatform3D : ParentComponent

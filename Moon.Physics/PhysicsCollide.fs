@@ -1,4 +1,5 @@
-module Moon.Physics.PhysicsCollide
+[<AutoOpen>]
+module Moon.PhysicsCollide
 
 open FSharp.Generic
 open Godot
@@ -13,7 +14,7 @@ type PhysicsQueryRaycast2D with
             | Some (d, _) when d.Dot dir <= 0f -> false
             | _ -> true
         )
-        
+
     member this.QueryCollide (target : Vector2, ?offset : Vector2, ?maxResult : int, ?hitFromInside : bool) =
         this.Query(target, ?offset = offset, ?maxResult = maxResult, ?hitFromInside = hitFromInside)
         |> Seq.filter (fun r ->
@@ -32,7 +33,7 @@ type PhysicsQueryRaycast3D with
             | Some (d, _) when d.Dot dir <= 0f -> false
             | _ -> true
         )
-        
+
     member this.QueryCollide (target : Vector3, ?offset : Vector3, ?maxResult : int, ?hitFromInside : bool, ?hitBackFaces : bool) =
         this.Query(target, ?offset = offset, ?maxResult = maxResult, ?hitFromInside = hitFromInside, ?hitBackFaces = hitBackFaces)
         |> Seq.filter (fun r ->
@@ -56,7 +57,7 @@ type PhysicsShapeQuerier2D with
             | Some (d, _) when d.Dot motion <= 0f -> false
             | _ -> true
         )
-    
+
     /// One should make sure the querier is inside at start.
     member this.PushOut (motion :Vector2, ?offset : Vector2, ?maxResult : int, ?margin : float32) =
         let offset = defaultArg offset Vector2.Zero
@@ -81,15 +82,15 @@ type PhysicsShapeQuerier2D with
                         UnsafeFraction = outTravel - r.UnsafeFraction
                 }
             )
-    
+
     member this.Collide (motion : Vector2, ?maxDepth: float32, ?offset : Vector2, ?maxResult : int, ?margin : float32) =
-        
+
         let cast m offset =
             this.QueryCollide(m, ?offset = offset, ?maxResult = maxResult, ?margin = margin, hitFromInside = false)
             |> Seq.tryHead
-        
+
         // check for initial overlap
-        
+
         let platforms, solids =
             this.Query(?offset = offset, ?maxResult = maxResult, ?margin = margin)
             |> Seq.map (fun r ->
@@ -98,7 +99,7 @@ type PhysicsShapeQuerier2D with
                 | _ -> Result.Error r
             )
             |> Seq.partitionResult
-        
+
         let travelSolid (rep : PhysicsQueryShapeResult2D) : PhysicsQueryCollisionResult2D =
             let maxDepth = defaultArg maxDepth MoonPhysics2D.bodyMaxRecovery
             if motion = Vector2.Zero || maxDepth <= 0f then
@@ -106,10 +107,10 @@ type PhysicsShapeQuerier2D with
                 |> PhysicsQueryShapeCastResult2D.From
                 |> PhysicsQueryCollisionResult2D.From
             else
-            
+
             let dir = motion.Normalized()
             let len = motion.Length()
-            
+
             this.PushOut(-dir * maxDepth, ?offset = offset, ?maxResult = maxResult, ?margin = margin)
             |> Option.map (
                 _.ChangeStep(maxDepth, -len)
@@ -127,14 +128,14 @@ type PhysicsShapeQuerier2D with
                 |> PhysicsQueryShapeCastResult2D.From
                 |> PhysicsQueryCollisionResult2D.From
             )
-        
+
         let travelPlatform () =
             if motion = Vector2.Zero || platforms.Count = 0 then None else
-            
+
             let offset = defaultArg offset Vector2.Zero
             let dir = motion.Normalized()
             let len = motion.Length()
-            
+
             platforms
             |> Seq.map snd
             |> Seq.choose (function
@@ -149,7 +150,7 @@ type PhysicsShapeQuerier2D with
                 )
             )
             |> Seq.tryMinBy _.Result.SafeFraction
-        
+
         if solids.Count > 0 then
             solids[0]
             |> travelSolid
@@ -177,7 +178,7 @@ type PhysicsShapeQuerier3D with
             | Some (d, _) when d.Dot motion <= 0f -> false
             | _ -> true
         )
-    
+
     /// One should make sure the querier is inside at start.
     member this.PushOut (motion :Vector3, ?offset : Vector3, ?maxResult : int, ?margin : float32) =
         let offset = defaultArg offset Vector3.Zero
@@ -202,15 +203,15 @@ type PhysicsShapeQuerier3D with
                         UnsafeFraction = outTravel - r.UnsafeFraction
                 }
             )
-    
+
     member this.Collide (motion : Vector3, ?maxDepth: float32, ?offset : Vector3, ?maxResult : int, ?margin : float32) =
-        
+
         let cast m offset =
             this.QueryCollide(m, ?offset = offset, ?maxResult = maxResult, ?margin = margin, hitFromInside = false)
             |> Seq.tryHead
-        
+
         // check for initial overlap
-        
+
         let platforms, solids =
             this.Query(?offset = offset, ?maxResult = maxResult, ?margin = margin)
             |> Seq.map (fun r ->
@@ -219,7 +220,7 @@ type PhysicsShapeQuerier3D with
                 | _ -> Result.Error r
             )
             |> Seq.partitionResult
-        
+
         let travelSolid (rep : PhysicsQueryShapeResult3D) : PhysicsQueryCollisionResult3D =
             let maxDepth = defaultArg maxDepth MoonPhysics3D.bodyMaxRecovery
             if motion = Vector3.Zero || maxDepth <= 0f then
@@ -227,10 +228,10 @@ type PhysicsShapeQuerier3D with
                 |> PhysicsQueryShapeCastResult3D.From
                 |> PhysicsQueryCollisionResult3D.From
             else
-            
+
             let dir = motion.Normalized()
             let len = motion.Length()
-            
+
             this.PushOut(-dir * maxDepth, ?offset = offset, ?maxResult = maxResult, ?margin = margin)
             |> Option.map (
                 _.ChangeStep(maxDepth, -len)
@@ -248,14 +249,14 @@ type PhysicsShapeQuerier3D with
                 |> PhysicsQueryShapeCastResult3D.From
                 |> PhysicsQueryCollisionResult3D.From
             )
-        
+
         let travelPlatform () =
             if motion = Vector3.Zero || platforms.Count = 0 then None else
-            
+
             let offset = defaultArg offset Vector3.Zero
             let dir = motion.Normalized()
             let len = motion.Length()
-            
+
             platforms
             |> Seq.map snd
             |> Seq.choose (function
@@ -270,7 +271,7 @@ type PhysicsShapeQuerier3D with
                 )
             )
             |> Seq.tryMinBy _.Result.SafeFraction
-        
+
         if solids.Count > 0 then
             solids[0]
             |> travelSolid

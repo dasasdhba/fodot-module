@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Moon.Class;
+namespace Moon;
 
 [GlobalClass, Tool]
 #if DEBUG

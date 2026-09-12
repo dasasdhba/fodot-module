@@ -1,8 +1,4 @@
-namespace Moon.Script
-
-open Fodot
-open Moon.Component
-open Moon.Library
+namespace Moon
 
 [<FScript(typeof<NodeToggle>)>]
 type private NodeToggleScript(node: NodeToggle) =

@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using Fodot.CSharp;
 using Godot;
 
-namespace Moon.Class;
+namespace Moon;
 
 /// <summary>
 /// Provide a drawing workflow similar to Game Maker.
@@ -64,8 +63,8 @@ public partial class Draw2D : Node2D
     [Export]
     public bool VisibleOnly { get; set; } = true;
 
-    private List<Action<Rid>> QueuedDrawingTasks = new();
-    protected List<Rid> QueuedDrawers { get ;set; } = new();
+    private List<System.Action<Rid>> QueuedDrawingTasks = new();
+    protected List<Rid> QueuedDrawers { get; set; } = new();
 
     public Draw2D() : base()
     {
@@ -79,19 +78,19 @@ public partial class Draw2D : Node2D
                 QueuedDrawers.Add(drawer);
             }
         };
-        
+
         Ready += () =>
         {
             this.AddProcess(ProcessDrawing, ProcessCallback == Draw2DProcessCallback.Physics);
         };
-        
+
         TreeExited += () =>
         {
             foreach (var drawer in QueuedDrawers)
             {
                 RenderingServer.FreeRid(drawer);
             }
-            
+
             QueuedDrawers.Clear();
         };
 
@@ -105,18 +104,18 @@ public partial class Draw2D : Node2D
         for (int i = 0; i < QueuedDrawers.Count; i++)
         {
             var drawer = QueuedDrawers[i];
-            
+
             if (i >= QueuedDrawingTasks.Count)
             {
                 RenderingServer.CanvasItemSetVisible(drawer, false);
                 continue;
             }
-            
+
             RenderingServer.CanvasItemClear(drawer);
             RenderingServer.CanvasItemSetVisible(drawer, true);
             QueuedDrawingTasks[i].Invoke(drawer);
         }
-        
+
         QueuedDrawingTasks.Clear();
     }
 

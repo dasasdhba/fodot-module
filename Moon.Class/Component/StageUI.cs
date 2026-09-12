@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Collections;
 
-namespace Moon.Component;
+namespace Moon;
 
 [GlobalClass, Tool]
 public partial class StageUI : Control

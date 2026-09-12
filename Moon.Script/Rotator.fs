@@ -1,17 +1,12 @@
-namespace Moon.Script
+namespace Moon
 
-open Fodot
-open Fodot.Module
 open Godot
-open Moon
-open Moon.Component
-open Moon.Utils
 
 [<FScript(typeof<Rotator>)>]
 type private RotatorScript(rot : Rotator) =
     let physics = rot.ProcessCallback = Rotator.RotatorProcessCallback.Physics
     let parent = rot |> Node.tryGetParent<CanvasItem>
-    
+
     let update delta =
         parent
         |> Option.filter (fun _ -> rot.Disabled |> not)
@@ -21,6 +16,5 @@ type private RotatorScript(rot : Rotator) =
             let r = Mathe.WrapAngle(r + d);
             p |> CanvasItem.setRotation r
         )
-    
-    do rot |> Engine.addDelta32Process physics update |> ignore
 
+    do rot |> Engine.addDelta32Process physics update |> ignore

@@ -1,11 +1,10 @@
-module Fodot.CSharp.StageExtensions
+module Moon.StageExtensions
 
 open System
 open System.Runtime.CompilerServices
 open System.Runtime.InteropServices
 open System.Threading.Tasks
-open FSharp.Threading
-open Fodot.Stage
+open FSharp
 open Godot
 
 let private opt value =
@@ -25,7 +24,7 @@ let GetStage node =
 [<Extension>]
 let GetCurrentScene node =
     node |> Node.getCurrentScene
-    
+
 [<Extension>]
 let GetUniquePath node =
     node |> Node.getUniquePath

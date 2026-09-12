@@ -1,7 +1,7 @@
-using Fodot.CSharp;
+using Moon;
 using Godot;
 
-namespace Moon.Component;
+namespace Moon;
 
 [GlobalClass]
 public partial class Radius2D : Node2D

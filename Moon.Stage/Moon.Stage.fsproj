@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
         <GenerateDocumentationFile>$(DocumentationFileFlag)</GenerateDocumentationFile>
-        <RootNamespace>Fodot.Stage</RootNamespace>
+        <RootNamespace>Moon</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,9 +17,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\library\Fodot.Async\Fodot.Async.fsproj" />
+        <ProjectReference Include="..\..\library\Moon.Async\Moon.Async.fsproj" />
         <ProjectReference Include="..\..\library\Godot.Editor\Godot.Editor.csproj" />
-        <ProjectReference Include="..\..\library\Fodot.Extend\Fodot.Extend.fsproj" />
+        <ProjectReference Include="..\..\library\Moon.Extend\Moon.Extend.fsproj" />
     </ItemGroup>
 
 </Project>

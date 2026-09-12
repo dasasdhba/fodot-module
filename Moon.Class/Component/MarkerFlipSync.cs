@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-namespace Moon.Component;
+namespace Moon;
 
 [GlobalClass]
 public partial class MarkerFlipSync : Marker2D
@@ -19,6 +19,6 @@ public partial class MarkerFlipSync : Marker2D
     public bool FlipV { get; set; } = false;
     public Vector2 Origin { get; set; }
     
-    public event Action Updated;
+    public event System.Action Updated;
     public void Update() => Updated?.Invoke();
 }

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Godot;
 
-namespace Moon.Class;
+namespace Moon;
 
 public partial class Draw2D
 {
@@ -101,7 +101,7 @@ public partial class Draw2D
     public void SetDrawIndex(int index) => DrawIndex = index;
     public void ResetDrawIndex() => DrawIndex = 0;
 
-    public void AddDrawingTask(Action<Rid> task)
+    public void AddDrawingTask(System.Action<Rid> task)
     {
         var queuedMaterial = (DrawMaterial ?? BlendMaterialMap[BlendMode]).GetRid();
         var queuedModulate = DrawModulate;

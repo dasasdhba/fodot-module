@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Moon.Class;
+namespace Moon;
 
 /// <summary>
 /// Manage drawing task with process functions.

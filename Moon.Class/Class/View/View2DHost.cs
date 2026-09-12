@@ -1,7 +1,7 @@
-﻿using Godot;
+using Godot;
 using Godot.Collections;
 
-namespace Moon.Class;
+namespace Moon;
 
 [GlobalClass, Tool]
 public partial class View2DHost : Node

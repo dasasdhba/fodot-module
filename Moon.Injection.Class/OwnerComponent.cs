@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Fodot.Injection;
+namespace Moon;
 
 public partial class OwnerComponent : Node, IFScripts
 {

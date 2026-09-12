@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Moon.Physics;
+namespace Moon;
 
 public interface IPlatformShape
 {

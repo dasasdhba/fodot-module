@@ -1,8 +1,7 @@
-namespace Fodot.Stage
+namespace Moon
 
 open System.Threading.Tasks
-open Fodot.Async.GD
-open Fodot
+open Moon
 open Godot
 
 type ICutscene =

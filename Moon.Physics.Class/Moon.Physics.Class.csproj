@@ -3,10 +3,10 @@
         <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
         <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">$(AndroidFrameworkVersion)</TargetFramework>
         <EnableDynamicLoading>true</EnableDynamicLoading>
-        <RootNamespace>Moon.Physics</RootNamespace>
+        <RootNamespace>Moon</RootNamespace>
         <EnableGodotWarningGenerator>true</EnableGodotWarningGenerator>
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\Fodot.Injection.Class\Fodot.Injection.Class.csproj" />
+      <ProjectReference Include="..\Moon.Injection.Class\Moon.Injection.Class.csproj" />
     </ItemGroup>
 </Project>

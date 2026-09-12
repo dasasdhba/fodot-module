@@ -1,6 +1,6 @@
-namespace Fodot.Injection.Bind
+namespace Moon.Injection.Bind
 
-open Fodot
+open Moon
 open Godot
 
 type ResourceProvider(obj : Node) =

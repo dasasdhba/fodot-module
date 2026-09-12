@@ -1,6 +1,6 @@
-﻿using Godot;
+using Godot;
 
-namespace Moon.Class;
+namespace Moon;
 
 [GlobalClass]
 public partial class InputReal : Inputer

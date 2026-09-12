@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Fodot.CSharp;
 using Godot;
 
-namespace Moon.Class;
+namespace Moon;
 
 /// <summary>
 /// Inherit this node to implement your save values.
@@ -18,16 +17,16 @@ public partial class SaveNode : Node
 #if DEBUG
 
     [Export(PropertyHint.File, "*.cfg,*.ini")]
-    public string DebugTable { get ;set; } = "";
+    public string DebugTable { get; set; } = "";
 
 #endif
 
     [Export]
-    public string SectionKey { get ;set; } = "save";
+    public string SectionKey { get; set; } = "save";
 
     [Export]
-    public string Password { get ;set; } = "";
-    
+    public string Password { get; set; } = "";
+
     private Dictionary<string, Variant> DefaultValues = new();
 
     public SaveNode() : base()
@@ -35,15 +34,15 @@ public partial class SaveNode : Node
         Ready += () =>
         {
             DefaultValues = ExportDictionary();
-            
-        #if DEBUG
+
+#if DEBUG
             var config = new ConfigFile();
             if (config.Load(DebugTable) == Error.Ok)
             {
                 var debug = config.GetSection(SectionKey);
                 ImportDictionary(debug);
             }
-        #endif
+#endif
         };
     }
 
@@ -55,33 +54,33 @@ public partial class SaveNode : Node
             var usageInt = item["usage"].AsInt32();
             var usage = (PropertyUsageFlags)usageInt;
             if (!usage.HasFlag(PropertyUsageFlags.ScriptVariable)) continue;
-            
+
             var name = item["name"].AsString();
             if (name is "SectionKey" or "Password") continue;
-            
-        #if DEBUG
+
+#if DEBUG
             if (name is "DebugTable") continue;
-        #endif
-        
+#endif
+
             result.Add(name, Get(name));
         }
         return result;
     }
-    
+
     public void ImportDictionary(Dictionary<string, Variant> dict)
     {
         foreach (var (name, value) in dict)
         {
             if (name is "SectionKey" or "Password") continue;
-            
-        #if DEBUG
+
+#if DEBUG
             if (name is "DebugTable") continue;
-        #endif    
-        
+#endif
+
             Set(name, value);
         }
     }
-    
+
     public void Save(string file, string section)
     {
         var config = new ConfigFile();
@@ -93,10 +92,10 @@ public partial class SaveNode : Node
         if (Password != "") config.Save(file + ".cfg");
 #endif    
     }
-    
+
     public void Save(string file)
         => Save(file, SectionKey);
-    
+
     public void Load(string file, string section)
     {
         var config = new ConfigFile();
@@ -111,7 +110,7 @@ public partial class SaveNode : Node
             ImportDictionary(DefaultValues);
         }
     }
-    
+
     public void Load(string file)
         => Load(file, SectionKey);
 
@@ -119,20 +118,20 @@ public partial class SaveNode : Node
     {
         ImportDictionary(DefaultValues);
     }
-    
+
     public async Task SaveAsync(string file, string section)
     {
         await Task.Run(() => Save(file, section));
     }
-    
+
     public Task SaveAsync(string file)
         => SaveAsync(file, SectionKey);
-    
+
     public async Task LoadAsync(string file, string section)
     {
         await Task.Run(() => Load(file, section));
     }
-    
+
     public Task LoadAsync(string file)
         => LoadAsync(file, SectionKey);
 }

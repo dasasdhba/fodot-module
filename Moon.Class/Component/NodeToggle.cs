@@ -1,7 +1,6 @@
-﻿using Godot;
-using Moon.Library;
+using Godot;
 
-namespace Moon.Component;
+namespace Moon;
 
 [GlobalClass]
 public abstract partial class NodeToggle : Node
@@ -15,10 +14,10 @@ public abstract partial class NodeToggle : Node
 
     [Export(PropertyHint.Range, "0,3,0.01,or_greater,suffix:s")]
     public double EditorTime { get; set; } = 0.2d;
-    
+
     [Export]
     public bool EditorPaused { get; set; } = false;
-    
+
     [Export]
     public bool EditorPhysics { get; set; } = true;
 
@@ -27,8 +26,8 @@ public abstract partial class NodeToggle : Node
 
     [Signal]
     public delegate void FullyOffEventHandler();
-    
-    public SmoothToggle Toggle { get; set; }
+
+    public Moon.SmoothToggle Toggle { get; set; }
 
     public bool Flag
     {
@@ -38,7 +37,7 @@ public abstract partial class NodeToggle : Node
             if (Toggle != null) Toggle.Flag = value;
         }
     }
-    
+
     public double Value
     {
         get => Toggle?.Value ?? 0d;
@@ -65,11 +64,11 @@ public abstract partial class NodeToggle : Node
             if (Toggle != null) Toggle.Paused = value;
         }
     }
-    
+
     public bool IsFullyOn() => Toggle.IsFullyOn();
     public bool IsFullyOff() => Toggle.IsFullyOff();
     public void QuickOn() => Toggle.QuickOn();
     public void QuickOff() => Toggle.QuickOff();
-    
+
     public abstract void OnValueUpdated(double v);
 }

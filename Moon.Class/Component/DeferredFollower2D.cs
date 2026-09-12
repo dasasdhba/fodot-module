@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Moon.Component;
+namespace Moon;
 
 [GlobalClass]
 public partial class DeferredFollower2D : Node2D

@@ -1,20 +1,18 @@
-namespace Fodot.Stage
+namespace Moon
 
-open Fodot.Async
-open Fodot
-open Fodot.Extend
+open Moon.Stage
 open Godot
 
 [<FScript("cutscene_provider")>]
 type CutsceneProvider(node : Node) =
     let bind = Bind.CutsceneProvider.From node
-    
+
     let poolMapper s =
         node |> AsyncScene.create s 1 0
-    
+
     let inPool = bind.InScene |> Option.map poolMapper
     let outPool = bind.OutScene |> Option.map poolMapper
-    
+
     let nodeMapper (p :AsyncScene<Node>) =
         p.Get() |> GodotObject.getScript<ICutscene>
 
@@ -24,7 +22,7 @@ type CutsceneProvider(node : Node) =
             match outPool with
             | Some p -> nodeMapper p |> Some
             | None -> if bind.ReuseInIfOutIsNull then inNode else None
-        
+
         {
             In = inNode
             Out = outNode

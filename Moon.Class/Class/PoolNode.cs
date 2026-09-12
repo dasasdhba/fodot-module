@@ -1,30 +1,29 @@
-using Fodot.CSharp;
 using Godot;
 
-namespace Moon.Class;
+namespace Moon;
 
 [GlobalClass]
-public partial class NodePool : Node
+public partial class PoolNode : Node
 {
     [Export]
     public int PoolSize { get; set; } = 100;
-    
+
     /// <summary>
     /// Make sure the pool objects can init when enter tree.
     /// </summary>
     [Export]
     public PackedScene PoolScene { get; set; }
-    
-    private Library.NodePool pool;
 
-    public NodePool() : base()
+    private NodePool pool;
+
+    public PoolNode() : base()
     {
         Ready += () =>
         {
-            pool = Library.NodePoolModule.create(PoolScene, PoolSize, this);
+            pool = NodePoolModule.create(PoolScene, PoolSize, this);
         };
     }
-    
+
     public Node GetPoolNode()
     {
         return pool.Get();
@@ -50,7 +49,7 @@ public static class NodePoolExtensions
             return false;
         }
 #endif
-        
-        return Library.NodePoolModule.returnPool(node);
+
+        return NodePoolModule.returnPool(node);
     }
 }

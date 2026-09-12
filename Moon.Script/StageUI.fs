@@ -1,15 +1,9 @@
-namespace Moon.Script
+namespace Moon
 
-open Fodot
-open Fodot.Extend
-open Fodot.Module
-open Fodot.Stage
 open Godot
-open Moon.Component
-open Moon.Module
 
 module private StageUI =
-    
+
     let getTargetRoot (path : string) (stage : Stage) =
         stage.Root
         |> Node.tryGetNode<Node> (new NodePath(path))
@@ -47,7 +41,7 @@ type private StageUIScript(node : StageUI) =
         parent |> Option.bind tryUnbox<CanvasItem>
     let tracking3D =
         parent |> Option.bind tryUnbox<Node3D>
-    
+
     let update2D (target : CanvasItem) =
         target
         |> GodotObject.validate
@@ -87,7 +81,7 @@ type private StagePersistantUIScript(marker : StagePersistantUI) =
     let getUi () =
         let stage = marker |> Node.getStage
         let root = stage |> StageUI.getTargetRoot marker.TargetNode
-        
+
         let ctrl, enter =
             root
             |> Node.tryGetNode<Control> (new NodePath(marker.Key))
@@ -98,13 +92,13 @@ type private StagePersistantUIScript(marker : StagePersistantUI) =
                 root |> Node.addChild p
                 p, false
             )
-        
+
         let interf =
             ctrl |> tryUnbox<IPersistantUI>
-        
+
         if enter then
             interf |> Option.iter _.OnReturn()
-        
+
         ctrl, interf
 
     let update (ui : Control) =
@@ -123,27 +117,27 @@ type private StagePersistantUIScript(marker : StagePersistantUI) =
         |> Option.defaultWith (fun _ ->
             ui.Hide()
         )
-    
+
     let ui = lazy (getUi ())
     let ctrl = lazy (ui.Value |> fst)
     let interf = lazy (ui.Value |> snd)
-    
+
     let update () =
         update ctrl.Value
-        
+
     let init () =
         if marker.Sync then
             update ()
         else
             ctrl.Value.GlobalPosition <- marker.GlobalPosition
-    
+
     let enter () =
         interf.Value |> Option.iter _.OnReturn()
-    
+
     let exit () =
         ctrl.Value.Hide()
         interf.Value |> Option.iter _.OnExit()
-    
+
     do
         marker |> Node.whenReady (fun _ ->
             init ()

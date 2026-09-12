@@ -1,7 +1,5 @@
-namespace Moon.Physics
+namespace Moon
 
-open Fodot.Injection
-open Fodot.Module.PhysicsServer
 open Godot
 
 type IPhysicsQueryResult =
@@ -15,12 +13,12 @@ type PhysicsQueryResult =
         Rid : Rid
         Shape : int
     }
-    
+
     interface IPhysicsQueryResult with
         member this.Collider = this.Collider
         member this.Rid = this.Rid
         member this.Shape = this.Shape
-    
+
     static member From (result : PhysicsShapeQueryResults2D) =
         seq {
             for i in 0 .. result.GetCollisionCount() - 1 do
@@ -33,7 +31,7 @@ type PhysicsQueryResult =
                     Shape = shape
                 }
         }
-        
+
     static member From (result : PhysicsShapeQueryResults3D) =
         seq {
             for i in 0 .. result.GetCollisionCount() - 1 do
@@ -55,12 +53,12 @@ type PhysicsQueryRayResult2D =
         Position : Vector2
         Normal : Vector2
     }
-    
+
     interface IPhysicsQueryResult with
         member this.Collider = this.Collider
         member this.Rid = this.Rid
         member this.Shape = this.Shape
-    
+
     static member From (result : PhysicsRayQueryResult2D) =
         {
             Collider = result.GetCollider()
@@ -78,12 +76,12 @@ type PhysicsQueryRayResult3D =
         Position : Vector3
         Normal : Vector3
     }
-    
+
     interface IPhysicsQueryResult with
         member this.Collider = this.Collider
         member this.Rid = this.Rid
         member this.Shape = this.Shape
-    
+
     static member From (result : PhysicsRayQueryResult3D) =
         {
             Collider = result.GetCollider()
@@ -102,12 +100,12 @@ type PhysicsQueryShapeResult2D =
         Normal : Vector2
         Velocity : Vector2
     }
-    
+
     interface IPhysicsQueryResult with
         member this.Collider = this.Collider
         member this.Rid = this.Rid
         member this.Shape = this.Shape
-    
+
     static member From (result : PhysicsShapeRestInfo2D) =
         {
             Collider = result.GetColliderId() |> GodotObject.InstanceFromId
@@ -117,7 +115,7 @@ type PhysicsQueryShapeResult2D =
             Normal = result.GetNormal()
             Velocity = result.GetLinearVelocity()
         }
-        
+
 type PhysicsQueryShapeResult3D =
     {
         Collider : GodotObject
@@ -127,12 +125,12 @@ type PhysicsQueryShapeResult3D =
         Normal : Vector3
         Velocity : Vector3
     }
-    
+
     interface IPhysicsQueryResult with
         member this.Collider = this.Collider
         member this.Rid = this.Rid
         member this.Shape = this.Shape
-    
+
     static member From (result : PhysicsShapeRestInfo3D) =
         {
             Collider = result.GetColliderId() |> GodotObject.InstanceFromId
@@ -154,22 +152,22 @@ type PhysicsQueryShapeCastResult2D =
         Normal : Vector2
         Velocity : Vector2
     }
-    
+
     interface IPhysicsQueryResult with
         member this.Collider = this.Collider
         member this.Rid = this.Rid
         member this.Shape = this.Shape
-    
+
     member this.ScaleFraction ratio=
         {
             this with
                 SafeFraction = this.SafeFraction * ratio
                 UnsafeFraction = this.UnsafeFraction * ratio
         }
-        
+
     member this.ChangeStep (originStep, newStep) =
         this.ScaleFraction (originStep / newStep)
-    
+
     static member From (result : PhysicsShapeCastResult2D) =
         {
             SafeFraction = result.GetClosestSafe()
@@ -181,7 +179,7 @@ type PhysicsQueryShapeCastResult2D =
             Normal = result.GetNormal()
             Velocity = result.GetLinearVelocity()
         }
-        
+
     static member From (result : PhysicsQueryShapeResult2D, ?safe : float32, ?unsafe : float32) =
         {
             SafeFraction = defaultArg safe 0f
@@ -193,7 +191,7 @@ type PhysicsQueryShapeCastResult2D =
             Normal = result.Normal
             Velocity = result.Velocity
         }
-        
+
 type PhysicsQueryShapeCastResult3D =
     {
         SafeFraction : float32
@@ -205,22 +203,22 @@ type PhysicsQueryShapeCastResult3D =
         Normal : Vector3
         Velocity : Vector3
     }
-    
+
     interface IPhysicsQueryResult with
         member this.Collider = this.Collider
         member this.Rid = this.Rid
         member this.Shape = this.Shape
-    
+
     member this.ScaleFraction ratio=
         {
             this with
                 SafeFraction = this.SafeFraction * ratio
                 UnsafeFraction = this.UnsafeFraction * ratio
         }
-        
+
     member this.ChangeStep (originStep, newStep) =
         this.ScaleFraction (originStep / newStep)
-    
+
     static member From (result : PhysicsShapeCastResult3D) =
         {
             SafeFraction = result.GetClosestSafe()
@@ -232,7 +230,7 @@ type PhysicsQueryShapeCastResult3D =
             Normal = result.GetNormal()
             Velocity = result.GetLinearVelocity()
         }
-        
+
     static member From (result : PhysicsQueryShapeResult3D, ?safe : float32, ?unsafe : float32)=
         {
             SafeFraction = defaultArg safe 0f
@@ -250,43 +248,43 @@ type PhysicsQueryCollisionResult2D =
         Result : PhysicsQueryShapeCastResult2D
         Recovered : bool
     }
-    
+
     interface IPhysicsQueryResult with
         member this.Collider = this.Result.Collider
         member this.Rid = this.Result.Rid
         member this.Shape = this.Result.Shape
-        
+
     static member From (result : PhysicsQueryShapeCastResult2D) = {
         Result = result
         Recovered = false
     }
-    
+
     static member FromRecovered (result : PhysicsQueryShapeCastResult2D) = {
         Result = result
         Recovered = true
     }
-    
+
 type PhysicsQueryCollisionResult3D =
     {
         Result : PhysicsQueryShapeCastResult3D
         Recovered : bool
     }
-    
+
     interface IPhysicsQueryResult with
         member this.Collider = this.Result.Collider
         member this.Rid = this.Result.Rid
         member this.Shape = this.Result.Shape
-    
+
     static member From (result : PhysicsQueryShapeCastResult3D) = {
         Result = result
         Recovered = false
     }
-    
+
     static member FromRecovered (result : PhysicsQueryShapeCastResult3D) = {
         Result = result
         Recovered = true
     }
-    
+
 module PhysicsQueryResult =
 
     let getOneWayParameters2D (r : IPhysicsQueryResult) =
@@ -307,7 +305,7 @@ module PhysicsQueryResult =
                 Some (dir, margin)
             else
                 None
-        
+
         match r.Collider with
         | :? CollisionObject2D as col ->
             col
@@ -322,12 +320,12 @@ module PhysicsQueryResult =
             )
             |> Option.orElseWith fallback
         | _ -> fallback()
-    
+
     let getOneWayDirection2D (r : IPhysicsQueryResult) =
         r
         |> getOneWayParameters2D
         |> Option.map fst
-    
+
     let getOneWayParameters3D (r : IPhysicsQueryResult) =
         match r.Collider with
         | :? CollisionObject3D as col ->
@@ -357,12 +355,12 @@ module PhysicsQueryResult =
                     None
             )
         | _ -> None
-    
+
     let getOneWayDirection3D (r : IPhysicsQueryResult) =
         r
         |> getOneWayParameters3D
         |> Option.map fst
-        
+
     let allowTravelWhenCrash (r : IPhysicsQueryResult) =
         match r.Collider with
         | :? CollisionObject2D as col ->
@@ -396,12 +394,12 @@ module PhysicsQueryResult =
                     false
             )
         | _ -> false
-        
+
     let chooseAndExclude<'a, 'b when 'a :> IPhysicsQueryResult>
         (query : IPhysicsQuery)
         (pattern : 'a -> 'b option)
         (results : 'a seq) : 'b seq =
-        
+
         results
         |> Seq.choose (fun r ->
             match pattern r with
@@ -410,12 +408,12 @@ module PhysicsQueryResult =
                 query |> PhysicsQuery.addExclude r.Rid
                 None
         )
-        
+
     let filterAndExclude<'a when 'a :> IPhysicsQueryResult>
         (query : IPhysicsQuery)
         (pattern : 'a -> bool)
         (results : 'a seq) : 'a seq =
-        
+
         results
         |> chooseAndExclude query (fun r ->
             if pattern r then
@@ -423,30 +421,30 @@ module PhysicsQueryResult =
             else
                 None
         )
-        
+
     let existsAndExclude<'a when 'a :> IPhysicsQueryResult>
         (query : IPhysicsQuery)
         (pattern : 'a -> bool)
         (results : 'a seq) : bool =
-        
+
         results
         |> filterAndExclude query pattern
         |> Seq.isEmpty |> not
-        
+
     let tryFindAndExclude<'a when 'a :> IPhysicsQueryResult>
         (query : IPhysicsQuery)
         (pattern : 'a -> bool)
         (results : 'a seq) : 'a option =
-        
+
         results
         |> filterAndExclude query pattern
         |> Seq.tryHead
-        
+
     let tryPickAndExclude<'a, 'b when 'a :> IPhysicsQueryResult>
         (query : IPhysicsQuery)
         (pattern : 'a -> 'b option)
         (results : 'a seq) : 'b option =
-        
+
         results
         |> chooseAndExclude query pattern
         |> Seq.tryHead

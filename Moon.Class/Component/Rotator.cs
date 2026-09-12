@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Warning;
 
-namespace Moon.Component;
+namespace Moon;
 
 [GlobalClass, ChildOf("CanvasItem")]
 public partial class Rotator : Node

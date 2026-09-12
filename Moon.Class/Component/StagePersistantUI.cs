@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Warning;
 
-namespace Moon.Component;
+namespace Moon;
 
 public interface IPersistantUI
 {

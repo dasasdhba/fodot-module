@@ -3,9 +3,9 @@
         <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
         <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">$(AndroidFrameworkVersion)</TargetFramework>
         <EnableDynamicLoading>true</EnableDynamicLoading>
-        <RootNamespace>Fodot.Injection</RootNamespace>
+        <RootNamespace>Moon</RootNamespace>
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\library\Fodot\Fodot.fsproj" />
+      <ProjectReference Include="..\..\library\Moon\Moon.fsproj" />
     </ItemGroup>
 </Project>

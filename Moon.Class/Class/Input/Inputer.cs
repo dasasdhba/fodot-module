@@ -1,7 +1,6 @@
-﻿using Fodot.CSharp;
 using Godot;
 
-namespace Moon.Class;
+namespace Moon;
 
 [GlobalClass]
 public abstract partial class Inputer : Node
@@ -11,11 +10,11 @@ public abstract partial class Inputer : Node
         Idle,
         Physics
     }
-    
+
     [Export]
     public InputBufferProcessCallback BufferProcessMode { get; set; }
         = InputBufferProcessCallback.Physics;
-        
+
     /// <summary>
     /// Disable buffer recovery when paused, this prevents, e.g.,
     /// when resume button and jump button is the same key,
@@ -39,11 +38,11 @@ public abstract partial class Inputer : Node
 
     public abstract InputKey GetKey(string key);
 
-    private System.Collections.Generic.Dictionary<string, bool> BufferMaps { get ;set; } = new();
+    private System.Collections.Generic.Dictionary<string, bool> BufferMaps { get; set; } = new();
 
     public bool IsKeyPressed(string key, bool buffered = true)
         => !(buffered && BufferMaps.TryGetValue(key, out bool value) && value) && GetKey(key).Pressed;
-    
+
     /// <summary>
     /// This will make IsKeyPressed (with buffered = true) always return false, until the key was released before.
     /// </summary>
@@ -57,10 +56,10 @@ public abstract partial class Inputer : Node
             {
                 SetKeyBuffered(key);
             }
-            
+
             return;
         }
-        
+
         var dict = BufferMaps;
         foreach (var key in dict.Keys)
         {

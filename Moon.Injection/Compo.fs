@@ -1,34 +1,32 @@
-namespace Fodot.Injection
+namespace Moon
 
-open Fodot
-open Fodot.Extend
 open Godot
 
 module private ComponentStore =
 
     let findAllWith map scope predictor node =
         map |> MetaDict.findAll (scope node) predictor
-    
+
     let tryFindWith map scope predictor node =
         node |> findAllWith map scope predictor |> List.tryHead
-    
+
     let findWith map scope predictor node =
         node |> findAllWith map scope predictor |> List.head
-    
+
     let ensureChild host scope (valueFunc : unit -> Node * 'a) =
         let n, a = valueFunc ()
         if n.IsInsideTree() |> not then
-            host |> scope |> Node.addChild n 
+            host |> scope |> Node.addChild n
         n, a
-    
+
     let findOrAddWith<'a> map scope predictor (valueFunc : unit -> Node * 'a) (node : Node) =
         map
         |> MetaDict.findOrAdd (scope node) predictor (fun _ -> valueFunc |> ensureChild node scope)
-    
+
     let getOrAddWith<'a> map scope key predictor (valueFunc : unit -> Node * 'a) (node : Node) =
         map
         |> MetaDict.getOrAdd (scope node) key predictor (fun _ -> valueFunc |> ensureChild node scope)
-    
+
     let predictor<'a when 'a :> Node> (node: Node) =
         match node with
         | :? 'a as a -> Some a
@@ -98,7 +96,7 @@ module private ComponentStore =
             let value = valueFunc ()
             value, value |> FScript.attach<'a>
         )
-    
+
     let predictorScript<'a> (node: Node) =
         node |> GodotObject.tryGetScript<'a>
 
@@ -132,7 +130,7 @@ module private ComponentStore =
             let value = valueFunc ()
             value, value |> GodotObject.getScript<'a>
         )
-    
+
     let inject map target (node : Node) =
         node
         |> target
@@ -144,19 +142,19 @@ module OwnerCompo =
 
     let map = MetaDict<Node> ()
     let private scope = Node.getOwnerOrSelf
-    
+
     let findAllWith predictor node =
         node |> ComponentStore.findAllWith map scope predictor
-    
+
     let tryFindWith predictor node =
         node |> ComponentStore.tryFindWith map scope predictor
-    
+
     let findWith predictor node =
         node |> ComponentStore.findWith map scope predictor
-    
+
     let findOrAddWith<'a> predictor (valueFunc : unit -> Node * 'a) (node : Node) =
         node |> ComponentStore.findOrAddWith map scope predictor valueFunc
-    
+
     let getOrAddWith<'a> key predictor (valueFunc : unit -> Node * 'a) (node : Node) =
         node |> ComponentStore.getOrAddWith map scope key predictor valueFunc
 
@@ -222,7 +220,7 @@ module OwnerCompo =
 
     let getOrAddScript<'a> path (valueFunc : unit -> Node) (node : Node) =
         node |> ComponentStore.getOrAddScript<'a> map scope path valueFunc
-    
+
     [<FScript("owner_component")>]
     type private ComponentScript(node : Node) =
 
@@ -230,34 +228,34 @@ module OwnerCompo =
         let mutable injected = false
         let inject() =
             if injected then () else
-            
+
             node
             |> ComponentStore.inject map Node.getSceneOwner
             |> Option.iter (fun _ ->
                 injected <- true
             )
-            
+
         do
             inject ()
             node.add_Ready inject
-            
+
 module Compo =
 
     let map = MetaDict<Node> ()
     let private scope (node : Node) = node
-    
+
     let findAllWith predictor node =
         node |> ComponentStore.findAllWith map scope predictor
-    
+
     let tryFindWith predictor node =
         node |> ComponentStore.tryFindWith map scope predictor
-    
+
     let findWith predictor node =
         node |> ComponentStore.findWith map scope predictor
-    
+
     let findOrAddWith<'a> predictor (valueFunc : unit -> Node * 'a) (node : Node) =
         node |> ComponentStore.findOrAddWith map scope predictor valueFunc
-    
+
     let getOrAddWith<'a> key predictor (valueFunc : unit -> Node * 'a) (node : Node) =
         node |> ComponentStore.getOrAddWith map scope key predictor valueFunc
 
@@ -323,7 +321,7 @@ module Compo =
 
     let getOrAddScript<'a> path (valueFunc : unit -> Node) (node : Node) =
         node |> ComponentStore.getOrAddScript<'a> map scope path valueFunc
-    
+
     [<FScript("component")>]
     type private ComponentScript(node : Node) =
 
@@ -331,13 +329,13 @@ module Compo =
         let mutable injected = false
         let inject() =
             if injected then () else
-            
+
             node
             |> ComponentStore.inject map Node.tryGetParent
             |> Option.iter (fun _ ->
                 injected <- true
             )
-            
+
         do
             inject ()
             node.add_Ready inject

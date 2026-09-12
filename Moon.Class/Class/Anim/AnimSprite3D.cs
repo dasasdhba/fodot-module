@@ -1,6 +1,6 @@
-﻿using Godot;
+using Godot;
 
-namespace Moon.Class;
+namespace Moon;
 
 [GlobalClass]
 public partial class AnimSprite3D : AnimatedSprite3D

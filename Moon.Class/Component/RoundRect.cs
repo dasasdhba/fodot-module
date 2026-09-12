@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Godot;
-using Moon.Class;
 
-namespace Moon.Component;
+namespace Moon;
 
 [GlobalClass, Tool]
 #if DEBUG
@@ -15,45 +14,45 @@ public partial class RoundRect : NodeSize2D
     [Export]
     public Color Color
     {
-        get  => _Color;
+        get => _Color;
         set
         {
             _Color = value;
             QueueRedraw();
-        }    
+        }
     }
     private Color _Color = Colors.Black;
-    
+
     [Export(PropertyHint.None, "suffix:px")]
     public float Radius
     {
-        get  => _Radius;
+        get => _Radius;
         set
         {
             _Radius = value;
             QueueRedraw();
         }
     }
-    
+
     private float _Radius = 16f;
 
     [Export]
     public int RoundPoint
     {
-        get  => _RoundPoint;
+        get => _RoundPoint;
         set
         {
             _RoundPoint = value;
             QueueRedraw();
         }
     }
-    
+
     private int _RoundPoint = 16;
 
     public override void _EnterTree()
     {
         base._EnterTree();
-        
+
         QueueRedraw();
         SizeChanged += QueueRedraw;
     }
@@ -61,12 +60,12 @@ public partial class RoundRect : NodeSize2D
     public override void _ExitTree()
     {
         base._ExitTree();
-        
+
         SizeChanged -= QueueRedraw;
     }
 
 #if DEBUG
-    
+
     public void OnBeforeSerialize()
     {
         SizeChanged -= QueueRedraw;
@@ -113,7 +112,7 @@ public partial class RoundRect : NodeSize2D
         points.AddRange(GetRoundedPoints(
             new Vector2(rx, ry), radius,
                  float.Pi, 3f * float.Pi / 2f));
-        
-        DrawColoredPolygon(points.ToArray(), Color);         
+
+        DrawColoredPolygon(points.ToArray(), Color);
     }
 }

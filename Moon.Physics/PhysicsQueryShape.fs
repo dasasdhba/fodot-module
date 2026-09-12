@@ -1,7 +1,6 @@
-namespace Moon.Physics
+namespace Moon
 
 open FSharp.Generic
-open Fodot.Module
 open Godot
 
 module PhysicsQueryShape2D =

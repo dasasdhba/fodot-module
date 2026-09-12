@@ -1,4 +1,4 @@
-namespace Moon.CSharp
+namespace Moon
 
 open System
 open System.Collections.Generic
@@ -6,10 +6,6 @@ open System.Runtime.CompilerServices
 open System.Runtime.InteropServices
 open Microsoft.FSharp.Core
 open Godot
-open Moon.Physics
-open Moon.Physics.MoonPhysics
-open Moon.Physics.PhysicsCollide
-open Moon.Physics.PhysicsMotion
 
 module private PhysicsExtStore =
 
@@ -27,7 +23,7 @@ module private PhysicsExtStore =
 
     let optVector3 (value : Nullable<Vector3>) =
         if value.HasValue then Some value.Value else None
-        
+
 module PhysicsQueryExt =
 
     [<Extension>]
@@ -120,12 +116,12 @@ module PhysicsQueryResultExt =
     let FilterAndExclude<'a when 'a :> IPhysicsQueryResult> (results : IEnumerable<'a>) (query : IPhysicsQuery) (pattern : Func<'a, bool>) =
         results
         |> PhysicsQueryResult.filterAndExclude query pattern.Invoke
-    
+
     [<Extension>]
     let ChooseAndExclude<'a, 'b when 'a :> IPhysicsQueryResult> (results : IEnumerable<'a>) (query : IPhysicsQuery) (pattern : Func<'a, 'b option>) =
         results
         |> PhysicsQueryResult.chooseAndExclude<'a, 'b> query pattern.Invoke
-    
+
     [<Extension>]
     let ExistsAndExclude<'a when 'a :> IPhysicsQueryResult> (results : IEnumerable<'a>) (query : IPhysicsQuery) (pattern : Func<'a, bool>) =
         results
@@ -254,11 +250,11 @@ module PhysicsShapeQuerier3DQueriesExt =
         query.Collide(motion, ?maxDepth = PhysicsExtStore.optSingle maxDepth, ?offset = PhysicsExtStore.optVector3 offset, ?maxResult = PhysicsExtStore.optInt maxResult, ?margin = PhysicsExtStore.optSingle margin)
 
 module PhysicsCollisionObject2DQueriesExt =
-    
+
     [<Extension>]
     let GetShapeCast (body : CollisionObject2D) =
         body.GetShapeCast()
-        
+
     [<Extension>]
     let GetRaycast (body : CollisionObject2D) =
         body.GetRaycast()
@@ -272,15 +268,15 @@ module PhysicsCollisionObject2DQueriesExt =
         body.CastMotion(motion, ?maxDepth = PhysicsExtStore.optSingle maxDepth, ?offset = PhysicsExtStore.optVector2 offset, ?maxResult = PhysicsExtStore.optInt maxResult, ?margin = PhysicsExtStore.optSingle margin, ?updateMask = PhysicsExtStore.optBool updateMask)
 
 module PhysicsCollisionObject3DQueriesExt =
-    
+
     [<Extension>]
     let GetShapeCast (body : CollisionObject3D) =
         body.GetShapeCast()
-        
+
     [<Extension>]
     let GetRaycast (body : CollisionObject3D) =
         body.GetRaycast()
-    
+
     [<Extension>]
     let CastMotionBy (body : CollisionObject3D) (query : PhysicsShapeQuerier3D) (motion : Vector3) ([<Optional; DefaultParameterValue(null)>] maxDepth : Nullable<float32>) ([<Optional; DefaultParameterValue(null)>] offset : Nullable<Vector3>) ([<Optional; DefaultParameterValue(null)>] maxResult : Nullable<int>) ([<Optional; DefaultParameterValue(null)>] margin : Nullable<float32>) =
         body.CastMotionBy(query, motion, ?maxDepth = PhysicsExtStore.optSingle maxDepth, ?offset = PhysicsExtStore.optVector3 offset, ?maxResult = PhysicsExtStore.optInt maxResult, ?margin = PhysicsExtStore.optSingle margin)

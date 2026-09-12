@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using Fodot.CSharp;
+using System.Collections.Generic;
 using Godot;
 
-namespace Moon.Class;
+namespace Moon;
 
 [GlobalClass]
 public partial class InputCustom : Inputer
@@ -12,7 +11,7 @@ public partial class InputCustom : Inputer
         Idle,
         Physics
     }
-    
+
     [Export]
     public InputCustomProcessCallback CustomProcessMode { get; set; }
         = InputCustomProcessCallback.Physics;
@@ -37,11 +36,11 @@ public partial class InputCustom : Inputer
         SetInputMap.Clear();
     }
 
-    public InputCustom() :base()
+    public InputCustom() : base()
     {
         Ready += () => this.AddProcess(InputProcess, CustomProcessMode == InputCustomProcessCallback.Physics);
     }
-    
+
     public void InputProcess()
     {
         foreach (var key in InputKeyMap.Keys)

@@ -1,7 +1,7 @@
 using Godot;
-using Moon.Class;
+using Moon;
 
-namespace Moon.Component;
+namespace Moon;
 
 [GlobalClass]
 public partial class NodeDestroyer : Node

@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
         <GenerateDocumentationFile>$(DocumentationFileFlag)</GenerateDocumentationFile>
-        <RootNamespace>Moon.Script</RootNamespace>
+        <RootNamespace>Moon</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,6 +19,9 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\library\Moon.Utils\Moon.Utils.fsproj" />
+      <ProjectReference Include="..\..\library\Moon.Game\Moon.Game.fsproj" />
+      <ProjectReference Include="..\Moon.Stage\Moon.Stage.fsproj" />
+      <ProjectReference Include="..\Moon.View\Moon.View.fsproj" />
       <ProjectReference Include="..\Moon.Class\Moon.Class.csproj" />
     </ItemGroup>
 

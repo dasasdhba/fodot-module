@@ -1,6 +1,6 @@
-namespace Fodot.Stage.Bind
+namespace Moon.Stage.Bind
 
-open Fodot
+open Moon
 open Godot
 
 type CutsceneProvider(obj : Node) =

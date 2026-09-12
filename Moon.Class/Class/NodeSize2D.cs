@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Collections;
 
-namespace Moon.Class;
+namespace Moon;
 
 [GlobalClass, Tool]
 public partial class NodeSize2D : Node2D

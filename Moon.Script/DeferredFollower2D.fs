@@ -1,11 +1,6 @@
-namespace Moon.Script
+namespace Moon
 
-open Fodot
-open Fodot.Module
 open Godot
-open Moon
-open Moon.Component
-open Moon.Module
 
 [<FScript(typeof<DeferredFollower2D>)>]
 type private DeferredFollower2DScript(follower : DeferredFollower2D) =
@@ -23,7 +18,7 @@ type private DeferredFollower2DScript(follower : DeferredFollower2D) =
         |> Option.filter _.IsVisibleInTree()
         |> Option.map (fun t ->
             let targetPosition = t |> CanvasItem.getGlobalPosition
-            
+
             if follower.Visible then
                 follower.GlobalPosition <-
                     follower.GlobalPosition.ConvToward(targetPosition, follower.Rate * delta)

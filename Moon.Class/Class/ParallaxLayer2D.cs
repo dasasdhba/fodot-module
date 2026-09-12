@@ -1,21 +1,20 @@
-using Fodot.CSharp;
 using Godot;
 using Godot.Collections;
 
-namespace Moon.Class;
+namespace Moon;
 
 [Tool]
 public partial class ParallaxLayer2D : ParallaxLayer
 {
     [Export(PropertyHint.None, "suffix:px/s")]
-    public Vector2 AutoScroll { get ;set; }
+    public Vector2 AutoScroll { get; set; }
 
     public ParallaxLayer2D() : base()
     {
-    #if DEBUG
+#if DEBUG
         if (Engine.IsEditorHint()) return;
-    #endif    
-    
+#endif
+
         Ready += () => this.AddPhysicsProcess(Process);
     }
 
@@ -34,7 +33,7 @@ public partial class ParallaxLayer2D : ParallaxLayer
             offset.Y += (float)(AutoScroll.Y * delta);
             offset.Y = Mathf.Wrap(offset.Y, 0f, MotionMirroring.Y);
         }
-        
+
         MotionOffset = offset;
     }
 
@@ -43,7 +42,7 @@ public partial class ParallaxLayer2D : ParallaxLayer
     {
         // disable transform
         var name = property["name"].AsStringName();
-        
+
         if (
             name == Node2D.PropertyName.Position ||
             name == Node2D.PropertyName.Rotation ||

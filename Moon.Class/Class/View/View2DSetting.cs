@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using Godot;
 using Godot.Collections;
 
-namespace Moon.Class;
+namespace Moon;
 
 [GlobalClass, Tool]
 public partial class View2DSetting : Node
@@ -205,7 +205,7 @@ public partial class View2DSetting : Node
     }
 #endif
     
-    public event Action Applied; 
+    public event System.Action Applied; 
     
     public void Apply()
     {
